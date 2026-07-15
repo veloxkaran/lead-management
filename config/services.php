@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'whatsapp' => [
+        'api_version' => env('WHATSAPP_API_VERSION', 'v20.0'),
+    ],
+
 ];

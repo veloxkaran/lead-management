@@ -4,16 +4,17 @@ namespace App\Models;
 
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Requirement extends Model
 {
-    use HasFactory;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
-        'lead_id', 'requirement', 'priority', 'status', 'assigned_to', 'created_by',
+        'company_id', 'lead_id', 'requirement', 'priority', 'status', 'assigned_to', 'created_by',
     ];
 
     protected function casts(): array

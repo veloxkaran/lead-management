@@ -54,7 +54,7 @@
                                 <div class="fw-semibold">{{ $user->name }}</div>
                                 <div class="text-muted small">{{ $user->email }}</div>
                             </td>
-                            <td class="small">{{ $user->department }} @if($user->designation) <div class="text-muted">{{ $user->designation }}</div> @endif</td>
+                            <td class="small">{{ $user->assignedDepartment?->name }} @if($user->designation) <div class="text-muted">{{ $user->designation }}</div> @endif</td>
                             <td><span class="badge bg-primary-subtle text-primary-emphasis">{{ $user->role->label() }}</span></td>
                             <td><x-status-badge :status="$user->status" /></td>
                             <td class="small">{{ $user->team?->name ?? '—' }}</td>

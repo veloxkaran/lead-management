@@ -4,6 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        if (localStorage.getItem('sidebar-collapsed') === '1') {
+            document.documentElement.classList.add('sidebar-collapsed');
+        }
+    </script>
     <title>@yield('title', 'Dashboard') - {{ config('app.name') }}</title>
     @vite(['resources/css/app.scss', 'resources/js/app.js'])
     @stack('styles')
@@ -23,6 +28,10 @@
             </main>
         </div>
     </div>
+
+    @auth
+        <x-policy-acknowledgment-modal />
+    @endauth
 
     @stack('scripts')
 </body>

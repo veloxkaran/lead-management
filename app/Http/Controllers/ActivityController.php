@@ -22,7 +22,7 @@ class ActivityController extends Controller
 
         $filters = $request->only(['activity_type', 'from', 'to']);
 
-        if (! $request->user()->isSuperAdmin()) {
+        if (! $request->user()->isOverseer()) {
             $filters['visible_to_user_id'] = $request->user()->id;
         }
 

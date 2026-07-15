@@ -7,76 +7,130 @@
         <span>{{ config('app.name') }}</span>
     </div>
     <nav class="nav flex-column py-2">
-        <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-            <i class="bi bi-speedometer2"></i> Dashboard
+        <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Dashboard" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-speedometer2"></i> <span class="nav-label">Dashboard</span>
         </a>
 
-        <div class="nav-section-title">Business Development</div>
-        <a href="{{ route('leads.index') }}" class="nav-link {{ request()->routeIs('leads.*') ? 'active' : '' }}">
-            <i class="bi bi-diagram-3"></i> Lead Management
-        </a>
-        <a href="{{ route('activities.index') }}" class="nav-link {{ request()->routeIs('activities.*') ? 'active' : '' }}">
-            <i class="bi bi-clock-history"></i> Activities
-        </a>
-        <a href="{{ route('requirements.index') }}" class="nav-link {{ request()->routeIs('requirements.*') ? 'active' : '' }}">
-            <i class="bi bi-list-check"></i> Requirements
-        </a>
-        <a href="{{ route('follow-ups.index') }}" class="nav-link {{ request()->routeIs('follow-ups.*') ? 'active' : '' }}">
-            <i class="bi bi-bell"></i> Follow Ups
-        </a>
-        <a href="{{ route('goals.index') }}" class="nav-link {{ request()->routeIs('goals.*') ? 'active' : '' }}">
-            <i class="bi bi-bullseye"></i> Goals
-        </a>
-        <a href="{{ route('meetings.index') }}" class="nav-link {{ request()->routeIs('meetings.*') ? 'active' : '' }}">
-            <i class="bi bi-camera-video"></i> Google Meet
+        @if ($user?->isBusinessDevelopment() || $user?->isManager() || $user?->isSuperAdmin())
+            <div class="nav-section-title">Business Development</div>
+            <a href="{{ route('leads.index') }}" class="nav-link {{ request()->routeIs('leads.*') ? 'active' : '' }}" title="Lead Management" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-diagram-3"></i> <span class="nav-label">Lead Management</span>
+            </a>
+            <a href="{{ route('activities.index') }}" class="nav-link {{ request()->routeIs('activities.*') ? 'active' : '' }}" title="Activities" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-clock-history"></i> <span class="nav-label">Activities</span>
+            </a>
+            <a href="{{ route('requirements.index') }}" class="nav-link {{ request()->routeIs('requirements.*') ? 'active' : '' }}" title="Requirements" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-list-check"></i> <span class="nav-label">Requirements</span>
+            </a>
+            <a href="{{ route('follow-ups.index') }}" class="nav-link {{ request()->routeIs('follow-ups.*') ? 'active' : '' }}" title="Follow Ups" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-bell"></i> <span class="nav-label">Follow Ups</span>
+            </a>
+            <a href="{{ route('goals.index') }}" class="nav-link {{ request()->routeIs('goals.*') ? 'active' : '' }}" title="Goals" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-bullseye"></i> <span class="nav-label">Goals</span>
+            </a>
+            <a href="{{ route('meetings.index') }}" class="nav-link {{ request()->routeIs('meetings.*') ? 'active' : '' }}" title="Google Meet" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-camera-video"></i> <span class="nav-label">Google Meet</span>
+            </a>
+            <a href="{{ route('implementation-requests.index') }}" class="nav-link {{ request()->routeIs('implementation-requests.*') ? 'active' : '' }}" title="Implementation Requests" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-box-arrow-in-up-right"></i> <span class="nav-label">Implementation Requests</span>
+            </a>
+            <a href="{{ route('account-requests.index') }}" class="nav-link {{ request()->routeIs('account-requests.*') ? 'active' : '' }}" title="Account Requests" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-cash-coin"></i> <span class="nav-label">Account Requests</span>
+            </a>
+        @endif
+
+        @if ($user?->isCustomerSuccess() || $user?->isManager() || $user?->isSuperAdmin())
+            <div class="nav-section-title">Customer Success</div>
+            <a href="{{ route('implementation-requests.index') }}" class="nav-link {{ request()->routeIs('implementation-requests.*') ? 'active' : '' }}" title="Implementation Requests" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-box-arrow-in-up-right"></i> <span class="nav-label">Implementation Requests</span>
+            </a>
+            <a href="{{ route('support-tickets.index') }}" class="nav-link {{ request()->routeIs('support-tickets.*') ? 'active' : '' }}" title="Support Tickets" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-life-preserver"></i> <span class="nav-label">Support Tickets</span>
+            </a>
+        @endif
+
+        @if ($user?->isFinance() || $user?->isManager() || $user?->isSuperAdmin())
+            <div class="nav-section-title">Finance</div>
+            <a href="{{ route('account-requests.index') }}" class="nav-link {{ request()->routeIs('account-requests.*') ? 'active' : '' }}" title="Account Requests" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-cash-coin"></i> <span class="nav-label">Account Requests</span>
+            </a>
+        @endif
+
+        <div class="nav-section-title">Messaging</div>
+        <a href="{{ route('whatsapp.index') }}" class="nav-link {{ request()->routeIs('whatsapp.*') ? 'active' : '' }}" title="WhatsApp" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-whatsapp"></i> <span class="nav-label">WhatsApp</span>
         </a>
 
         <div class="nav-section-title">Knowledge</div>
-        <a href="{{ route('knowledge-base.index') }}" class="nav-link {{ request()->routeIs('knowledge-base.*') ? 'active' : '' }}">
-            <i class="bi bi-journal-richtext"></i> Knowledge Base
+        <a href="{{ route('knowledge-base.index') }}" class="nav-link {{ request()->routeIs('knowledge-base.*') ? 'active' : '' }}" title="Knowledge Base" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-journal-richtext"></i> <span class="nav-label">Knowledge Base</span>
         </a>
-        <a href="{{ route('release-notes.index') }}" class="nav-link {{ request()->routeIs('release-notes.*') ? 'active' : '' }}">
-            <i class="bi bi-megaphone"></i> Release Notes
+        <a href="{{ route('release-notes.index') }}" class="nav-link {{ request()->routeIs('release-notes.*') ? 'active' : '' }}" title="Release Notes" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-megaphone"></i> <span class="nav-label">Release Notes</span>
+        </a>
+        <a href="{{ route('my-policy-documents.index') }}" class="nav-link {{ request()->routeIs('my-policy-documents.*') ? 'active' : '' }}" title="My SOPs & Job Descriptions" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-journal-check"></i> <span class="nav-label">My SOPs &amp; Job Descriptions</span>
         </a>
 
         <div class="nav-section-title">Reporting</div>
-        <a href="{{ route('daily-summaries.index') }}" class="nav-link {{ request()->routeIs('daily-summaries.*') ? 'active' : '' }}">
-            <i class="bi bi-journal-text"></i> Daily Summary
+        <a href="{{ route('daily-summaries.index') }}" class="nav-link {{ request()->routeIs('daily-summaries.*') ? 'active' : '' }}" title="Daily Summary" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-journal-text"></i> <span class="nav-label">Daily Summary</span>
         </a>
-        @if ($user?->isSuperAdmin())
-            <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
-                <i class="bi bi-bar-chart-line"></i> Reports
+        @if ($user?->isOverseer())
+            <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" title="Reports" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-bar-chart-line"></i> <span class="nav-label">Reports</span>
             </a>
         @else
-            <a href="{{ route('common-reports.personal-achievement') }}" class="nav-link {{ request()->routeIs('common-reports.*') ? 'active' : '' }}">
-                <i class="bi bi-bar-chart-line"></i> Reports
+            <a href="{{ route('common-reports.personal-achievement') }}" class="nav-link {{ request()->routeIs('common-reports.*') ? 'active' : '' }}" title="Reports" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-bar-chart-line"></i> <span class="nav-label">Reports</span>
             </a>
         @endif
 
         @if ($user?->isSuperAdmin())
             <div class="nav-section-title">Administration</div>
-            <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
-                <i class="bi bi-people"></i> Users
+            <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" title="Users" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-people"></i> <span class="nav-label">Users</span>
             </a>
-            <a href="{{ route('lead-statuses.index') }}" class="nav-link {{ request()->routeIs('lead-statuses.*') ? 'active' : '' }}">
-                <i class="bi bi-signpost-split"></i> Lead Statuses
+            <a href="{{ route('lead-statuses.index') }}" class="nav-link {{ request()->routeIs('lead-statuses.*') ? 'active' : '' }}" title="Lead Statuses" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-signpost-split"></i> <span class="nav-label">Lead Statuses</span>
             </a>
-            <a href="{{ route('settings.edit') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
-                <i class="bi bi-gear"></i> Settings
+            <a href="{{ route('settings.edit') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" title="Settings" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-gear"></i> <span class="nav-label">Settings</span>
+            </a>
+            <a href="{{ route('whatsapp-settings.edit') }}" class="nav-link {{ request()->routeIs('whatsapp-settings.*') ? 'active' : '' }}" title="WhatsApp Settings" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-whatsapp"></i> <span class="nav-label">WhatsApp Settings</span>
+            </a>
+            <a href="{{ route('departments.index') }}" class="nav-link {{ request()->routeIs('departments.*') ? 'active' : '' }}" title="Departments" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-diagram-2"></i> <span class="nav-label">Departments</span>
+            </a>
+            <a href="{{ route('sops.index') }}" class="nav-link {{ request()->routeIs('sops.*') ? 'active' : '' }}" title="SOPs" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-journal-check"></i> <span class="nav-label">SOPs</span>
+            </a>
+            <a href="{{ route('department-jds.index') }}" class="nav-link {{ request()->routeIs('department-jds.*') ? 'active' : '' }}" title="Department Job Descriptions" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-diagram-3"></i> <span class="nav-label">Department Job Descriptions</span>
+            </a>
+            <a href="{{ route('individual-jds.index') }}" class="nav-link {{ request()->routeIs('individual-jds.*') ? 'active' : '' }}" title="Individual Job Descriptions" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-person-badge"></i> <span class="nav-label">Individual Job Descriptions</span>
+            </a>
+            <a href="{{ route('policy-documents.reports.index') }}" class="nav-link {{ request()->routeIs('policy-documents.reports.*') ? 'active' : '' }}" title="Acknowledgment Reports" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-bar-chart-line"></i> <span class="nav-label">Acknowledgment Reports</span>
+            </a>
+            <a href="{{ route('activity-feed-settings.edit') }}" class="nav-link {{ request()->routeIs('activity-feed-settings.*') ? 'active' : '' }}" title="Activity Feed Settings" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-activity"></i> <span class="nav-label">Activity Feed Settings</span>
             </a>
         @endif
 
         <div class="nav-section-title">Account</div>
-        <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}">
-            <i class="bi bi-person-circle"></i> Profile
+        <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}" title="Profile" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-person-circle"></i> <span class="nav-label">Profile</span>
         </a>
-        <a href="{{ route('password.edit') }}" class="nav-link {{ request()->routeIs('password.edit') ? 'active' : '' }}">
-            <i class="bi bi-key"></i> Change Password
+        <a href="{{ route('password.edit') }}" class="nav-link {{ request()->routeIs('password.edit') ? 'active' : '' }}" title="Change Password" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-key"></i> <span class="nav-label">Change Password</span>
         </a>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="nav-link border-0 bg-transparent w-100 text-start">
-                <i class="bi bi-box-arrow-right"></i> Logout
+            <button type="submit" class="nav-link border-0 bg-transparent w-100 text-start" title="Logout" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-box-arrow-right"></i> <span class="nav-label">Logout</span>
             </button>
         </form>
     </nav>

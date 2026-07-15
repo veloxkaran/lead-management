@@ -5,6 +5,8 @@
 @section('content')
     <x-page-header title="Organization Dashboard" icon="bi-speedometer2" />
 
+    <x-role-playbook :user="$user" :playbook="$playbook" :quote="$quote" />
+
     <div class="row g-3 mb-3">
         <div class="col-md-3">
             <div class="stat-card d-flex align-items-center gap-3">
@@ -46,11 +48,12 @@
             </div>
         </div>
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100 text-white" style="background: linear-gradient(135deg,#2456a6,#1b2430);">
-                <div class="card-body d-flex flex-column justify-content-center h-100">
-                    <i class="bi bi-quote fs-2 opacity-75"></i>
-                    <p class="mb-1">{{ $quote['text'] }}</p>
-                    <p class="small opacity-75 mb-0">— {{ $quote['author'] }}</p>
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-semibold">Operations Snapshot</div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2"><span>Open Implementation Requests</span><span class="badge bg-primary">{{ $openImplementationRequests }}</span></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Open Support Tickets</span><span class="badge bg-warning text-dark">{{ $openSupportTickets }}</span></div>
+                    <div class="d-flex justify-content-between"><span>Open Account Requests</span><span class="badge bg-info text-dark">{{ $openAccountRequests }}</span></div>
                 </div>
             </div>
         </div>
@@ -146,6 +149,12 @@
                     @endforelse
                 </ul>
             </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-0">
+        <div class="col-12">
+            <x-activity-feed-widget />
         </div>
     </div>
 

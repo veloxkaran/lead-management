@@ -4,16 +4,17 @@ namespace App\Models;
 
 use App\Enums\FollowUpStatus;
 use App\Enums\ReminderType;
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FollowUp extends Model
 {
-    use HasFactory;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
-        'lead_id', 'follow_up_date', 'follow_up_time', 'reminder_minutes_before',
+        'company_id', 'lead_id', 'follow_up_date', 'follow_up_time', 'reminder_minutes_before',
         'reminder_type', 'status', 'notified_at', 'created_by',
     ];
 

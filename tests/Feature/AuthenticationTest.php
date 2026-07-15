@@ -59,7 +59,7 @@ class AuthenticationTest extends TestCase
 
     public function test_non_super_admin_cannot_access_user_management(): void
     {
-        $user = User::factory()->create(['role' => UserRole::User]);
+        $user = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
 
         $this->actingAs($user)->get('/users')->assertForbidden();
     }

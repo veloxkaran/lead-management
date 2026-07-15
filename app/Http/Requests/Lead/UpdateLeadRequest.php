@@ -19,6 +19,7 @@ class UpdateLeadRequest extends FormRequest
             'contact_person' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string'],
             'website' => ['nullable', 'string', 'max:255'],
             'industry' => ['nullable', 'string', 'max:255'],

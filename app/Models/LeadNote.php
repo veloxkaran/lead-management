@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,9 +11,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LeadNote extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
-    protected $fillable = ['lead_id', 'comment', 'author_id'];
+    protected $fillable = ['company_id', 'lead_id', 'comment', 'author_id'];
 
     public function lead(): BelongsTo
     {

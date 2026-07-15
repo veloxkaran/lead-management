@@ -28,7 +28,7 @@ class DailySummaryController extends Controller
         return view('daily-summaries.index', [
             'summaries' => $summaries,
             'filters' => $filters,
-            'users' => $request->user()->isSuperAdmin() ? User::orderBy('name')->get() : collect(),
+            'users' => $request->user()->isOverseer() ? User::orderBy('name')->get() : collect(),
         ]);
     }
 

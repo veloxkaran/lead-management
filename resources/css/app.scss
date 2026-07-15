@@ -26,6 +26,7 @@ $enable-shadows: false;
 // ---- Application shell ----
 :root {
     --sidebar-width: 260px;
+    --sidebar-width-collapsed: 72px;
     --topbar-height: 64px;
 }
 
@@ -46,9 +47,10 @@ body {
     position: fixed;
     inset-block: 0;
     left: 0;
+    overflow-x: hidden;
     overflow-y: auto;
     z-index: 1030;
-    transition: transform 0.2s ease-in-out;
+    transition: transform 0.2s ease-in-out, width 0.2s ease-in-out;
 }
 
 .app-sidebar .brand {
@@ -61,6 +63,7 @@ body {
     font-weight: 600;
     letter-spacing: 0.02em;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    white-space: nowrap;
 }
 
 .app-sidebar .nav-link {
@@ -71,6 +74,8 @@ body {
     gap: 0.65rem;
     font-size: 0.92rem;
     border-left: 3px solid transparent;
+    white-space: nowrap;
+    transition: padding 0.2s ease-in-out, justify-content 0.2s ease-in-out;
 }
 
 .app-sidebar .nav-link:hover {
@@ -98,6 +103,7 @@ body {
     min-width: 0;
     display: flex;
     flex-direction: column;
+    transition: margin-left 0.2s ease-in-out;
 }
 
 .app-topbar {
@@ -179,5 +185,492 @@ body {
 
     .app-main {
         margin-left: 0;
+    }
+}
+
+// ---- Collapsible sidebar (icon-rail), desktop only — the `sidebar-collapsed`
+// class lives on <html> (set by an inline script in layouts/app.blade.php
+// before paint, and toggled by resources/js/app.js) so it survives full page
+// loads without a flash of the expanded state.
+@media (min-width: 992px) {
+    html.sidebar-collapsed .app-sidebar {
+        width: var(--sidebar-width-collapsed);
+    }
+
+    html.sidebar-collapsed .app-main {
+        margin-left: var(--sidebar-width-collapsed);
+    }
+
+    html.sidebar-collapsed .app-sidebar .brand {
+        justify-content: center;
+        padding-inline: 0;
+    }
+
+    html.sidebar-collapsed .app-sidebar .brand span,
+    html.sidebar-collapsed .app-sidebar .nav-label,
+    html.sidebar-collapsed .app-sidebar .nav-section-title {
+        display: none;
+    }
+
+    html.sidebar-collapsed .app-sidebar .nav-link {
+        justify-content: center;
+        padding-inline: 0;
+        gap: 0;
+    }
+}
+
+// ---- Lead Walkthrough (story-style presentation) ----
+.immersive-body {
+    min-height: 100vh;
+    margin: 0;
+    background: radial-gradient(circle at top, lighten($dark, 12%), $dark 70%);
+    display: flex;
+    flex-direction: column;
+}
+
+.wt-stage {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem clamp(1rem, 6vw, 4rem);
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.wt-progress {
+    display: flex;
+    gap: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+.wt-segment {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.18);
+    overflow: hidden;
+}
+
+.wt-segment.is-done,
+.wt-segment.is-active {
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.wt-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 1.5rem;
+}
+
+.wt-close {
+    color: #fff;
+    opacity: 0.75;
+    font-size: 1.25rem;
+    line-height: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.wt-close:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+}
+
+.wt-card-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.wt-card {
+    width: min(640px, 100%);
+    background: #fff;
+    border-radius: $border-radius-lg;
+    box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.55);
+    padding: 2.5rem clamp(1.5rem, 4vw, 2.75rem);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.wt-card-accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+}
+
+.wt-icon-badge {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.65rem;
+    color: #fff;
+    margin-bottom: 1.25rem;
+}
+
+.wt-card h2 {
+    font-weight: 600;
+    font-size: 1.4rem;
+    margin-bottom: 0.35rem;
+}
+
+.wt-card .wt-subtitle {
+    color: $secondary;
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+}
+
+.wt-card .wt-body {
+    font-size: 0.98rem;
+    color: #33404f;
+    background: $light;
+    border-radius: $border-radius;
+    padding: 0.85rem 1.1rem;
+    text-align: left;
+    margin-bottom: 0.75rem;
+}
+
+.wt-card .wt-meta {
+    font-size: 0.8rem;
+    color: $secondary;
+}
+
+.wt-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.wt-btn {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    border-radius: 100px;
+    padding: 0.5rem 1.15rem;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.wt-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+}
+
+.wt-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.wt-btn-primary {
+    background: #fff;
+    color: $dark;
+    border-color: #fff;
+}
+
+.wt-btn-primary:hover {
+    background: rgba(255, 255, 255, 0.85);
+    color: $dark;
+}
+
+.wt-confetti-canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 20;
+}
+
+// Per-step-type enter animation — start state; end state is the shared "settled" transform below.
+.wt-in-greeting { opacity: 0; transform: scale(0.92); }
+.wt-in-status_change { opacity: 0; transform: translateX(70px); }
+.wt-in-activity { opacity: 0; transform: translateY(30px); }
+.wt-in-note { opacity: 0; transform: scale(0.86) rotate(-2deg); }
+.wt-in-requirement { opacity: 0; transform: translateY(30px); }
+.wt-in-follow_up { opacity: 0; transform: translateY(-24px); }
+.wt-in-deal_closure { opacity: 0; transform: scale(0.8); }
+.wt-in-closure { opacity: 0; transform: scale(0.85); }
+
+.wt-settled {
+    opacity: 1;
+    transform: none;
+}
+
+.wt-transition-enter {
+    transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wt-transition-leave {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.wt-leave-settled {
+    opacity: 1;
+    transform: none;
+}
+
+.wt-leave-out {
+    opacity: 0;
+    transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wt-transition-enter,
+    .wt-transition-leave {
+        transition-duration: 0.01ms !important;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// SOP / Job Description acknowledgment modal
+// ---------------------------------------------------------------------------
+
+[x-cloak] {
+    display: none !important;
+}
+
+.policy-ack-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1080;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.policy-ack-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.policy-ack-card {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    max-height: min(85vh, 900px);
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 1.25rem;
+    box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(15, 23, 42, 0.03);
+    overflow: hidden;
+}
+
+.policy-ack-card__header {
+    padding: 1.25rem 1.5rem 0.75rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.policy-ack-progress {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.policy-ack-progress__bar {
+    height: 100%;
+    background: linear-gradient(90deg, $primary, lighten($primary, 15%));
+    border-radius: 999px;
+    transition: width 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.policy-ack-card__body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+.policy-ack-card__body :first-child {
+    margin-top: 0;
+}
+
+.policy-ack-card__footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    background: rgba(255, 255, 255, 0.5);
+}
+
+// Scale + fade entrance for the whole card
+.policy-ack-enter {
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.policy-ack-enter-start {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+}
+
+.policy-ack-enter-end {
+    opacity: 1;
+    transform: none;
+}
+
+// Slide-between-steps transition for the body content
+.policy-ack-step-enter {
+    transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.policy-ack-step-enter-start {
+    opacity: 0;
+    transform: translateX(16px);
+}
+
+.policy-ack-step-enter-end {
+    opacity: 1;
+    transform: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    .policy-ack-backdrop {
+        background: rgba(2, 6, 23, 0.7);
+    }
+
+    .policy-ack-card {
+        background: rgba(22, 27, 39, 0.85);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #e2e8f0;
+    }
+
+    .policy-ack-card__header,
+    .policy-ack-card__footer {
+        border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .policy-ack-card__footer {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .policy-ack-progress {
+        background: rgba(255, 255, 255, 0.12);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .policy-ack-enter,
+    .policy-ack-step-enter,
+    .policy-ack-progress__bar {
+        transition-duration: 0.01ms !important;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Activity Feed dashboard widget
+// ---------------------------------------------------------------------------
+
+.activity-feed-list {
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.activity-feed-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.activity-feed-item:last-child {
+    border-bottom: none;
+}
+
+.activity-feed-item--clickable {
+    cursor: pointer;
+}
+
+.activity-feed-item--clickable:hover {
+    background: rgba(15, 23, 42, 0.03);
+}
+
+.activity-feed-avatar {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: $primary;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.activity-feed-body {
+    min-width: 0;
+    flex: 1;
+}
+
+.activity-feed-body > div {
+    word-break: break-word;
+}
+
+// New-item entrance animation (fade + slight slide-down)
+.activity-feed-item-enter {
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.activity-feed-item-enter-start {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+.activity-feed-item-enter-end {
+    opacity: 1;
+    transform: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    .activity-feed-widget.card {
+        background: rgba(22, 27, 39, 0.9);
+        color: #e2e8f0;
+    }
+
+    .activity-feed-widget .card-header,
+    .activity-feed-widget .card-footer {
+        background: rgba(22, 27, 39, 0.9) !important;
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #e2e8f0;
+    }
+
+    .activity-feed-item {
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .activity-feed-item--clickable:hover {
+        background: rgba(255, 255, 255, 0.04);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .activity-feed-item-enter {
+        transition-duration: 0.01ms !important;
     }
 }

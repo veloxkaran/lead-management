@@ -13,6 +13,13 @@ enum ActivityType: string
     case RequirementDiscussion = 'requirement_discussion';
     case ContractDiscussion = 'contract_discussion';
 
+    /**
+     * System-generated only — not offered in the manual "log an activity"
+     * form (see leads/_activities.blade.php), just the audit trail for
+     * Implementation Request create/update actions.
+     */
+    case ImplementationRequest = 'implementation_request';
+
     public function label(): string
     {
         return match ($this) {
@@ -24,6 +31,7 @@ enum ActivityType: string
             self::Proposal => 'Proposal',
             self::RequirementDiscussion => 'Requirement Discussion',
             self::ContractDiscussion => 'Contract Discussion',
+            self::ImplementationRequest => 'Implementation Request',
         };
     }
 
@@ -38,6 +46,7 @@ enum ActivityType: string
             self::Proposal => 'bi-file-earmark-text',
             self::RequirementDiscussion => 'bi-chat-left-text',
             self::ContractDiscussion => 'bi-file-earmark-ruled',
+            self::ImplementationRequest => 'bi-box-arrow-in-up-right',
         };
     }
 }

@@ -15,7 +15,7 @@
                 <a href="{{ route('meetings.index', ['scope' => 'mine']) }}" class="btn btn-outline-primary {{ $scope === 'mine' ? 'active' : '' }}">My Meetings</a>
                 <a href="{{ route('meetings.index', ['scope' => 'personal']) }}" class="btn btn-outline-primary {{ $scope === 'personal' ? 'active' : '' }}">Personal Only</a>
                 <a href="{{ route('meetings.index', ['scope' => 'team']) }}" class="btn btn-outline-primary {{ $scope === 'team' ? 'active' : '' }}">Team Meetings</a>
-                @if (auth()->user()->isSuperAdmin())
+                @if (auth()->user()->isOverseer())
                     <a href="{{ route('meetings.index', ['scope' => 'all']) }}" class="btn btn-outline-primary {{ $scope === 'all' ? 'active' : '' }}">All Meetings</a>
                 @endif
             </div>

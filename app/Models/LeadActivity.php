@@ -3,16 +3,17 @@
 namespace App\Models;
 
 use App\Enums\ActivityType;
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LeadActivity extends Model
 {
-    use HasFactory;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
-        'lead_id', 'activity_type', 'activity_date', 'activity_time', 'description', 'created_by',
+        'company_id', 'lead_id', 'activity_type', 'activity_date', 'activity_time', 'description', 'created_by',
     ];
 
     protected function casts(): array

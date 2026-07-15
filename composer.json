@@ -9,10 +9,12 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
         "guzzlehttp/guzzle": "^7.13",
+        "jenssegers/agent": "^2.6",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "^3.1",
+        "mews/purifier": "^3.4",
         "yajra/laravel-datatables-oracle": "^12.7"
     },
     "require-dev": {

@@ -11,3 +11,4 @@ Artisan::command('inspire', function () {
 Schedule::command('follow-ups:send-reminders')->everyFiveMinutes();
 Schedule::command('goals:reset-monthly')->dailyAt('00:10');
 Schedule::command('slack:daily-summary')->dailyAt('18:00');
+Schedule::command('db:backup')->hourly();

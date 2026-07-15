@@ -8,15 +8,20 @@
         <label class="form-label small fw-semibold">Contact Person *</label>
         <input type="text" name="contact_person" value="{{ old('contact_person', $lead->contact_person ?? '') }}" class="form-control" required>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <label class="form-label small fw-semibold">Email</label>
         <input type="email" name="email" value="{{ old('email', $lead->email ?? '') }}" class="form-control">
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <label class="form-label small fw-semibold">Phone</label>
         <input type="text" name="phone" value="{{ old('phone', $lead->phone ?? '') }}" class="form-control">
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+        <label class="form-label small fw-semibold">WhatsApp Number</label>
+        <input type="text" name="whatsapp_number" value="{{ old('whatsapp_number', $lead->whatsapp_number ?? '') }}" class="form-control" placeholder="15551234567">
+        <div class="form-text">Include country code, no + or spaces.</div>
+    </div>
+    <div class="col-md-3">
         <label class="form-label small fw-semibold">Website</label>
         <input type="text" name="website" value="{{ old('website', $lead->website ?? '') }}" class="form-control">
     </div>

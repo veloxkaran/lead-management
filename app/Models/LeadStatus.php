@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LeadStatus extends Model
 {
-    use HasFactory;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
-        'name', 'slug', 'color', 'order', 'is_default', 'is_closed_won', 'is_closed_lost', 'is_achievement',
+        'company_id', 'name', 'slug', 'color', 'order', 'is_default', 'is_closed_won', 'is_closed_lost', 'is_achievement',
     ];
 
     protected function casts(): array

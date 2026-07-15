@@ -15,14 +15,14 @@ class GoalRepository extends BaseRepository
     }
 
     /**
-     * Filter goals, scoping visibility for non-super-admin viewers to:
+     * Filter goals, scoping visibility for non-overseer viewers to:
      * all Organization goals, their own Team's goals, and their own Individual goals.
      */
     public function filter(array $filters, ?User $viewer = null, int $perPage = 15): LengthAwarePaginator
     {
         $query = $this->query()->with(['team', 'user', 'creator']);
 
-        if ($viewer && ! $viewer->isSuperAdmin()) {
+        if ($viewer && ! $viewer->isOverseer()) {
             $query->where(function ($q) use ($viewer) {
                 $q->where('goal_type', GoalType::Organization->value)
                     ->orWhere(function ($q2) use ($viewer) {

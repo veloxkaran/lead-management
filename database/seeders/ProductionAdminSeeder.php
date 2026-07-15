@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Models\Company;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -28,6 +29,11 @@ class ProductionAdminSeeder extends Seeder
             $generated = true;
         }
 
+        $company = Company::firstOrCreate(
+            ['slug' => 'default'],
+            ['name' => config('app.name', 'Default Company'), 'status' => 'active', 'fiscal_calendar' => 'bikram_sambat']
+        );
+
         User::updateOrCreate(
             ['email' => $email],
             [
@@ -37,6 +43,7 @@ class ProductionAdminSeeder extends Seeder
                 'status' => UserStatus::Active,
                 'department' => 'Management',
                 'designation' => 'Super Admin',
+                'company_id' => $company->id,
                 'email_verified_at' => now(),
             ]
         );

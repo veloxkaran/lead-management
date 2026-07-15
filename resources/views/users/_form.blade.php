@@ -14,7 +14,12 @@
     </div>
     <div class="col-md-4">
         <label class="form-label small fw-semibold">Department</label>
-        <input type="text" name="department" value="{{ old('department', $user->department ?? '') }}" class="form-control">
+        <select name="department_id" class="form-select" data-select2>
+            <option value="">No department</option>
+            @foreach ($departments as $department)
+                <option value="{{ $department->id }}" @selected(old('department_id', $user->department_id ?? '') == $department->id)>{{ $department->name }}</option>
+            @endforeach
+        </select>
     </div>
     <div class="col-md-4">
         <label class="form-label small fw-semibold">Designation</label>
@@ -24,7 +29,7 @@
         <label class="form-label small fw-semibold">Role *</label>
         <select name="role" class="form-select" required>
             @foreach ($roles as $role)
-                <option value="{{ $role->value }}" @selected(old('role', $user->role->value ?? 'user') === $role->value)>{{ $role->label() }}</option>
+                <option value="{{ $role->value }}" @selected(old('role', $user->role->value ?? 'business_development') === $role->value)>{{ $role->label() }}</option>
             @endforeach
         </select>
     </div>

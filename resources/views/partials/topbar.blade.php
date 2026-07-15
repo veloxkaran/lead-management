@@ -7,6 +7,9 @@
         <button id="sidebarToggle" class="btn btn-sm btn-outline-secondary d-lg-none" type="button">
             <i class="bi bi-list"></i>
         </button>
+        <button id="sidebarCollapseToggle" class="btn btn-sm btn-outline-secondary d-none d-lg-inline-flex" type="button" title="Toggle sidebar">
+            <i class="bi bi-layout-sidebar-inset"></i>
+        </button>
         <h2 class="h6 mb-0 text-muted">@yield('title')</h2>
     </div>
     <div class="d-flex align-items-center gap-3">
@@ -33,9 +36,7 @@
         </div>
         <div class="dropdown">
             <button class="btn btn-sm btn-light d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
-                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white" style="width:28px;height:28px;font-size:0.8rem;">
-                    {{ strtoupper(substr($user->name ?? '?', 0, 1)) }}
-                </span>
+                <x-user-avatar :user="$user" :size="28" />
                 <span class="small fw-semibold d-none d-sm-inline">{{ $user->name }}</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">

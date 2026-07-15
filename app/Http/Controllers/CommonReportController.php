@@ -13,7 +13,7 @@ class CommonReportController extends Controller
     {
         $user = $request->user();
 
-        $goals = $user->isSuperAdmin()
+        $goals = $user->isOverseer()
             ? Goal::with(['team', 'user'])->latest()->get()
             : Goal::where(function ($q) use ($user) {
                 $q->where('goal_type', GoalType::Organization)
@@ -29,7 +29,7 @@ class CommonReportController extends Controller
         $user = $request->user();
 
         $goals = Goal::where('goal_type', GoalType::Team)
-            ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('team_id', $user->team_id))
+            ->when(! $user->isOverseer(), fn ($q) => $q->where('team_id', $user->team_id))
             ->with('team')->latest()->get()
             ->groupBy(fn (Goal $g) => $g->team?->name ?? 'Unassigned');
 

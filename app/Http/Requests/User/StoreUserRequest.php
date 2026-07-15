@@ -21,7 +21,7 @@ class StoreUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'department' => ['nullable', 'string', 'max:255'],
+            'department_id' => ['nullable', 'exists:departments,id'],
             'designation' => ['nullable', 'string', 'max:255'],
             'role' => ['required', new Enum(UserRole::class)],
             'status' => ['required', new Enum(UserStatus::class)],

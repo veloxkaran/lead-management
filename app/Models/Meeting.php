@@ -2,16 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Meeting extends Model
 {
-    use HasFactory;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
-        'title', 'meeting_date', 'meeting_time', 'meeting_link', 'participants', 'team_id', 'created_by',
+        'company_id', 'title', 'meeting_date', 'meeting_time', 'meeting_link', 'participants', 'team_id', 'created_by',
     ];
 
     protected function casts(): array

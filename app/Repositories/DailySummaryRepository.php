@@ -17,7 +17,7 @@ class DailySummaryRepository extends BaseRepository
     {
         $query = $this->query()->with('user');
 
-        if (! $viewer->isSuperAdmin()) {
+        if (! $viewer->isOverseer()) {
             $query->where('user_id', $viewer->id);
         } elseif (! empty($filters['user_id'])) {
             $query->where('user_id', $filters['user_id']);

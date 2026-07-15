@@ -5,6 +5,7 @@
 @section('content')
     <x-page-header :title="$lead->company_name" icon="bi-building" :subtitle="$lead->industry">
         <x-slot:actions>
+            <a href="{{ route('leads.walkthrough', $lead) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-stars"></i> Walkthrough</a>
             @can('update', $lead)
                 <a href="{{ route('leads.edit', $lead) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
             @endcan
@@ -27,6 +28,17 @@
                         <dt class="col-5 text-muted">Contact</dt><dd class="col-7">{{ $lead->contact_person }}</dd>
                         <dt class="col-5 text-muted">Email</dt><dd class="col-7">{{ $lead->email ?: '—' }}</dd>
                         <dt class="col-5 text-muted">Phone</dt><dd class="col-7">{{ $lead->phone ?: '—' }}</dd>
+                        <dt class="col-5 text-muted">WhatsApp</dt>
+                        <dd class="col-7">
+                            @if ($lead->whatsapp_number)
+                                <i class="bi bi-whatsapp text-success"></i> {{ $lead->whatsapp_number }}
+                                @can('chatWhatsapp', $lead)
+                                    <a href="{{ route('whatsapp.show', $lead) }}" class="small ms-1">Chat</a>
+                                @endcan
+                            @else
+                                —
+                            @endif
+                        </dd>
                         <dt class="col-5 text-muted">Website</dt><dd class="col-7">{{ $lead->website ?: '—' }}</dd>
                         <dt class="col-5 text-muted">Address</dt><dd class="col-7">{{ $lead->address ?: '—' }}</dd>
                         <dt class="col-5 text-muted">Employees</dt><dd class="col-7">{{ $lead->number_of_employees ?: '—' }}</dd>

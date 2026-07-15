@@ -25,7 +25,15 @@ class LeadController extends Controller
     {
         $this->authorize('viewAny', Lead::class);
 
-        $leads = $this->leadService->list($request->only(['search', 'status_id', 'assigned_user_id', 'source', 'archived']));
+        $filters = $request->only(['search', 'status_id', 'assigned_user_id', 'source', 'archived']);
+
+        // Business Development only ever works their own leads; Manager and
+        // Super Admin see the full pipeline.
+        if ($request->user()->isBusinessDevelopment()) {
+            $filters['assigned_user_id'] = $request->user()->id;
+        }
+
+        $leads = $this->leadService->list($filters);
 
         return view('leads.index', [
             'leads' => $leads,
@@ -67,15 +75,34 @@ class LeadController extends Controller
             'lead' => $lead,
             'statuses' => LeadStatus::ordered()->get(),
             'users' => User::orderBy('name')->get(),
-            'activityTypes' => ActivityType::cases(),
+            'activityTypes' => array_values(array_filter(ActivityType::cases(), fn (ActivityType $type) => $type !== ActivityType::ImplementationRequest)),
             'reminderTypes' => ReminderType::cases(),
             'priorities' => RequirementPriority::cases(),
+        ]);
+    }
+
+    public function walkthrough(Lead $lead): View
+    {
+        $this->authorize('view', $lead);
+
+        $lead->load([
+            'assignedUser', 'status', 'dealClosure',
+            'activities.creator', 'notes.author', 'notes.attachments',
+            'followUps.creator', 'requirements.assignee', 'requirements.creator',
+            'statusHistories.fromStatus', 'statusHistories.toStatus', 'statusHistories.changedBy',
+        ]);
+
+        return view('leads.walkthrough', [
+            'lead' => $lead,
+            'steps' => \App\Support\LeadWalkthrough::build($lead),
         ]);
     }
 
     public function edit(Lead $lead): View
     {
         $this->authorize('update', $lead);
+
+        $lead->load('whatsappUsers');
 
         return view('leads.edit', [
             'lead' => $lead,

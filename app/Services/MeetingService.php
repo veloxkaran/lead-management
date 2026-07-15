@@ -14,14 +14,14 @@ class MeetingService
     }
 
     /**
-     * Scope options: "mine" (default: personal + team), "personal", "team", "all" (super admin only).
+     * Scope options: "mine" (default: personal + team), "personal", "team", "all" (Manager/Super Admin only).
      */
     public function list(User $user, string $scope = 'mine', int $perPage = 15): LengthAwarePaginator
     {
         $query = $this->meetings->query()->with(['team', 'creator']);
 
-        if ($scope === 'all' && $user->isSuperAdmin()) {
-            // No additional constraint — super admin sees every meeting.
+        if ($scope === 'all' && $user->isOverseer()) {
+            // No additional constraint — overseers see every meeting.
         } elseif ($scope === 'team') {
             $query->where('team_id', $user->team_id);
         } elseif ($scope === 'personal') {

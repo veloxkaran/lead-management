@@ -3,16 +3,17 @@
 namespace App\Models;
 
 use App\Enums\GoalType;
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Goal extends Model
 {
-    use HasFactory;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
-        'title', 'target', 'achieved', 'goal_type', 'team_id', 'user_id',
+        'company_id', 'title', 'target', 'achieved', 'goal_type', 'team_id', 'user_id',
         'start_date', 'end_date', 'bs_year', 'bs_month', 'created_by',
     ];
 

@@ -2,15 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class KnowledgeBaseTag extends Model
 {
-    use HasFactory;
+    use BelongsToCompany, HasFactory;
 
-    protected $fillable = ['name', 'slug'];
+    protected $fillable = ['company_id', 'name', 'slug'];
 
     public function items(): BelongsToMany
     {
