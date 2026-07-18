@@ -14,7 +14,13 @@ class ManagerLeadVisibilityTest extends TestCase
 
     public function test_manager_sees_leads_assigned_to_other_reps_in_the_index(): void
     {
+        // A direct report makes $manager an overseer (hierarchy-derived, no
+        // Manager-role flag involved) — repA/repB are deliberately NOT in
+        // $manager's chain, so seeing their leads proves the company-wide
+        // overseer bypass, not just hierarchy-scoped visibility (already
+        // covered by LeadHierarchyVisibilityTest).
         $manager = User::factory()->create(['role' => UserRole::Manager]);
+        User::factory()->create(['reporting_manager_id' => $manager->id]);
         $repA = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
         $repB = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
         Lead::factory()->create(['assigned_user_id' => $repA->id, 'created_by' => $repA->id]);
@@ -29,6 +35,7 @@ class ManagerLeadVisibilityTest extends TestCase
     public function test_manager_can_view_and_update_a_lead_assigned_to_someone_else(): void
     {
         $manager = User::factory()->create(['role' => UserRole::Manager]);
+        User::factory()->create(['reporting_manager_id' => $manager->id]);
         $rep = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
         $lead = Lead::factory()->create(['assigned_user_id' => $rep->id, 'created_by' => $rep->id]);
 

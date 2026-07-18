@@ -62,6 +62,7 @@ class TeamActivitiesTest extends TestCase
     {
         $company = Company::factory()->create();
         $manager = User::factory()->create(['company_id' => $company->id, 'role' => UserRole::Manager]);
+        User::factory()->create(['company_id' => $company->id, 'reporting_manager_id' => $manager->id]);
         $repOne = User::factory()->create(['company_id' => $company->id, 'role' => UserRole::BusinessDevelopment]);
         $repTwo = User::factory()->create(['company_id' => $company->id, 'role' => UserRole::BusinessDevelopment]);
 

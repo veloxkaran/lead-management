@@ -20,6 +20,7 @@ class ManagerOversightTest extends TestCase
     public function test_manager_can_access_the_full_reports_suite(): void
     {
         $manager = User::factory()->create(['role' => UserRole::Manager]);
+        User::factory()->create(['reporting_manager_id' => $manager->id]);
 
         $this->actingAs($manager)->get(route('reports.index'))->assertOk();
         $this->actingAs($manager)->get(route('reports.master'))->assertOk();
@@ -36,7 +37,7 @@ class ManagerOversightTest extends TestCase
     public function test_manager_sees_every_users_activities_not_just_their_own(): void
     {
         $manager = User::factory()->create(['role' => UserRole::Manager]);
-        $other = User::factory()->create();
+        $other = User::factory()->create(['reporting_manager_id' => $manager->id]);
         $lead = Lead::factory()->create(['assigned_user_id' => $other->id, 'created_by' => $other->id]);
         LeadActivity::factory()->create([
             'lead_id' => $lead->id,
@@ -53,7 +54,7 @@ class ManagerOversightTest extends TestCase
     public function test_manager_sees_every_users_follow_ups(): void
     {
         $manager = User::factory()->create(['role' => UserRole::Manager]);
-        $other = User::factory()->create();
+        $other = User::factory()->create(['reporting_manager_id' => $manager->id]);
         $lead = Lead::factory()->create(['assigned_user_id' => $other->id, 'created_by' => $other->id]);
         FollowUp::factory()->create([
             'lead_id' => $lead->id,
@@ -70,7 +71,7 @@ class ManagerOversightTest extends TestCase
     public function test_manager_can_use_the_all_meetings_scope(): void
     {
         $manager = User::factory()->create(['role' => UserRole::Manager]);
-        $other = User::factory()->create();
+        $other = User::factory()->create(['reporting_manager_id' => $manager->id]);
         Meeting::factory()->create(['created_by' => $other->id]);
 
         $response = $this->actingAs($manager)->get(route('meetings.index', ['scope' => 'all']));

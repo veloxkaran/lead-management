@@ -39,6 +39,17 @@ class OrganizationHierarchyService
      * changes anywhere in the chain, so staleness is bounded by that event,
      * not by the TTL, in the common case.
      *
+     * Returns via ->values(): the array cache driver (used in tests) hands
+     * back the exact same Collection object on every read, not a copy —
+     * without this, a caller doing ->push($viewer->id) on the result (a
+     * common idiom for "subordinates plus self") would mutate the cached
+     * collection in place, permanently corrupting it for every subsequent
+     * read of that key. ->values() returns a fresh Collection instance
+     * wrapping a fresh array, so callers can safely mutate what they get
+     * back. Harmless in production (the database cache driver
+     * serializes/deserializes on every read, so this was never reachable
+     * there) but a real bug under the array driver.
+     *
      * @return Collection<int, int>
      */
     public function getAllSubordinateIds(User $manager): Collection
@@ -47,7 +58,16 @@ class OrganizationHierarchyService
             "org_hierarchy:subordinate_ids:{$manager->id}",
             now()->addMinutes(10),
             fn () => $this->hierarchy->getAllSubordinateIds($manager->id)
-        );
+        )->values();
+    }
+
+    /**
+     * Purely factual — does $user have any direct or indirect report? No
+     * SuperAdmin special-casing here (that's isOverseer()'s job).
+     */
+    public function hasSubordinates(User $user): bool
+    {
+        return $this->getAllSubordinateIds($user)->isNotEmpty();
     }
 
     /**

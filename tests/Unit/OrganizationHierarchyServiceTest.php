@@ -62,8 +62,9 @@ class OrganizationHierarchyServiceTest extends TestCase
         $this->assertEqualsCanonicalizing([$a->id, $b->id, $c->id, $d->id], $visibleToA->all());
         $this->assertFalse($visibleToA->contains($otherCompanyUser->id));
 
-        // B (non-overseer with reports): self + recursive subordinates only.
-        $this->assertEqualsCanonicalizing([$b->id, $c->id, $d->id], $service->visibleUserIds($b)->all());
+        // B (has reports, so is now an overseer too — hierarchy-derived, no
+        // Manager role needed): company-wide, same as A.
+        $this->assertEqualsCanonicalizing([$a->id, $b->id, $c->id, $d->id], $service->visibleUserIds($b)->all());
 
         // D (leaf IC): only self.
         $this->assertEqualsCanonicalizing([$d->id], $service->visibleUserIds($d)->all());

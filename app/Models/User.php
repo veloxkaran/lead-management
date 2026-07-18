@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Services\OrganizationHierarchyService;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -76,14 +77,16 @@ class User extends Authenticatable
     }
 
     /**
-     * Super Admin keeps exclusive control of configuration (users, roles,
-     * lead statuses, settings); Manager gets the same company-wide view
-     * everywhere else — reports, tracking lists, dashboards — so this is
-     * the check for "sees everything" rather than "can configure anything".
+     * "Sees everything" (reports, tracking lists, dashboards) rather than
+     * "can configure anything" (Super Admin keeps exclusive control of
+     * configuration — users, lead statuses, settings). Hierarchy-derived,
+     * not role-derived: a user becomes an overseer simply by having any
+     * direct or indirect report, per OrganizationHierarchyService — no
+     * separate "Manager" role is checked here.
      */
     public function isOverseer(): bool
     {
-        return $this->isSuperAdmin() || $this->isManager();
+        return $this->isSuperAdmin() || app(OrganizationHierarchyService::class)->hasSubordinates($this);
     }
 
     public function isActive(): bool
@@ -170,11 +173,6 @@ class User extends Authenticatable
     public function assignedRequirements(): HasMany
     {
         return $this->hasMany(Requirement::class, 'assigned_to');
-    }
-
-    public function goals(): HasMany
-    {
-        return $this->hasMany(Goal::class);
     }
 
     public function whatsappLeads(): BelongsToMany
