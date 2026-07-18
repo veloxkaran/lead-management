@@ -83,7 +83,14 @@
                     <div class="d-flex justify-content-between mb-2"><span>Due Today</span><span class="badge bg-warning text-dark">{{ $reminderSummary['today'] }}</span></div>
                     <div class="d-flex justify-content-between mb-2"><span>Overdue</span><span class="badge bg-danger">{{ $reminderSummary['overdue'] }}</span></div>
                     <hr>
-                    <div class="d-flex justify-content-between"><span>Daily Summaries Submitted Today</span><span class="badge bg-success">{{ $productivity['submitted'] }}/{{ $productivity['total'] }}</span></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Daily Summaries Submitted Today</span><span class="badge bg-success">{{ $productivity['submitted'] }}/{{ $productivity['total'] }}</span></div>
+                    <hr>
+                    @if ($sopStats['active_count'] === 0)
+                        <div class="d-flex justify-content-between"><span>SOPs</span><span class="text-muted small">No SOPs Configured</span></div>
+                    @else
+                        <div class="d-flex justify-content-between"><span>Active SOPs</span><span class="badge bg-primary">{{ $sopStats['active_count'] }}</span></div>
+                        <div class="d-flex justify-content-between mt-2"><span>Acknowledged</span><span class="badge bg-success">{{ $sopStats['rate'] }}%</span></div>
+                    @endif
                 </div>
             </div>
         </div>

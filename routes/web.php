@@ -152,6 +152,7 @@ Route::middleware('auth')->group(function () {
     // available to any authenticated user regardless of role (an IC with no
     // direct reports just sees an empty state, per OrganizationHierarchyPolicy).
     Route::get('team', [TeamController::class, 'index'])->name('team.index');
+    Route::get('team/activities', [TeamController::class, 'activities'])->name('team.activities');
     Route::get('org-tree', [OrgTreeController::class, 'index'])->name('org-tree.index');
 
     // Manager and Super Admin — full reporting suite, company-wide.

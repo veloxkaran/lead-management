@@ -85,8 +85,11 @@
         <a href="{{ route('daily-summaries.index') }}" class="nav-link {{ request()->routeIs('daily-summaries.*') ? 'active' : '' }}" title="Daily Summary" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-journal-text"></i> <span class="nav-label">Daily Summary</span>
         </a>
-        <a href="{{ route('team.index') }}" class="nav-link {{ request()->routeIs('team.*') ? 'active' : '' }}" title="My Team" data-bs-toggle="tooltip" data-bs-placement="right">
+        <a href="{{ route('team.index') }}" class="nav-link {{ request()->routeIs('team.index') ? 'active' : '' }}" title="My Team" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-people-fill"></i> <span class="nav-label">My Team</span>
+        </a>
+        <a href="{{ route('team.activities') }}" class="nav-link {{ request()->routeIs('team.activities') ? 'active' : '' }}" title="Team Activities" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-clock-history"></i> <span class="nav-label">Team Activities</span>
         </a>
         @can('viewOrgTree')
             <a href="{{ route('org-tree.index') }}" class="nav-link {{ request()->routeIs('org-tree.*') ? 'active' : '' }}" title="Organization Tree" data-bs-toggle="tooltip" data-bs-placement="right">

@@ -8,9 +8,7 @@ use App\Services\OrganizationHierarchyService;
 
 class LeadPolicy
 {
-    public function __construct(protected OrganizationHierarchyService $hierarchy)
-    {
-    }
+    public function __construct(protected OrganizationHierarchyService $hierarchy) {}
 
     public function viewAny(User $user): bool
     {
@@ -81,10 +79,24 @@ class LeadPolicy
                 && $this->hierarchy->getAllSubordinateIds($user)->contains($lead->assigned_user_id));
     }
 
+    /**
+     * True for the literal owner/creator or an overseer (unchanged), or for
+     * anyone whose reporting hierarchy (direct + indirect reports) includes
+     * the lead's assignee or creator — e.g. a senior rep whose junior report
+     * created or is working the lead.
+     */
     private function isOwnerOrOverseer(User $user, Lead $lead): bool
     {
-        return $user->isOverseer()
-            || $lead->assigned_user_id === $user->id || $lead->created_by === $user->id;
+        if ($user->isOverseer()
+            || $lead->assigned_user_id === $user->id
+            || $lead->created_by === $user->id) {
+            return true;
+        }
+
+        $subordinateIds = $this->hierarchy->getAllSubordinateIds($user);
+
+        return $subordinateIds->contains($lead->assigned_user_id)
+            || $subordinateIds->contains($lead->created_by);
     }
 
     /**

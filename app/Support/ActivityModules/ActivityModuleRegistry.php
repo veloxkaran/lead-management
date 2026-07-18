@@ -9,6 +9,7 @@ use App\Models\FollowUp;
 use App\Models\Goal;
 use App\Models\KnowledgeBaseItem;
 use App\Models\Lead;
+use App\Models\LeadNote;
 use App\Models\LeadStatusHistory;
 use App\Models\Meeting;
 use App\Models\PolicyDocument;
@@ -139,6 +140,12 @@ class ActivityModuleRegistry
                 ActivityModule::Email, 'Email Accounts', 'bi-envelope-at',
                 fn (Model $subject, User $viewer) => self::linkFor($subject, $viewer, 'view', fn ($a) => route('email-accounts.edit', $a)),
             ),
+            new ActivityModuleDefinition(
+                ActivityModule::Note, 'Notes', 'bi-sticky',
+                function (Model $subject, User $viewer): array {
+                    return self::linkFor($subject->lead, $viewer, 'view', fn (Lead $lead) => route('leads.show', $lead));
+                },
+            ),
         ];
     }
 
@@ -208,11 +215,17 @@ class ActivityModuleRegistry
                 fn (EmailAccount $account) => "connected an email account: {$account->email_address}",
                 fn (EmailAccount $account) => $account->user_id,
             ),
+            new ActivityLoggingRegistration(
+                LeadNote::class, ActivityModule::Note,
+                fn (LeadNote $note) => "added a note on {$note->lead->company_name}",
+                fn (LeadNote $note) => $note->author_id,
+            ),
         ];
     }
 
     /**
      * @template TModel of Model
+     *
      * @param  TModel|null  $target
      * @param  callable(TModel): string  $routeBuilder
      * @return array{can_view: bool, url: string|null}

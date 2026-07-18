@@ -5,9 +5,11 @@ namespace Tests\Feature;
 use App\Enums\ActivityModule;
 use App\Enums\WhatsappMessageDirection;
 use App\Models\Lead;
+use App\Models\LeadNote;
 use App\Models\PolicyDocument;
 use App\Models\Requirement;
 use App\Models\User;
+use App\Models\WhatsappMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -77,7 +79,7 @@ class ActivityLoggingTest extends TestCase
         ]);
 
         $this->assertDatabaseMissing('activity_log_entries', [
-            'subject_type' => \App\Models\WhatsappMessage::class,
+            'subject_type' => WhatsappMessage::class,
             'subject_id' => $message->id,
         ]);
     }
@@ -100,6 +102,21 @@ class ActivityLoggingTest extends TestCase
             'user_id' => $user->id,
             'subject_id' => $version->id,
             'description' => 'published SOP: Fire Safety SOP (v1.0)',
+        ]);
+    }
+
+    public function test_adding_a_lead_note_logs_an_activity(): void
+    {
+        $user = User::factory()->create();
+        $lead = Lead::factory()->create(['company_name' => 'Acme Corp']);
+        $note = LeadNote::factory()->create(['lead_id' => $lead->id, 'author_id' => $user->id]);
+
+        $this->assertDatabaseHas('activity_log_entries', [
+            'module' => ActivityModule::Note->value,
+            'user_id' => $user->id,
+            'subject_type' => LeadNote::class,
+            'subject_id' => $note->id,
+            'description' => 'added a note on Acme Corp',
         ]);
     }
 }

@@ -3,7 +3,13 @@
 @section('title', 'My Team')
 
 @section('content')
-    <x-page-header title="My Team" icon="bi-people-fill" subtitle="Your reporting hierarchy — direct and indirect team members." />
+    <x-page-header title="My Team" icon="bi-people-fill" subtitle="Your reporting hierarchy — direct and indirect team members.">
+        <x-slot:actions>
+            <a href="{{ route('team.activities') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-clock-history"></i> Team Activities
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-header bg-white fw-semibold">

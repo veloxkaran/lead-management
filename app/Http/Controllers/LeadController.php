@@ -11,6 +11,7 @@ use App\Models\Lead;
 use App\Models\LeadStatus;
 use App\Models\User;
 use App\Services\LeadService;
+use App\Services\OrganizationHierarchyService;
 use App\Support\LeadWalkthrough;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,10 @@ use Illuminate\View\View;
 
 class LeadController extends Controller
 {
-    public function __construct(protected LeadService $leadService) {}
+    public function __construct(
+        protected LeadService $leadService,
+        protected OrganizationHierarchyService $hierarchy,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -26,10 +30,13 @@ class LeadController extends Controller
 
         $filters = $request->only(['search', 'status_id', 'assigned_user_id', 'source', 'archived']);
 
-        // Business Development only ever works their own leads; Manager and
-        // Super Admin see the full pipeline.
-        if ($request->user()->isBusinessDevelopment()) {
-            $filters['assigned_user_id'] = $request->user()->id;
+        // Manager and Super Admin see the full pipeline; everyone else sees
+        // leads assigned to or created by anyone in their reporting
+        // hierarchy (direct + indirect reports) plus their own.
+        if (! $request->user()->isOverseer()) {
+            $filters['visible_user_ids'] = $this->hierarchy->getAllSubordinateIds($request->user())
+                ->push($request->user()->id)
+                ->all();
         }
 
         $leads = $this->leadService->list($filters);
