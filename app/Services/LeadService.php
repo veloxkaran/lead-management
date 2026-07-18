@@ -13,7 +13,8 @@ class LeadService
 {
     public function __construct(
         protected LeadRepositoryInterface $leads,
-        protected GoalAchievementService $goalAchievements,
+        protected LeadAchievementService $leadAchievements,
+        protected GoalContributionService $goalContributions,
     ) {}
 
     public function list(array $filters, int $perPage = 15): LengthAwarePaginator
@@ -38,9 +39,7 @@ class LeadService
                     'changed_at' => now(),
                 ]);
 
-                $this->goalAchievements->applyStatusToLead($lead, LeadStatus::find($lead->lead_status_id));
-            } else {
-                $this->goalAchievements->syncForLead($lead);
+                $this->leadAchievements->applyStatusToLead($lead, LeadStatus::find($lead->lead_status_id));
             }
 
             return $lead;
@@ -49,15 +48,7 @@ class LeadService
 
     public function update(Lead $lead, array $attributes): Lead
     {
-        return DB::transaction(function () use ($lead, $attributes) {
-            $previousAssignedUserId = $lead->assigned_user_id;
-
-            $lead = $this->leads->update($lead, $attributes);
-
-            $this->goalAchievements->syncForLead($lead, $previousAssignedUserId);
-
-            return $lead;
-        });
+        return $this->leads->update($lead, $attributes);
     }
 
     public function changeStatus(Lead $lead, int $newStatusId, User $changedBy): Lead
@@ -82,7 +73,7 @@ class LeadService
 
             $lead->update(['lead_status_id' => $newStatusId]);
 
-            $this->goalAchievements->applyStatusToLead($lead, LeadStatus::find($newStatusId));
+            $this->leadAchievements->applyStatusToLead($lead, LeadStatus::find($newStatusId));
 
             return $lead->refresh();
         });
@@ -101,12 +92,14 @@ class LeadService
     public function close(Lead $lead, array $attributes, User $closedBy): Lead
     {
         return DB::transaction(function () use ($lead, $attributes, $closedBy) {
-            $lead->dealClosure()->updateOrCreate([], [
+            $dealClosure = $lead->dealClosure()->updateOrCreate([], [
                 'closed_by' => $closedBy->id,
                 'closed_date' => $attributes['closed_date'],
                 'deal_value' => $attributes['deal_value'],
                 'closing_comment' => $attributes['closing_comment'] ?? null,
             ]);
+
+            $this->goalContributions->recordForDealClosure($dealClosure);
 
             $convertedStatusId = LeadStatus::where('slug', 'converted-to-customer')->value('id');
 

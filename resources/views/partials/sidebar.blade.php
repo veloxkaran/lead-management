@@ -28,8 +28,11 @@
             <a href="{{ route('follow-ups.index') }}" class="nav-link {{ request()->routeIs('follow-ups.*') ? 'active' : '' }}" title="Follow Ups" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-bell"></i> <span class="nav-label">Follow Ups</span>
             </a>
-            <a href="{{ route('goals.index') }}" class="nav-link {{ request()->routeIs('goals.*') ? 'active' : '' }}" title="Goals" data-bs-toggle="tooltip" data-bs-placement="right">
+            <a href="{{ route('goals.index') }}" class="nav-link {{ request()->routeIs('goals.index') || request()->routeIs('goals.show') || request()->routeIs('goals.create') || request()->routeIs('goals.edit') ? 'active' : '' }}" title="Goals" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-bullseye"></i> <span class="nav-label">Goals</span>
+            </a>
+            <a href="{{ route('goals.leaderboard') }}" class="nav-link {{ request()->routeIs('goals.leaderboard') ? 'active' : '' }}" title="Goals Leaderboard" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-trophy"></i> <span class="nav-label">Goals Leaderboard</span>
             </a>
             <a href="{{ route('meetings.index') }}" class="nav-link {{ request()->routeIs('meetings.*') ? 'active' : '' }}" title="Google Meet" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-camera-video"></i> <span class="nav-label">Google Meet</span>
@@ -101,7 +104,7 @@
                 <i class="bi bi-bar-chart-line"></i> <span class="nav-label">Reports</span>
             </a>
         @else
-            <a href="{{ route('common-reports.personal-achievement') }}" class="nav-link {{ request()->routeIs('common-reports.*') ? 'active' : '' }}" title="Reports" data-bs-toggle="tooltip" data-bs-placement="right">
+            <a href="{{ route('common-reports.my-contributions') }}" class="nav-link {{ request()->routeIs('common-reports.*') ? 'active' : '' }}" title="Reports" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-bar-chart-line"></i> <span class="nav-label">Reports</span>
             </a>
         @endif

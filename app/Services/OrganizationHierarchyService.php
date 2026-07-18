@@ -2,11 +2,9 @@
 
 namespace App\Services;
 
-use App\Enums\GoalType;
 use App\Models\ActivityLogEntry;
 use App\Models\DailySummary;
 use App\Models\DealClosure;
-use App\Models\Goal;
 use App\Models\User;
 use App\Repositories\UserHierarchyRepository;
 use Illuminate\Support\Collection;
@@ -127,17 +125,17 @@ class OrganizationHierarchyService
     }
 
     /**
-     * Bulk-composed from DailySummary/ActivityLogEntry/DealClosure/Goal,
-     * all keyed by the single subordinate-id list above — a fixed number
-     * of queries regardless of team size, matching the keyed-collection
-     * idiom already used by ActivityLogRepository::feedForViewer().
+     * Bulk-composed from DailySummary/ActivityLogEntry/DealClosure, all
+     * keyed by the single subordinate-id list above — a fixed number of
+     * queries regardless of team size, matching the keyed-collection idiom
+     * already used by ActivityLogRepository::feedForViewer().
      *
      * "Attendance Today" has no real data source in this app (no Attendance
      * module exists) — proxied as "submitted a DailySummary today" and
      * exposed as `reported_today`, deliberately not labeled "attendance" in
      * the data layer to avoid overstating what it means.
      *
-     * @return array{members: Collection<int, User>, reported_today: Collection<int, int>, latest_summary: Collection<int, DailySummary>, latest_activity: Collection<int, ActivityLogEntry>, weekly_performance: Collection<int, object>, monthly_performance: Collection<int, object>, goals: Collection<int, Collection>}
+     * @return array{members: Collection<int, User>, reported_today: Collection<int, int>, latest_summary: Collection<int, DailySummary>, latest_activity: Collection<int, ActivityLogEntry>, weekly_performance: Collection<int, object>, monthly_performance: Collection<int, object>}
      */
     public function getTeamStatistics(User $manager): array
     {
@@ -151,7 +149,6 @@ class OrganizationHierarchyService
                 'latest_activity' => collect(),
                 'weekly_performance' => collect(),
                 'monthly_performance' => collect(),
-                'goals' => collect(),
             ];
         }
 
@@ -188,10 +185,6 @@ class OrganizationHierarchyService
             ->selectRaw('closed_by, count(*) as deals, sum(deal_value) as value')
             ->groupBy('closed_by')->get()->keyBy('closed_by');
 
-        $goals = Goal::where('goal_type', GoalType::Individual)
-            ->whereIn('user_id', $subordinateIds)
-            ->get()->groupBy('user_id');
-
         return [
             'members' => $this->getAllSubordinates($manager),
             'reported_today' => $reportedToday,
@@ -199,7 +192,6 @@ class OrganizationHierarchyService
             'latest_activity' => $latestActivity,
             'weekly_performance' => $weeklyPerformance,
             'monthly_performance' => $monthlyPerformance,
-            'goals' => $goals,
         ];
     }
 

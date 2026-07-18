@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailAccountController;
 use App\Http\Controllers\FollowUpController;
 use App\Http\Controllers\GoalController;
+use App\Http\Controllers\GoalLeaderboardController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ImplementationRequestController;
 use App\Http\Controllers\IndividualJdController;
@@ -85,7 +86,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('requirements', RequirementController::class)->except('show');
     Route::post('leads/{lead}/requirements', [RequirementController::class, 'storeForLead'])->name('leads.requirements.store');
 
-    Route::resource('goals', GoalController::class)->except('show');
+    // Registered before the resource so /goals/leaderboard isn't swallowed by the {goal} wildcard.
+    Route::get('goals/leaderboard', [GoalLeaderboardController::class, 'index'])->name('goals.leaderboard');
+    Route::resource('goals', GoalController::class);
 
     // Organization-wide task management, hierarchy-scoped.
     Route::resource('tasks', TaskController::class);
@@ -121,7 +124,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('meetings', MeetingController::class)->except('show');
 
     Route::get('common-reports/goal-vs-achievement', [CommonReportController::class, 'goalVsAchievement'])->name('common-reports.goal-vs-achievement');
-    Route::get('common-reports/personal-achievement', [CommonReportController::class, 'personalAchievement'])->name('common-reports.personal-achievement');
+    Route::get('common-reports/my-contributions', [CommonReportController::class, 'myContributions'])->name('common-reports.my-contributions');
 
     // Available while impersonating (the active session is a regular user at this point).
     Route::post('impersonate/stop', [ImpersonationController::class, 'stop'])->name('impersonate.stop');

@@ -4,10 +4,8 @@ namespace Tests\Feature;
 
 use App\Enums\ActivityType;
 use App\Enums\FollowUpStatus;
-use App\Enums\GoalType;
 use App\Enums\UserRole;
 use App\Models\FollowUp;
-use App\Models\Goal;
 use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Models\Meeting;
@@ -67,18 +65,6 @@ class ManagerOversightTest extends TestCase
 
         $response->assertOk();
         $response->assertViewHas('followUps', fn ($followUps) => $followUps->total() === 1);
-    }
-
-    public function test_manager_sees_every_users_individual_goals(): void
-    {
-        $manager = User::factory()->create(['role' => UserRole::Manager]);
-        $other = User::factory()->create();
-        Goal::factory()->create(['goal_type' => GoalType::Individual, 'user_id' => $other->id]);
-
-        $response = $this->actingAs($manager)->get(route('goals.index'));
-
-        $response->assertOk();
-        $response->assertViewHas('goals', fn ($goals) => $goals->total() === 1);
     }
 
     public function test_manager_can_use_the_all_meetings_scope(): void

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Goal;
 
-use App\Enums\GoalType;
+use App\Enums\GoalCategory;
 use App\Models\Goal;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
@@ -18,9 +18,9 @@ class StoreGoalRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'category' => ['required', new Enum(GoalCategory::class)],
             'target' => ['required', 'numeric', 'min:0'],
-            'goal_type' => ['required', new Enum(GoalType::class)],
-            'user_id' => ['required_if:goal_type,individual', 'nullable', 'exists:users,id'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
             'bs_year' => ['nullable', 'integer'],

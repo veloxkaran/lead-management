@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\GoalType;
 use App\Models\Goal;
 use App\Models\User;
 use App\Repositories\GoalRepository;
@@ -13,23 +12,22 @@ class GoalService
 {
     public function __construct(
         protected GoalRepository $goals,
-        protected GoalAchievementService $goalAchievements,
+        protected GoalContributionService $goalContributions,
     ) {}
 
-    public function list(array $filters, ?User $viewer, int $perPage = 15): LengthAwarePaginator
+    public function list(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        return $this->goals->filter($filters, $viewer, $perPage);
+        return $this->goals->filter($filters, $perPage);
     }
 
     public function create(array $attributes, User $creator): Goal
     {
         return DB::transaction(function () use ($attributes, $creator) {
-            $attributes = $this->clearIrrelevantTargets($attributes);
             $attributes['created_by'] = $creator->id;
 
             $goal = $this->goals->create($attributes);
 
-            $this->goalAchievements->recalculate($goal);
+            $this->goalContributions->resyncGoal($goal);
 
             return $goal;
         });
@@ -37,11 +35,9 @@ class GoalService
 
     public function update(Goal $goal, array $attributes): Goal
     {
-        $attributes = $this->clearIrrelevantTargets($attributes);
-
         $goal = $this->goals->update($goal, $attributes);
 
-        $this->goalAchievements->recalculate($goal);
+        $this->goalContributions->resyncGoal($goal);
 
         return $goal;
     }
@@ -49,17 +45,5 @@ class GoalService
     public function delete(Goal $goal): bool
     {
         return $this->goals->delete($goal);
-    }
-
-    protected function clearIrrelevantTargets(array $attributes): array
-    {
-        $type = $attributes['goal_type'] ?? null;
-        $type = $type instanceof GoalType ? $type->value : $type;
-
-        if ($type !== 'individual') {
-            $attributes['user_id'] = null;
-        }
-
-        return $attributes;
     }
 }

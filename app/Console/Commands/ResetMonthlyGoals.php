@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Goal;
-use App\Services\GoalAchievementService;
+use App\Services\GoalContributionService;
 use App\Support\NepaliCalendar;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +14,7 @@ class ResetMonthlyGoals extends Command
 
     protected $description = 'Reset recurring goals whose period has elapsed and roll them into the current Nepali (BS) month';
 
-    public function handle(GoalAchievementService $goalAchievements): int
+    public function handle(GoalContributionService $goalContributions): int
     {
         $today = now()->startOfDay();
         $currentBs = NepaliCalendar::today();
@@ -27,7 +27,7 @@ class ResetMonthlyGoals extends Command
             return self::SUCCESS;
         }
 
-        DB::transaction(function () use ($expiredGoals, $currentBs, $today, $goalAchievements) {
+        DB::transaction(function () use ($expiredGoals, $currentBs, $today, $goalContributions) {
             foreach ($expiredGoals as $goal) {
                 $periodLength = $goal->start_date->diffInDays($goal->end_date) + 1;
 
@@ -39,7 +39,7 @@ class ResetMonthlyGoals extends Command
                     'bs_month' => $currentBs['month'],
                 ]);
 
-                $goalAchievements->recalculate($goal->refresh());
+                $goalContributions->resyncGoal($goal->refresh());
             }
         });
 

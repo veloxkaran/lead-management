@@ -2,20 +2,21 @@
 
 namespace Database\Seeders;
 
+use App\Enums\GoalCategory;
 use App\Models\Goal;
 use App\Models\User;
-use App\Services\GoalAchievementService;
+use App\Services\GoalContributionService;
 use Illuminate\Database\Seeder;
 
 class GoalSeeder extends Seeder
 {
     /**
-     * Seed sample goals. Assumes Users already exist in the database.
-     * Achieved amounts are not faked — GoalAchievementService recalculates
-     * them from real achievement-flagged leads right after each is created,
-     * the same way it would in production.
+     * Seed sample Organization goals. Assumes Users already exist. Achieved
+     * amounts are not faked — GoalContributionService resyncs each from
+     * real closed deals right after creation, the same way it would in
+     * production.
      */
-    public function run(GoalAchievementService $goalAchievements): void
+    public function run(GoalContributionService $goalContributions): void
     {
         $creator = User::inRandomOrder()->first();
 
@@ -25,28 +26,22 @@ class GoalSeeder extends Seeder
             return;
         }
 
-        // 2-3 Organization goals.
-        $orgTitles = ['Annual Revenue Target', 'New Customer Acquisition', 'Client Retention Rate'];
-        foreach ($orgTitles as $title) {
-            $goal = Goal::factory()->organization()->create([
+        $goalsByTitle = [
+            'Annual Revenue Target' => GoalCategory::AnnualRevenueTarget,
+            'New Customer Acquisition' => GoalCategory::NewClientAcquisition,
+            'Client Retention Rate' => GoalCategory::CustomerRetention,
+        ];
+
+        foreach ($goalsByTitle as $title => $category) {
+            $goal = Goal::factory()->create([
                 'title' => $title,
+                'category' => $category,
                 'target' => fake()->randomFloat(2, 500000, 2000000),
+                'achieved' => 0,
                 'created_by' => $creator->id,
             ]);
 
-            $goalAchievements->recalculate($goal);
+            $goalContributions->resyncGoal($goal);
         }
-
-        // One Individual goal per existing user.
-        User::all()->each(function (User $user) use ($creator, $goalAchievements) {
-            $goal = Goal::factory()->individual()->create([
-                'title' => 'Personal Sales Target',
-                'target' => fake()->randomFloat(2, 20000, 150000),
-                'user_id' => $user->id,
-                'created_by' => $creator->id,
-            ]);
-
-            $goalAchievements->recalculate($goal);
-        });
     }
 }

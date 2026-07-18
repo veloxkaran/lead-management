@@ -48,7 +48,6 @@ class TeamController extends Controller
             'latestActivity' => $stats['latest_activity'],
             'weeklyPerformance' => $stats['weekly_performance'],
             'monthlyPerformance' => $stats['monthly_performance'],
-            'goals' => $stats['goals'],
         ]);
     }
 

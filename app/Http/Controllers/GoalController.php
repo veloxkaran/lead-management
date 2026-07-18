@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Goal\StoreGoalRequest;
 use App\Http\Requests\Goal\UpdateGoalRequest;
 use App\Models\Goal;
-use App\Models\User;
+use App\Repositories\GoalContributionRepository;
 use App\Services\GoalService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,20 +13,20 @@ use Illuminate\View\View;
 
 class GoalController extends Controller
 {
-    public function __construct(protected GoalService $goalService) {}
+    public function __construct(
+        protected GoalService $goalService,
+        protected GoalContributionRepository $contributions,
+    ) {}
 
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Goal::class);
 
-        $goals = $this->goalService->list(
-            $request->only(['goal_type']),
-            $request->user(),
-        );
+        $filters = $request->only(['category', 'status']);
 
         return view('goals.index', [
-            'goals' => $goals,
-            'filters' => $request->only(['goal_type']),
+            'goals' => $this->goalService->list($filters),
+            'filters' => $filters,
         ]);
     }
 
@@ -34,9 +34,7 @@ class GoalController extends Controller
     {
         $this->authorize('create', Goal::class);
 
-        return view('goals.create', [
-            'users' => User::orderBy('name')->get(),
-        ]);
+        return view('goals.create');
     }
 
     public function store(StoreGoalRequest $request): RedirectResponse
@@ -46,13 +44,22 @@ class GoalController extends Controller
         return redirect()->route('goals.index')->with('success', 'Goal created successfully.');
     }
 
+    public function show(Goal $goal): View
+    {
+        $this->authorize('view', $goal);
+
+        return view('goals.show', [
+            'goal' => $goal,
+            'contributions' => $this->contributions->forGoal($goal),
+        ]);
+    }
+
     public function edit(Goal $goal): View
     {
         $this->authorize('update', $goal);
 
         return view('goals.edit', [
             'goal' => $goal,
-            'users' => User::orderBy('name')->get(),
         ]);
     }
 

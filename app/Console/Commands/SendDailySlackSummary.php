@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\GoalType;
 use App\Models\Goal;
 use App\Models\Lead;
 use App\Support\Currency;
@@ -19,7 +18,7 @@ class SendDailySlackSummary extends Command
     {
         $lines = ['*'.config('app.name').' — Daily Summary ('.now()->format('M d, Y').')*'];
 
-        $orgGoals = Goal::where('goal_type', GoalType::Organization)->get();
+        $orgGoals = Goal::all();
 
         if ($orgGoals->isNotEmpty()) {
             $lines[] = '';

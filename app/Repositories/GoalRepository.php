@@ -2,9 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Enums\GoalType;
 use App\Models\Goal;
-use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class GoalRepository extends BaseRepository
@@ -15,27 +14,40 @@ class GoalRepository extends BaseRepository
     }
 
     /**
-     * Filter goals, scoping visibility for non-overseer viewers to:
-     * all Organization goals, and their own Individual goals.
+     * Every goal is visible to every employee (GoalPolicy::viewAny is
+     * unconditionally true) — no viewer-based scoping needed, unlike the
+     * old Individual/Organization split.
      */
-    public function filter(array $filters, ?User $viewer = null, int $perPage = 15): LengthAwarePaginator
+    public function filter(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        $query = $this->query()->with(['user', 'creator']);
+        $query = $this->query()->with('creator');
 
-        if ($viewer && ! $viewer->isOverseer()) {
-            $query->where(function ($q) use ($viewer) {
-                $q->where('goal_type', GoalType::Organization->value)
-                    ->orWhere(function ($q3) use ($viewer) {
-                        $q3->where('goal_type', GoalType::Individual->value)
-                            ->where('user_id', $viewer->id);
-                    });
-            });
+        if (! empty($filters['category'])) {
+            $query->where('category', $filters['category']);
         }
 
-        if (! empty($filters['goal_type'])) {
-            $query->where('goal_type', $filters['goal_type']);
+        if (! empty($filters['status'])) {
+            $this->applyStatusFilter($query, $filters['status']);
         }
 
         return $query->latest()->paginate($perPage)->withQueryString();
+    }
+
+    /**
+     * Mirrors Goal::status()'s derivation in SQL so pagination counts stay
+     * correct (a PHP-side filter after paginate() would under/over-count).
+     */
+    private function applyStatusFilter(Builder $query, string $status): void
+    {
+        $today = now()->toDateString();
+        $notCompleted = fn ($q) => $q->where(fn ($q2) => $q2->where('target', '<=', 0)->orWhereColumn('achieved', '<', 'target'));
+
+        match ($status) {
+            'completed' => $query->where('target', '>', 0)->whereColumn('achieved', '>=', 'target'),
+            'upcoming' => $query->where($notCompleted)->whereDate('start_date', '>', $today),
+            'expired' => $query->where($notCompleted)->whereDate('start_date', '<=', $today)->whereDate('end_date', '<', $today),
+            'active' => $query->where($notCompleted)->whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today),
+            default => null,
+        };
     }
 }

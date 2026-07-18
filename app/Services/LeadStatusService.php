@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\LeadStatus;
 use App\Repositories\LeadStatusRepository;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -12,11 +13,10 @@ class LeadStatusService
 {
     public function __construct(
         protected LeadStatusRepository $leadStatuses,
-        protected GoalAchievementService $goalAchievements,
-    ) {
-    }
+        protected LeadAchievementService $leadAchievements,
+    ) {}
 
-    public function list(): \Illuminate\Support\Collection
+    public function list(): Collection
     {
         return $this->leadStatuses->ordered();
     }
@@ -72,7 +72,7 @@ class LeadStatusService
      */
     protected function resyncLeadsInStatus(LeadStatus $leadStatus): void
     {
-        $leadStatus->leads()->each(fn ($lead) => $this->goalAchievements->applyStatusToLead($lead, $leadStatus));
+        $leadStatus->leads()->each(fn ($lead) => $this->leadAchievements->applyStatusToLead($lead, $leadStatus));
     }
 
     public function delete(LeadStatus $leadStatus): void
