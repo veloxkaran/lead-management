@@ -12,9 +12,7 @@ use Illuminate\View\View;
 
 class MeetingController extends Controller
 {
-    public function __construct(protected MeetingService $meetingService)
-    {
-    }
+    public function __construct(protected MeetingService $meetingService) {}
 
     public function index(Request $request): View
     {

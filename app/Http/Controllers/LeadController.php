@@ -11,15 +11,14 @@ use App\Models\Lead;
 use App\Models\LeadStatus;
 use App\Models\User;
 use App\Services\LeadService;
+use App\Support\LeadWalkthrough;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class LeadController extends Controller
 {
-    public function __construct(protected LeadService $leadService)
-    {
-    }
+    public function __construct(protected LeadService $leadService) {}
 
     public function index(Request $request): View
     {
@@ -97,7 +96,7 @@ class LeadController extends Controller
 
         return view('leads.walkthrough', [
             'lead' => $lead,
-            'steps' => \App\Support\LeadWalkthrough::build($lead),
+            'steps' => LeadWalkthrough::build($lead),
         ]);
     }
 

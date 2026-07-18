@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use App\Models\PolicyDocument;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -41,8 +42,8 @@ class PolicyDocumentManagementTest extends TestCase
     public function test_a_sop_applies_to_every_active_user_in_the_company(): void
     {
         $superAdmin = User::factory()->create(['role' => UserRole::SuperAdmin]);
-        $activeUser = User::factory()->create(['status' => \App\Enums\UserStatus::Active]);
-        $suspendedUser = User::factory()->create(['status' => \App\Enums\UserStatus::Suspended]);
+        $activeUser = User::factory()->create(['status' => UserStatus::Active]);
+        $suspendedUser = User::factory()->create(['status' => UserStatus::Suspended]);
 
         $document = PolicyDocument::factory()->create();
 

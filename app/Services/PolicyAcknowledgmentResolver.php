@@ -10,9 +10,7 @@ use Illuminate\Support\Collection;
 
 class PolicyAcknowledgmentResolver
 {
-    public function __construct(protected PolicyDocumentRepository $repository)
-    {
-    }
+    public function __construct(protected PolicyDocumentRepository $repository) {}
 
     /**
      * Sop → IndividualJd, in that order, excluding any document whose
@@ -27,8 +25,8 @@ class PolicyAcknowledgmentResolver
 
     /**
      * @return array<int> the current-version ids of everything pending —
-     *                     used as the throttle fingerprint (see
-     *                     ResolvePendingPolicyAcknowledgments).
+     *                    used as the throttle fingerprint (see
+     *                    ResolvePendingPolicyAcknowledgments).
      */
     public function pendingVersionIds(User $user): array
     {

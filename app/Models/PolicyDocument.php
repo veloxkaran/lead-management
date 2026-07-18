@@ -72,7 +72,7 @@ class PolicyDocument extends Model
     }
 
     /**
-     * @param  \Illuminate\Support\Collection<int, int>  $userIds
+     * @param  Collection<int, int>  $userIds
      */
     public static function forgetPendingCacheForUserIds($userIds): void
     {

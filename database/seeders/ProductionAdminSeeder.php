@@ -41,7 +41,6 @@ class ProductionAdminSeeder extends Seeder
                 'password' => Hash::make($password),
                 'role' => UserRole::SuperAdmin,
                 'status' => UserStatus::Active,
-                'department' => 'Management',
                 'designation' => 'Super Admin',
                 'company_id' => $company->id,
                 'email_verified_at' => now(),

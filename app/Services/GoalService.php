@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\GoalType;
 use App\Models\Goal;
 use App\Models\User;
 use App\Repositories\GoalRepository;
@@ -13,8 +14,7 @@ class GoalService
     public function __construct(
         protected GoalRepository $goals,
         protected GoalAchievementService $goalAchievements,
-    ) {
-    }
+    ) {}
 
     public function list(array $filters, ?User $viewer, int $perPage = 15): LengthAwarePaginator
     {
@@ -54,7 +54,7 @@ class GoalService
     protected function clearIrrelevantTargets(array $attributes): array
     {
         $type = $attributes['goal_type'] ?? null;
-        $type = $type instanceof \App\Enums\GoalType ? $type->value : $type;
+        $type = $type instanceof GoalType ? $type->value : $type;
 
         if ($type !== 'individual') {
             $attributes['user_id'] = null;

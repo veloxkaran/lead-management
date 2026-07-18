@@ -12,9 +12,7 @@ use Illuminate\View\View;
 
 class MyPolicyDocumentsController extends Controller
 {
-    public function __construct(protected PolicyDocumentRepository $repository)
-    {
-    }
+    public function __construct(protected PolicyDocumentRepository $repository) {}
 
     public function index(Request $request): View
     {

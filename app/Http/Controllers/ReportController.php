@@ -6,10 +6,12 @@ use App\Exports\GenericTableExport;
 use App\Models\LeadStatus;
 use App\Models\User;
 use App\Services\ReportService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReportController extends Controller
 {
@@ -18,9 +20,7 @@ class ReportController extends Controller
         'opportunity', 'failure', 'deal', 'requirement', 'conversion',
     ];
 
-    public function __construct(protected ReportService $reportService)
-    {
-    }
+    public function __construct(protected ReportService $reportService) {}
 
     public function index(): View
     {
@@ -92,7 +92,7 @@ class ReportController extends Controller
         return view('reports.show', $this->reportService->conversion() + ['type' => 'conversion']);
     }
 
-    public function export(Request $request, string $type, string $format): Response|\Symfony\Component\HttpFoundation\BinaryFileResponse
+    public function export(Request $request, string $type, string $format): Response|BinaryFileResponse
     {
         abort_unless(in_array($type, $this->reports), 404);
 
@@ -114,7 +114,7 @@ class ReportController extends Controller
         return match ($format) {
             'excel' => Excel::download(new GenericTableExport($data['headings'], $rows), "{$filename}.xlsx"),
             'csv' => Excel::download(new GenericTableExport($data['headings'], $rows), "{$filename}.csv", \Maatwebsite\Excel\Excel::CSV),
-            'pdf' => \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.pdf', $data)->download("{$filename}.pdf"),
+            'pdf' => Pdf::loadView('reports.pdf', $data)->download("{$filename}.pdf"),
             default => abort(404),
         };
     }

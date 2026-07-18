@@ -10,9 +10,7 @@ use Illuminate\Http\Request;
 
 class ActivityFeedController extends Controller
 {
-    public function __construct(protected ActivityLogRepository $activityLog)
-    {
-    }
+    public function __construct(protected ActivityLogRepository $activityLog) {}
 
     public function index(Request $request): JsonResponse
     {

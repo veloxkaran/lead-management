@@ -20,9 +20,7 @@ use Illuminate\View\View;
  */
 abstract class PolicyDocumentTypeController extends Controller
 {
-    public function __construct(protected PolicyDocumentService $policyDocumentService)
-    {
-    }
+    public function __construct(protected PolicyDocumentService $policyDocumentService) {}
 
     abstract protected function type(): PolicyDocumentType;
 

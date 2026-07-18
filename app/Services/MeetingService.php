@@ -9,9 +9,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class MeetingService
 {
-    public function __construct(protected MeetingRepository $meetings)
-    {
-    }
+    public function __construct(protected MeetingRepository $meetings) {}
 
     /**
      * Scope options: "mine" (default: meetings the user created), "all" (Manager/Super Admin only).

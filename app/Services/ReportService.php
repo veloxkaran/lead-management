@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\DailySummary;
 use App\Models\DealClosure;
 use App\Models\Lead;
+use App\Models\LeadActivity;
 use App\Models\LeadStatusHistory;
 use App\Models\Requirement;
 use Illuminate\Support\Carbon;
@@ -39,7 +40,7 @@ class ReportService
             'Type' => 'New Lead', 'Detail' => $l->company_name, 'By' => $l->creator?->name, 'Time' => $l->created_at->format('H:i'),
         ]);
 
-        $activities = \App\Models\LeadActivity::whereDate('activity_date', $day)->with(['lead', 'creator'])->get()->map(fn ($a) => [
+        $activities = LeadActivity::whereDate('activity_date', $day)->with(['lead', 'creator'])->get()->map(fn ($a) => [
             'Type' => 'Activity: '.$a->activity_type->label(), 'Detail' => $a->lead->company_name.' — '.$a->description, 'By' => $a->creator?->name, 'Time' => $a->activity_time,
         ]);
 

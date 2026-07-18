@@ -13,9 +13,7 @@ use Illuminate\View\View;
 
 class GoalController extends Controller
 {
-    public function __construct(protected GoalService $goalService)
-    {
-    }
+    public function __construct(protected GoalService $goalService) {}
 
     public function index(Request $request): View
     {

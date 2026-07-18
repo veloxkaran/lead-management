@@ -15,9 +15,7 @@ use Illuminate\View\View;
 
 class TrainingController extends Controller
 {
-    public function __construct(protected TrainingService $trainings)
-    {
-    }
+    public function __construct(protected TrainingService $trainings) {}
 
     public function index(Request $request): View
     {

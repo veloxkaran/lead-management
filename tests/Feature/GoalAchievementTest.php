@@ -7,6 +7,7 @@ use App\Models\Goal;
 use App\Models\Lead;
 use App\Models\LeadStatus;
 use App\Models\User;
+use App\Services\GoalAchievementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -74,7 +75,7 @@ class GoalAchievementTest extends TestCase
             'end_date' => now()->addDays(25),
         ]);
 
-        app(\App\Services\GoalAchievementService::class)->recalculate($goal);
+        app(GoalAchievementService::class)->recalculate($goal);
         $this->assertEquals(3000, (float) $goal->fresh()->achieved);
 
         $this->actingAs($user)->post(route('leads.status.update', $lead), [

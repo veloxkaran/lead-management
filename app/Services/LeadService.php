@@ -14,8 +14,7 @@ class LeadService
     public function __construct(
         protected LeadRepositoryInterface $leads,
         protected GoalAchievementService $goalAchievements,
-    ) {
-    }
+    ) {}
 
     public function list(array $filters, int $perPage = 15): LengthAwarePaginator
     {

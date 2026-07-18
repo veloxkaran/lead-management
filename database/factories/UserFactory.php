@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -29,8 +31,8 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),
             'designation' => fake()->randomElement(['Executive', 'Senior Executive', 'Manager', 'Associate']),
-            'role' => \App\Enums\UserRole::BusinessDevelopment,
-            'status' => \App\Enums\UserStatus::Active,
+            'role' => UserRole::BusinessDevelopment,
+            'status' => UserStatus::Active,
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -50,7 +52,7 @@ class UserFactory extends Factory
     public function superAdmin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => \App\Enums\UserRole::SuperAdmin,
+            'role' => UserRole::SuperAdmin,
         ]);
     }
 }

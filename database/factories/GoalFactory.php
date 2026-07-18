@@ -3,11 +3,12 @@
 namespace Database\Factories;
 
 use App\Enums\GoalType;
+use App\Models\Goal;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Goal>
+ * @extends Factory<Goal>
  */
 class GoalFactory extends Factory
 {

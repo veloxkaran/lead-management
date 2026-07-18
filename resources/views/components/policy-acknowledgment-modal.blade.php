@@ -7,7 +7,7 @@
             'versionId' => $version->id,
             'title' => $document->title,
             'typeLabel' => $document->type->label(),
-            'assignee' => $document->department?->name ?? $document->user?->name ?? '',
+            'assignee' => $document->user?->name ?? '',
             'version' => $version->version,
             'effectiveDate' => $version->effective_date->format('M d, Y'),
             'updatedAt' => $version->published_at->format('M d, Y'),
