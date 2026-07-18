@@ -9,6 +9,7 @@ use App\Http\Controllers\DailySummaryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\DepartmentJdController;
+use App\Http\Controllers\EmailAccountController;
 use App\Http\Controllers\FollowUpController;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\ImplementationRequestController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\LeadStatusController;
 use App\Http\Controllers\LeadWhatsappUserController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\MyPolicyDocumentsController;
+use App\Http\Controllers\OrgTreeController;
 use App\Http\Controllers\PolicyDocumentAcknowledgmentController;
 use App\Http\Controllers\PolicyDocumentReportController;
 use App\Http\Controllers\ProfileController;
@@ -31,7 +33,13 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SopController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\TaskChecklistItemController;
+use App\Http\Controllers\TaskCommentController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WhatsappChatController;
 use App\Http\Controllers\WhatsappSettingsController;
@@ -51,6 +59,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Personal email account configuration — each user manages only their own.
+    Route::resource('email-accounts', EmailAccountController::class)->except('show');
+    Route::post('email-accounts/{email_account}/test-connection', [EmailAccountController::class, 'testConnection'])->name('email-accounts.test-connection');
+    Route::post('email-accounts/{email_account}/set-default', [EmailAccountController::class, 'setDefault'])->name('email-accounts.set-default');
+    Route::patch('email-accounts/{email_account}/toggle-active', [EmailAccountController::class, 'toggleActive'])->name('email-accounts.toggle-active');
 
     // Leads
     Route::resource('leads', LeadController::class);
@@ -75,8 +89,23 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('goals', GoalController::class)->except('show');
 
+    // Organization-wide task management, hierarchy-scoped.
+    Route::resource('tasks', TaskController::class);
+    Route::post('tasks/{task}/checklist-items', [TaskChecklistItemController::class, 'store'])->name('tasks.checklist-items.store');
+    Route::patch('tasks/{task}/checklist-items/{checklistItem}', [TaskChecklistItemController::class, 'update'])->name('tasks.checklist-items.update');
+    Route::delete('tasks/{task}/checklist-items/{checklistItem}', [TaskChecklistItemController::class, 'destroy'])->name('tasks.checklist-items.destroy');
+    Route::post('tasks/{task}/comments', [TaskCommentController::class, 'store'])->name('tasks.comments.store');
+    Route::delete('tasks/{task}/comments/{comment}', [TaskCommentController::class, 'destroy'])->name('tasks.comments.destroy');
+
     // Customer Success handoff — raised by Business Development, worked by Customer Success.
     Route::resource('implementation-requests', ImplementationRequestController::class)->except('show');
+
+    // Lead progress tracking — managed by Customer Success/Management.
+    Route::resource('trainings', TrainingController::class)->except('show');
+    Route::get('leads/{lead}/trainings', [TrainingController::class, 'forLead'])->name('leads.trainings.index');
+
+    Route::resource('subscriptions', SubscriptionController::class)->except('show');
+    Route::get('leads/{lead}/subscriptions', [SubscriptionController::class, 'forLead'])->name('leads.subscriptions.index');
 
     // Raised by Managers, worked by Customer Success.
     Route::resource('support-tickets', SupportTicketController::class)->except('show');
@@ -121,6 +150,12 @@ Route::middleware('auth')->group(function () {
     // Backing endpoints for both the forced onboarding modal and the reopen/review page.
     Route::post('policy-documents/{policy_document_version}/view', [PolicyDocumentAcknowledgmentController::class, 'view'])->name('policy-documents.view');
     Route::post('policy-documents/{policy_document_version}/acknowledge', [PolicyDocumentAcknowledgmentController::class, 'acknowledge'])->name('policy-documents.acknowledge');
+
+    // Team & Org Hierarchy — visibility derived from reporting_manager_id,
+    // available to any authenticated user regardless of role (an IC with no
+    // direct reports just sees an empty state, per OrganizationHierarchyPolicy).
+    Route::get('team', [TeamController::class, 'index'])->name('team.index');
+    Route::get('org-tree', [OrgTreeController::class, 'index'])->name('org-tree.index');
 
     // Manager and Super Admin — full reporting suite, company-wide.
     Route::middleware('overseer')->group(function () {

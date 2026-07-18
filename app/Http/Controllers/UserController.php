@@ -16,9 +16,7 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    public function __construct(protected UserService $userService)
-    {
-    }
+    public function __construct(protected UserService $userService) {}
 
     public function index(Request $request): View
     {
@@ -39,6 +37,7 @@ class UserController extends Controller
         return view('users.create', [
             'teams' => Team::orderBy('name')->get(),
             'departments' => Department::orderBy('name')->get(),
+            'managers' => User::orderBy('name')->get(),
             'roles' => UserRole::cases(),
             'statuses' => UserStatus::cases(),
         ]);
@@ -68,6 +67,7 @@ class UserController extends Controller
             'user' => $user,
             'teams' => Team::orderBy('name')->get(),
             'departments' => Department::orderBy('name')->get(),
+            'managers' => User::whereKeyNot($user->id)->orderBy('name')->get(),
             'roles' => UserRole::cases(),
             'statuses' => UserStatus::cases(),
         ]);

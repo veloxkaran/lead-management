@@ -4,6 +4,7 @@ namespace App\Support\ActivityModules;
 
 use App\Enums\ActivityModule;
 use App\Models\DealClosure;
+use App\Models\EmailAccount;
 use App\Models\FollowUp;
 use App\Models\Goal;
 use App\Models\KnowledgeBaseItem;
@@ -13,6 +14,7 @@ use App\Models\Meeting;
 use App\Models\PolicyDocument;
 use App\Models\PolicyDocumentVersion;
 use App\Models\Requirement;
+use App\Models\Task;
 use App\Models\User;
 use App\Models\WhatsappMessage;
 use App\Support\Currency;
@@ -125,6 +127,18 @@ class ActivityModuleRegistry
                 ActivityModule::Meeting, 'Meetings', 'bi-camera-video',
                 fn (Model $subject, User $viewer) => self::linkFor($subject, $viewer, 'update', fn ($m) => route('meetings.edit', $m)),
             ),
+            new ActivityModuleDefinition(
+                ActivityModule::Task, 'Tasks', 'bi-list-task',
+                function (Model $subject, User $viewer): array {
+                    $task = $subject instanceof Task ? $subject : $subject->task;
+
+                    return self::linkFor($task, $viewer, 'view', fn (Task $task) => route('tasks.show', $task));
+                },
+            ),
+            new ActivityModuleDefinition(
+                ActivityModule::Email, 'Email Accounts', 'bi-envelope-at',
+                fn (Model $subject, User $viewer) => self::linkFor($subject, $viewer, 'view', fn ($a) => route('email-accounts.edit', $a)),
+            ),
         ];
     }
 
@@ -183,6 +197,16 @@ class ActivityModuleRegistry
                 Meeting::class, ActivityModule::Meeting,
                 fn (Meeting $meeting) => "scheduled a meeting: {$meeting->title}",
                 fn (Meeting $meeting) => $meeting->created_by,
+            ),
+            new ActivityLoggingRegistration(
+                Task::class, ActivityModule::Task,
+                fn (Task $task) => "created a new task: {$task->title}",
+                fn (Task $task) => $task->created_by,
+            ),
+            new ActivityLoggingRegistration(
+                EmailAccount::class, ActivityModule::Email,
+                fn (EmailAccount $account) => "connected an email account: {$account->email_address}",
+                fn (EmailAccount $account) => $account->user_id,
             ),
         ];
     }

@@ -10,6 +10,9 @@
         <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Dashboard" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-speedometer2"></i> <span class="nav-label">Dashboard</span>
         </a>
+        <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->routeIs('tasks.*') ? 'active' : '' }}" title="Tasks" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-list-task"></i> <span class="nav-label">Tasks</span>
+        </a>
 
         @if ($user?->isBusinessDevelopment() || $user?->isManager() || $user?->isSuperAdmin())
             <div class="nav-section-title">Business Development</div>
@@ -47,6 +50,12 @@
             <a href="{{ route('support-tickets.index') }}" class="nav-link {{ request()->routeIs('support-tickets.*') ? 'active' : '' }}" title="Support Tickets" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-life-preserver"></i> <span class="nav-label">Support Tickets</span>
             </a>
+            <a href="{{ route('trainings.index') }}" class="nav-link {{ request()->routeIs('trainings.*') ? 'active' : '' }}" title="Trainings" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-mortarboard"></i> <span class="nav-label">Trainings</span>
+            </a>
+            <a href="{{ route('subscriptions.index') }}" class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}" title="Subscriptions" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-credit-card"></i> <span class="nav-label">Subscriptions</span>
+            </a>
         @endif
 
         @if ($user?->isFinance() || $user?->isManager() || $user?->isSuperAdmin())
@@ -76,6 +85,14 @@
         <a href="{{ route('daily-summaries.index') }}" class="nav-link {{ request()->routeIs('daily-summaries.*') ? 'active' : '' }}" title="Daily Summary" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-journal-text"></i> <span class="nav-label">Daily Summary</span>
         </a>
+        <a href="{{ route('team.index') }}" class="nav-link {{ request()->routeIs('team.*') ? 'active' : '' }}" title="My Team" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-people-fill"></i> <span class="nav-label">My Team</span>
+        </a>
+        @can('viewOrgTree')
+            <a href="{{ route('org-tree.index') }}" class="nav-link {{ request()->routeIs('org-tree.*') ? 'active' : '' }}" title="Organization Tree" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-diagram-3"></i> <span class="nav-label">Organization Tree</span>
+            </a>
+        @endcan
         @if ($user?->isOverseer())
             <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" title="Reports" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-bar-chart-line"></i> <span class="nav-label">Reports</span>
@@ -123,6 +140,9 @@
         <div class="nav-section-title">Account</div>
         <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}" title="Profile" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-person-circle"></i> <span class="nav-label">Profile</span>
+        </a>
+        <a href="{{ route('email-accounts.index') }}" class="nav-link {{ request()->routeIs('email-accounts.*') ? 'active' : '' }}" title="Email Accounts" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-envelope-at"></i> <span class="nav-label">Email Accounts</span>
         </a>
         <a href="{{ route('password.edit') }}" class="nav-link {{ request()->routeIs('password.edit') ? 'active' : '' }}" title="Change Password" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-key"></i> <span class="nav-label">Change Password</span>

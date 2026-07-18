@@ -69,13 +69,16 @@ class LeadController extends Controller
             'activities.creator', 'notes.author', 'notes.attachments',
             'followUps.creator', 'requirements.assignee', 'requirements.creator',
             'statusHistories.fromStatus', 'statusHistories.toStatus', 'statusHistories.changedBy',
+            'latestImplementationRequest.assignee',
+            'latestTraining.department', 'latestTraining.conductor',
+            'latestSubscription.creator',
         ]);
 
         return view('leads.show', [
             'lead' => $lead,
             'statuses' => LeadStatus::ordered()->get(),
             'users' => User::orderBy('name')->get(),
-            'activityTypes' => array_values(array_filter(ActivityType::cases(), fn (ActivityType $type) => $type !== ActivityType::ImplementationRequest)),
+            'activityTypes' => array_values(array_filter(ActivityType::cases(), fn (ActivityType $type) => ! in_array($type, [ActivityType::ImplementationRequest, ActivityType::TrainingUpdate, ActivityType::SubscriptionUpdate], true))),
             'reminderTypes' => ReminderType::cases(),
             'priorities' => RequirementPriority::cases(),
         ]);

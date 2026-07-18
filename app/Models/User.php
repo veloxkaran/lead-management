@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'role',
         'status',
         'team_id',
+        'reporting_manager_id',
         'company_id',
         'password',
         'suspended_at',
@@ -90,6 +92,52 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status === UserStatus::Active;
+    }
+
+    /**
+     * Cache invalidation only, not authorization: moving a user invalidates
+     * every ancestor's cached subordinate-id list, not just the moved
+     * user's own (which is unaffected by their own reassignment). Walks
+     * both the old and new manager chains via reportingManager() — see
+     * OrganizationHierarchyService::getManagerChain() for the same
+     * upward-walk logic reused for authorization/tree-building.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (self $user) {
+            if (! $user->wasChanged('reporting_manager_id')) {
+                return;
+            }
+
+            self::forgetAncestorHierarchyCaches($user->getOriginal('reporting_manager_id'));
+            self::forgetAncestorHierarchyCaches($user->reporting_manager_id);
+        });
+
+        static::deleted(function (self $user) {
+            self::forgetAncestorHierarchyCaches($user->reporting_manager_id);
+        });
+    }
+
+    private static function forgetAncestorHierarchyCaches(?int $startingManagerId): void
+    {
+        $seen = [];
+        $current = $startingManagerId ? self::find($startingManagerId) : null;
+
+        while ($current && ! in_array($current->id, $seen, true)) {
+            Cache::forget("org_hierarchy:subordinate_ids:{$current->id}");
+            $seen[] = $current->id;
+            $current = $current->reportingManager;
+        }
+    }
+
+    public function reportingManager(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'reporting_manager_id');
+    }
+
+    public function directReports(): HasMany
+    {
+        return $this->hasMany(self::class, 'reporting_manager_id');
     }
 
     public function team(): BelongsTo

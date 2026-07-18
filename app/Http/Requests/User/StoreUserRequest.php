@@ -26,6 +26,7 @@ class StoreUserRequest extends FormRequest
             'role' => ['required', new Enum(UserRole::class)],
             'status' => ['required', new Enum(UserStatus::class)],
             'team_id' => ['nullable', 'exists:teams,id'],
+            'reporting_manager_id' => ['nullable', 'exists:users,id'],
             'password' => ['required', Rules\Password::defaults()],
         ];
     }

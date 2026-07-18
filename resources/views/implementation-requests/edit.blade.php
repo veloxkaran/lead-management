@@ -31,7 +31,7 @@
                         @error('status')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Assigned To</label>
+                        <label class="form-label small fw-semibold">Assigned Engineer</label>
                         <select name="assigned_to" class="form-select" data-select2>
                             <option value="">Unassigned</option>
                             @foreach ($users as $u)
@@ -39,6 +39,26 @@
                             @endforeach
                         </select>
                         @error('assigned_to')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Planned Date</label>
+                        <input type="date" name="planned_date" class="form-control" value="{{ old('planned_date', $implementationRequest->planned_date?->toDateString()) }}">
+                        @error('planned_date')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Current Phase</label>
+                        <input type="text" name="phase" class="form-control" value="{{ old('phase', $implementationRequest->phase) }}" placeholder="e.g. Data Migration">
+                        @error('phase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Completion %</label>
+                        <input type="number" name="completion_percentage" class="form-control" min="0" max="100" value="{{ old('completion_percentage', $implementationRequest->completion_percentage) }}">
+                        @error('completion_percentage')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-semibold">Implementation Notes</label>
+                        <textarea name="notes" rows="3" class="form-control">{{ old('notes', $implementationRequest->notes) }}</textarea>
+                        @error('notes')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                 </div>
                 <div class="mt-3">

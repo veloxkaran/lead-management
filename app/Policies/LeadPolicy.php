@@ -4,9 +4,14 @@ namespace App\Policies;
 
 use App\Models\Lead;
 use App\Models\User;
+use App\Services\OrganizationHierarchyService;
 
 class LeadPolicy
 {
+    public function __construct(protected OrganizationHierarchyService $hierarchy)
+    {
+    }
+
     public function viewAny(User $user): bool
     {
         return true;
@@ -50,6 +55,30 @@ class LeadPolicy
     public function close(User $user, Lead $lead): bool
     {
         return $this->isOwnerOrOverseer($user, $lead);
+    }
+
+    /**
+     * Gates the Implementation/Training/Subscription progress cards on the
+     * Lead page — narrower than view(): the BD rep who owns the lead can
+     * see the page but not these cards, since progress tracking is a
+     * Customer Success/management concern, not a sales one. Reporting-line
+     * managers of the assigned salesperson get read-only visibility via the
+     * org hierarchy, independent of whether they hold a special role —
+     * editing still requires the per-module policy to pass too.
+     *
+     * Deliberately uses getAllSubordinateIds() rather than canView(): the
+     * latter treats a user as able to view themselves, which would grant
+     * the assigned rep visibility into their own cards — exactly what this
+     * method exists to exclude.
+     */
+    public function viewProgressStatus(User $user, Lead $lead): bool
+    {
+        return $user->isSuperAdmin()
+            || $user->isManager()
+            || $user->isCustomerSuccess()
+            || ($lead->assignedUser
+                && $lead->assigned_user_id !== $user->id
+                && $this->hierarchy->getAllSubordinateIds($user)->contains($lead->assigned_user_id));
     }
 
     private function isOwnerOrOverseer(User $user, Lead $lead): bool

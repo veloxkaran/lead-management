@@ -19,6 +19,7 @@ class StoreImplementationRequestRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'details' => ['nullable', 'string'],
             'assigned_to' => ['nullable', 'exists:users,id'],
+            'planned_date' => ['nullable', 'date'],
         ];
     }
 }

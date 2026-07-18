@@ -14,6 +14,8 @@ enum ActivityModule: string
     case Goal = 'goal';
     case KnowledgeBase = 'knowledge_base';
     case Meeting = 'meeting';
+    case Task = 'task';
+    case Email = 'email';
 
     /**
      * Label/icon live in ActivityModuleRegistry (the single source of truth

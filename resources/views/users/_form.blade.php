@@ -50,6 +50,15 @@
             @endforeach
         </select>
     </div>
+    <div class="col-md-4">
+        <label class="form-label small fw-semibold">Reports To</label>
+        <select name="reporting_manager_id" class="form-select" data-select2>
+            <option value="">No manager (top of hierarchy)</option>
+            @foreach ($managers as $manager)
+                <option value="{{ $manager->id }}" @selected(old('reporting_manager_id', $user->reporting_manager_id ?? '') == $manager->id)>{{ $manager->name }}</option>
+            @endforeach
+        </select>
+    </div>
     @if (!$user)
         <div class="col-md-6">
             <label class="form-label small fw-semibold">Password *</label>

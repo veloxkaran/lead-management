@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\RequirementStatus;
+use App\Enums\ImplementationStatus;
 use App\Http\Requests\ImplementationRequest\StoreImplementationRequestRequest;
 use App\Http\Requests\ImplementationRequest\UpdateImplementationRequestRequest;
 use App\Models\ImplementationRequest;
@@ -23,7 +23,7 @@ class ImplementationRequestController extends Controller
     {
         $this->authorize('viewAny', ImplementationRequest::class);
 
-        $filters = $request->only(['status']);
+        $filters = $request->only(['status', 'lead_id']);
 
         if ($request->user()->isBusinessDevelopment()) {
             $filters['requested_by'] = $request->user()->id;
@@ -31,8 +31,8 @@ class ImplementationRequestController extends Controller
 
         return view('implementation-requests.index', [
             'requests' => $this->implementationRequests->list($filters, 20),
-            'statuses' => RequirementStatus::cases(),
-            'filters' => $request->only(['status']),
+            'statuses' => ImplementationStatus::cases(),
+            'filters' => $request->only(['status', 'lead_id']),
         ]);
     }
 
@@ -60,7 +60,7 @@ class ImplementationRequestController extends Controller
 
         return view('implementation-requests.edit', [
             'implementationRequest' => $implementationRequest,
-            'statuses' => RequirementStatus::cases(),
+            'statuses' => ImplementationStatus::cases(),
             'users' => User::whereIn('role', [\App\Enums\UserRole::CustomerSuccess, \App\Enums\UserRole::Manager])->orderBy('name')->get(),
         ]);
     }

@@ -4,6 +4,7 @@ namespace App\Http\Requests\User;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Rules\ProhibitsHierarchyCycles;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -26,6 +27,11 @@ class UpdateUserRequest extends FormRequest
             'role' => ['required', new Enum(UserRole::class)],
             'status' => ['required', new Enum(UserStatus::class)],
             'team_id' => ['nullable', 'exists:teams,id'],
+            'reporting_manager_id' => [
+                'nullable',
+                'exists:users,id',
+                new ProhibitsHierarchyCycles($this->route('user')?->id),
+            ],
         ];
     }
 }

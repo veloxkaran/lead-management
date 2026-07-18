@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Enums\RequirementStatus;
+use App\Enums\ImplementationStatus;
 use App\Models\ImplementationRequest;
 use App\Models\Lead;
 use App\Models\User;
@@ -21,9 +21,13 @@ class ImplementationRequestFactory extends Factory
             'lead_id' => Lead::factory(),
             'title' => fake()->sentence(4),
             'details' => fake()->paragraph(),
-            'status' => RequirementStatus::Pending->value,
+            'status' => ImplementationStatus::NotStarted->value,
             'requested_by' => User::factory(),
             'assigned_to' => null,
+            'planned_date' => null,
+            'completion_percentage' => 0,
+            'phase' => null,
+            'notes' => null,
         ];
     }
 }

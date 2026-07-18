@@ -24,6 +24,10 @@ class ImplementationRequestRepository extends BaseRepository
             $query->where('requested_by', $filters['requested_by']);
         }
 
+        if (! empty($filters['lead_id'])) {
+            $query->where('lead_id', $filters['lead_id']);
+        }
+
         return $query->latest()->paginate($perPage)->withQueryString();
     }
 }

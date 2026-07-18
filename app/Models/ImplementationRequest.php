@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\RequirementStatus;
+use App\Enums\ImplementationStatus;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,13 +14,16 @@ class ImplementationRequest extends Model
 
     protected $fillable = [
         'company_id', 'lead_id', 'title', 'details', 'status', 'requested_by', 'assigned_to', 'completed_at',
+        'planned_date', 'completion_percentage', 'phase', 'notes',
     ];
 
     protected function casts(): array
     {
         return [
-            'status' => RequirementStatus::class,
+            'status' => ImplementationStatus::class,
             'completed_at' => 'datetime',
+            'planned_date' => 'date',
+            'completion_percentage' => 'integer',
         ];
     }
 

@@ -3,9 +3,12 @@
 namespace App\Providers;
 
 use App\Models\ActivityLogEntry;
+use App\Models\User;
+use App\Policies\OrganizationHierarchyPolicy;
 use App\Support\ActivityModules\ActivityLoggingRegistration;
 use App\Support\ActivityModules\ActivityModuleRegistry;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,6 +29,20 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrapFive();
 
         $this->registerActivityLogging();
+        $this->registerOrganizationHierarchyGates();
+    }
+
+    /**
+     * Not a model-backed policy (no natural Gate::policy() auto-discovery
+     * target), so registered as explicit Gate definitions delegating to
+     * OrganizationHierarchyPolicy — keeps the policy class itself
+     * constructor-injectable and unit-testable in isolation.
+     */
+    private function registerOrganizationHierarchyGates(): void
+    {
+        Gate::define('viewTeamPage', fn (User $user) => app(OrganizationHierarchyPolicy::class)->viewTeamPage($user));
+        Gate::define('viewOrgTree', fn (User $user) => app(OrganizationHierarchyPolicy::class)->viewOrgTree($user));
+        Gate::define('viewTeamMember', fn (User $user, User $target) => app(OrganizationHierarchyPolicy::class)->viewTeamMember($user, $target));
     }
 
     /**

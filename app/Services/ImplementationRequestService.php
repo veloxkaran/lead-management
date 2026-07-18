@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ActivityType;
-use App\Enums\RequirementStatus;
+use App\Enums\ImplementationStatus;
 use App\Models\ImplementationRequest;
 use App\Models\LeadActivity;
 use App\Models\User;
@@ -35,7 +35,7 @@ class ImplementationRequestService
 
     public function update(ImplementationRequest $request, array $attributes, User $actor): ImplementationRequest
     {
-        if (($attributes['status'] ?? null) === RequirementStatus::Completed->value && ! $request->completed_at) {
+        if (($attributes['status'] ?? null) === ImplementationStatus::Completed->value && ! $request->completed_at) {
             $attributes['completed_at'] = now();
         }
 
