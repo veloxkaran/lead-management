@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
-use App\Models\Department;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -17,10 +16,8 @@ class OrgTreeTest extends TestCase
     private function makeChain(): array
     {
         $company = Company::factory()->create();
-        $department = Department::factory()->create(['company_id' => $company->id]);
         $make = fn (?User $manager = null) => User::factory()->create([
             'company_id' => $company->id,
-            'department_id' => $department->id,
             'reporting_manager_id' => $manager?->id,
         ]);
 
@@ -52,11 +49,10 @@ class OrgTreeTest extends TestCase
     public function test_query_count_does_not_grow_with_employee_count(): void
     {
         $company = Company::factory()->create();
-        $department = Department::factory()->create(['company_id' => $company->id]);
-        $manager = User::factory()->create(['company_id' => $company->id, 'department_id' => $department->id]);
+        $manager = User::factory()->create(['company_id' => $company->id]);
 
         User::factory()->count(3)->create([
-            'company_id' => $company->id, 'department_id' => $department->id, 'reporting_manager_id' => $manager->id,
+            'company_id' => $company->id, 'reporting_manager_id' => $manager->id,
         ]);
         // Flushed before each measured request: unrelated cross-cutting
         // caches (e.g. the pre-existing policy-acknowledgment throttle
@@ -71,7 +67,7 @@ class OrgTreeTest extends TestCase
         DB::flushQueryLog();
 
         User::factory()->count(10)->create([
-            'company_id' => $company->id, 'department_id' => $department->id, 'reporting_manager_id' => $manager->id,
+            'company_id' => $company->id, 'reporting_manager_id' => $manager->id,
         ]);
         Cache::flush();
         DB::enableQueryLog();

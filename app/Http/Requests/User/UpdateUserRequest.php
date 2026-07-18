@@ -22,11 +22,9 @@ class UpdateUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->route('user'))],
             'phone' => ['nullable', 'string', 'max:30'],
-            'department_id' => ['nullable', 'exists:departments,id'],
             'designation' => ['nullable', 'string', 'max:255'],
             'role' => ['required', new Enum(UserRole::class)],
             'status' => ['required', new Enum(UserStatus::class)],
-            'team_id' => ['nullable', 'exists:teams,id'],
             'reporting_manager_id' => [
                 'nullable',
                 'exists:users,id',

@@ -22,7 +22,6 @@ class TrainingFactory extends Factory
             'training_date' => null,
             'trainer_name' => fake()->name(),
             'attendees_count' => null,
-            'department_id' => null,
             'completion_percentage' => 0,
             'feedback' => null,
             'conducted_by' => null,

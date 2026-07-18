@@ -18,11 +18,9 @@
         <div class="card-body">
             <dl class="row small mb-0">
                 <dt class="col-3 text-muted">Phone</dt><dd class="col-9">{{ $user->phone ?: '—' }}</dd>
-                <dt class="col-3 text-muted">Department</dt><dd class="col-9">{{ $user->assignedDepartment?->name ?? '—' }}</dd>
                 <dt class="col-3 text-muted">Designation</dt><dd class="col-9">{{ $user->designation ?: '—' }}</dd>
                 <dt class="col-3 text-muted">Role</dt><dd class="col-9">{{ $user->role->label() }}</dd>
                 <dt class="col-3 text-muted">Status</dt><dd class="col-9"><x-status-badge :status="$user->status" /></dd>
-                <dt class="col-3 text-muted">Team</dt><dd class="col-9">{{ $user->team?->name ?? '—' }}</dd>
             </dl>
         </div>
     </div>

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Meeting\StoreMeetingRequest;
 use App\Http\Requests\Meeting\UpdateMeetingRequest;
 use App\Models\Meeting;
-use App\Models\Team;
 use App\Services\MeetingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,9 +32,7 @@ class MeetingController extends Controller
     {
         $this->authorize('create', Meeting::class);
 
-        return view('meetings.create', [
-            'teams' => Team::orderBy('name')->get(),
-        ]);
+        return view('meetings.create');
     }
 
     public function store(StoreMeetingRequest $request): RedirectResponse
@@ -51,7 +48,6 @@ class MeetingController extends Controller
 
         return view('meetings.edit', [
             'meeting' => $meeting,
-            'teams' => Team::orderBy('name')->get(),
         ]);
     }
 

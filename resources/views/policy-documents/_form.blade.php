@@ -1,21 +1,24 @@
 @php
     $document = $document ?? null;
+    $assignmentField = $assignmentField ?? null;
     $currentVersion = $document?->currentVersion ?? $document?->versions->first();
 @endphp
 <div class="row g-3">
-    <div class="col-md-8">
+    <div class="col-md-{{ $assignmentField ? 8 : 12 }}">
         <label class="form-label small fw-semibold">Title *</label>
         <input type="text" name="title" value="{{ old('title', $document->title ?? '') }}" class="form-control" required>
     </div>
-    <div class="col-md-4">
-        <label class="form-label small fw-semibold">{{ $assignmentLabel }} *</label>
-        <select name="{{ $assignmentField }}" class="form-select" data-select2 required>
-            <option value="">Select {{ strtolower($assignmentLabel) }}...</option>
-            @foreach ($assignmentOptions as $option)
-                <option value="{{ $option->id }}" @selected(old($assignmentField, $document?->{$assignmentField} ?? '') == $option->id)>{{ $option->name }}</option>
-            @endforeach
-        </select>
-    </div>
+    @if ($assignmentField)
+        <div class="col-md-4">
+            <label class="form-label small fw-semibold">{{ $assignmentLabel }} *</label>
+            <select name="{{ $assignmentField }}" class="form-select" data-select2 required>
+                <option value="">Select {{ strtolower($assignmentLabel) }}...</option>
+                @foreach ($assignmentOptions as $option)
+                    <option value="{{ $option->id }}" @selected(old($assignmentField, $document?->{$assignmentField} ?? '') == $option->id)>{{ $option->name }}</option>
+                @endforeach
+            </select>
+        </div>
+    @endif
     <div class="col-md-6 form-check form-switch">
         <input class="form-check-input" type="checkbox" role="switch" name="is_active" value="1" @checked(old('is_active', $document->is_active ?? true))>
         <label class="form-check-label small">Active (visible to assigned employees)</label>

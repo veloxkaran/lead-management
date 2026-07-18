@@ -46,13 +46,6 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label small">Team</label>
-                        <select name="team_id" class="form-select form-select-sm">
-                            <option value="">All</option>
-                            @foreach ($teams as $t)<option value="{{ $t->id }}" @selected(request('team_id') == $t->id)>{{ $t->name }}</option>@endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-2">
                         <label class="form-label small">Status</label>
                         <select name="status_id" class="form-select form-select-sm">
                             <option value="">All</option>

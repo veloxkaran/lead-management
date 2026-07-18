@@ -60,7 +60,7 @@
     </div>
 
     <div class="row g-3 mb-3">
-        <div class="col-lg-4">
+        <div class="col-lg-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white fw-semibold"><i class="bi bi-bullseye me-1"></i> Organization Goals</div>
                 <div class="card-body">
@@ -76,23 +76,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white fw-semibold"><i class="bi bi-people me-1"></i> Team Goal Progress</div>
-                <div class="card-body">
-                    @forelse ($teamGoals as $goal)
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between small mb-1"><span>{{ $goal->team?->name }} — {{ $goal->title }}</span><span>{{ $goal->achievementPercentage() }}%</span></div>
-                            <div class="progress" style="height: 8px;"><div class="progress-bar bg-info" style="width: {{ $goal->achievementPercentage() }}%"></div></div>
-                            <div class="small text-muted mt-1"><x-currency :amount="$goal->achieved" /> / <x-currency :amount="$goal->target" /></div>
-                        </div>
-                    @empty
-                        <x-empty-state icon="bi-people" title="No team goals set" />
-                    @endforelse
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4">
+        <div class="col-lg-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white fw-semibold"><i class="bi bi-bell me-1"></i> Reminder Summary</div>
                 <div class="card-body">
@@ -137,7 +121,7 @@
         </div>
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white fw-semibold"><i class="bi bi-camera-video me-1"></i> Team Meeting Schedule</div>
+                <div class="card-header bg-white fw-semibold"><i class="bi bi-camera-video me-1"></i> Upcoming Meetings</div>
                 <ul class="list-group list-group-flush">
                     @forelse ($meetings as $meeting)
                         <li class="list-group-item small">

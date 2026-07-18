@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use App\Enums\UserRole;
 use App\Models\Company;
-use App\Models\Department;
 use App\Models\User;
 use App\Rules\ProhibitsHierarchyCycles;
 use App\Services\OrganizationHierarchyService;
@@ -18,10 +17,8 @@ class OrganizationHierarchyServiceTest extends TestCase
     private function makeChain(): array
     {
         $company = Company::factory()->create();
-        $department = Department::factory()->create(['company_id' => $company->id]);
         $make = fn (?User $manager = null) => User::factory()->create([
             'company_id' => $company->id,
-            'department_id' => $department->id,
             'reporting_manager_id' => $manager?->id,
         ]);
 

@@ -7,7 +7,6 @@ use App\Enums\UserRole;
 use App\Models\ActivityLogEntry;
 use App\Models\Company;
 use App\Models\DealClosure;
-use App\Models\Department;
 use App\Models\Lead;
 use App\Models\PolicyDocument;
 use App\Models\PolicyDocumentVersion;
@@ -119,17 +118,14 @@ class ActivityFeedTest extends TestCase
     {
         Setting::set('activity_feed_per_page', '20');
         $user = User::factory()->create();
-        $department = Department::factory()->create();
-        $policyDocument = PolicyDocument::factory()->create(['department_id' => $department->id]);
+        $policyDocument = PolicyDocument::factory()->create();
 
         $seedMixedEntries = function (int $count) use ($user, $policyDocument) {
             foreach (range(1, $count) as $i) {
                 // deal_closures.lead_id is unique, so each deal needs its own
                 // lead — but assigned_user_id/created_by/closed_by are
                 // overridden to $user->id to avoid cascading fresh
-                // User::factory() (and their nested Department::factory())
-                // per iteration, which would exhaust DepartmentFactory's
-                // 6-value unique() name pool.
+                // User::factory() calls per iteration.
                 $lead = Lead::factory()->create(['assigned_user_id' => $user->id, 'created_by' => $user->id]);
                 $deal = DealClosure::factory()->create(['lead_id' => $lead->id, 'closed_by' => $user->id]);
                 ActivityLogEntry::factory()->create([

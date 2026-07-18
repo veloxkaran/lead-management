@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\PolicyDocumentType;
 use App\Enums\UserRole;
-use App\Models\Department;
+use App\Models\Company;
 use App\Models\PolicyDocument;
 use App\Models\PolicyDocumentVersion;
 use App\Models\User;
@@ -15,14 +15,14 @@ class PolicyDocumentReportControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_index_summarizes_department_assigned_counts(): void
+    public function test_index_summarizes_company_wide_assigned_counts(): void
     {
-        $superAdmin = User::factory()->create(['role' => UserRole::SuperAdmin]);
-        $department = Department::factory()->create();
-        $acknowledgedUser = User::factory()->create(['department_id' => $department->id]);
-        $pendingUser = User::factory()->create(['department_id' => $department->id]);
+        $company = Company::factory()->create();
+        $superAdmin = User::factory()->create(['role' => UserRole::SuperAdmin, 'company_id' => $company->id]);
+        $acknowledgedUser = User::factory()->create(['company_id' => $company->id]);
+        $pendingUser = User::factory()->create(['company_id' => $company->id]);
 
-        $document = PolicyDocument::factory()->create(['department_id' => $department->id, 'type' => PolicyDocumentType::Sop]);
+        $document = PolicyDocument::factory()->create(['company_id' => $company->id, 'type' => PolicyDocumentType::Sop]);
         $version = PolicyDocumentVersion::factory()->create(['policy_document_id' => $document->id]);
         $version->acknowledgments()->create(['user_id' => $acknowledgedUser->id, 'viewed_at' => now(), 'acknowledged_at' => now()]);
 
@@ -32,20 +32,22 @@ class PolicyDocumentReportControllerTest extends TestCase
         $response->assertViewHas('rows', function ($rows) use ($document) {
             $row = $rows->firstWhere('document.id', $document->id);
 
-            return $row->assigned_count === 2
+            // superAdmin + acknowledgedUser + pendingUser — every active user
+            // in the company, since Sops are company-wide.
+            return $row->assigned_count === 3
                 && $row->acknowledged_count === 1
-                && $row->pending_count === 1;
+                && $row->pending_count === 2;
         });
     }
 
     public function test_show_lists_assigned_users_with_their_acknowledgment_status(): void
     {
-        $superAdmin = User::factory()->create(['role' => UserRole::SuperAdmin]);
-        $department = Department::factory()->create();
-        $acknowledgedUser = User::factory()->create(['department_id' => $department->id]);
-        $pendingUser = User::factory()->create(['department_id' => $department->id]);
+        $company = Company::factory()->create();
+        $superAdmin = User::factory()->create(['role' => UserRole::SuperAdmin, 'company_id' => $company->id]);
+        $acknowledgedUser = User::factory()->create(['company_id' => $company->id]);
+        $pendingUser = User::factory()->create(['company_id' => $company->id]);
 
-        $document = PolicyDocument::factory()->create(['department_id' => $department->id, 'type' => PolicyDocumentType::Sop]);
+        $document = PolicyDocument::factory()->create(['company_id' => $company->id, 'type' => PolicyDocumentType::Sop]);
         $version = PolicyDocumentVersion::factory()->create(['policy_document_id' => $document->id]);
         $version->acknowledgments()->create(['user_id' => $acknowledgedUser->id, 'viewed_at' => now(), 'acknowledged_at' => now()]);
 

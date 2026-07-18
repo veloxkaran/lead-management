@@ -14,7 +14,7 @@ class UserRepository extends BaseRepository
 
     public function filter(array $filters, int $perPage = 15): LengthAwarePaginator
     {
-        $query = $this->query()->with('team');
+        $query = $this->query();
 
         if (! empty($filters['search'])) {
             $search = $filters['search'];

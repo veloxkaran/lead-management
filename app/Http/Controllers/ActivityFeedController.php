@@ -28,7 +28,6 @@ class ActivityFeedController extends Controller
                 'id' => $entry->id,
                 'user_name' => $entry->user->name,
                 'user_initial' => strtoupper(substr($entry->user->name, 0, 1)),
-                'department' => $entry->user->assignedDepartment?->name,
                 'module' => $entry->module->value,
                 'module_label' => $entry->module->label(),
                 'module_icon' => $entry->module->icon(),

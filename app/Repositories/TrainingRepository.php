@@ -14,7 +14,7 @@ class TrainingRepository extends BaseRepository
 
     public function filter(array $filters, int $perPage = 20): LengthAwarePaginator
     {
-        $query = $this->query()->with(['lead', 'department', 'conductor']);
+        $query = $this->query()->with(['lead', 'conductor']);
 
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);

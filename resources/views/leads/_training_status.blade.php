@@ -14,7 +14,6 @@
                 <dt class="col-6 text-muted">Training Date</dt><dd class="col-6">{{ $training->training_date?->format('M d, Y') ?? '—' }}</dd>
                 <dt class="col-6 text-muted">Trainer</dt><dd class="col-6">{{ $training->trainer_name ?? '—' }}</dd>
                 <dt class="col-6 text-muted">Attendees</dt><dd class="col-6">{{ $training->attendees_count ?? '—' }}</dd>
-                <dt class="col-6 text-muted">Department</dt><dd class="col-6">{{ $training->department?->name ?? '—' }}</dd>
                 <dt class="col-6 text-muted">Completion</dt><dd class="col-6">{{ $training->completion_percentage }}%</dd>
             </dl>
             @if ($training->feedback)

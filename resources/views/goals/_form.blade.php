@@ -29,16 +29,6 @@
             </select>
         </div>
 
-        <div class="col-md-4" x-show="goalType === 'team'" x-cloak>
-            <label class="form-label small fw-semibold">Team *</label>
-            <select name="team_id" class="form-select" data-select2>
-                <option value="">Select a team</option>
-                @foreach ($teams as $team)
-                    <option value="{{ $team->id }}" @selected(old('team_id', $goal->team_id ?? '') == $team->id)>{{ $team->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
         <div class="col-md-4" x-show="goalType === 'individual'" x-cloak>
             <label class="form-label small fw-semibold">User *</label>
             <select name="user_id" class="form-select" data-select2>

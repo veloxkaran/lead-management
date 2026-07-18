@@ -24,11 +24,6 @@ class Company extends Model
         return $this->hasMany(User::class);
     }
 
-    public function teams(): HasMany
-    {
-        return $this->hasMany(Team::class);
-    }
-
     public function leads(): HasMany
     {
         return $this->hasMany(Lead::class);

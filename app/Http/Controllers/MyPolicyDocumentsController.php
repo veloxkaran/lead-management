@@ -22,7 +22,6 @@ class MyPolicyDocumentsController extends Controller
 
         return view('my-policy-documents.index', [
             'sops' => $this->sectionRows($user, PolicyDocumentType::Sop),
-            'departmentJds' => $this->sectionRows($user, PolicyDocumentType::DepartmentJd),
             'individualJds' => $this->sectionRows($user, PolicyDocumentType::IndividualJd),
         ]);
     }
@@ -31,7 +30,7 @@ class MyPolicyDocumentsController extends Controller
     {
         $this->authorize('view', $policy_document_version->policyDocument);
 
-        $policy_document_version->load('policyDocument.department', 'policyDocument.user', 'policyDocument.creator');
+        $policy_document_version->load('policyDocument.user', 'policyDocument.creator');
 
         return view('my-policy-documents.show', [
             'version' => $policy_document_version,

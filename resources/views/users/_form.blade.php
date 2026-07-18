@@ -13,15 +13,6 @@
         <input type="text" name="phone" value="{{ old('phone', $user->phone ?? '') }}" class="form-control">
     </div>
     <div class="col-md-4">
-        <label class="form-label small fw-semibold">Department</label>
-        <select name="department_id" class="form-select" data-select2>
-            <option value="">No department</option>
-            @foreach ($departments as $department)
-                <option value="{{ $department->id }}" @selected(old('department_id', $user->department_id ?? '') == $department->id)>{{ $department->name }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="col-md-4">
         <label class="form-label small fw-semibold">Designation</label>
         <input type="text" name="designation" value="{{ old('designation', $user->designation ?? '') }}" class="form-control">
     </div>
@@ -38,15 +29,6 @@
         <select name="status" class="form-select" required>
             @foreach ($statuses as $status)
                 <option value="{{ $status->value }}" @selected(old('status', $user->status->value ?? 'active') === $status->value)>{{ $status->label() }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="col-md-4">
-        <label class="form-label small fw-semibold">Team</label>
-        <select name="team_id" class="form-select" data-select2>
-            <option value="">No team</option>
-            @foreach ($teams as $team)
-                <option value="{{ $team->id }}" @selected(old('team_id', $user->team_id ?? '') == $team->id)>{{ $team->name }}</option>
             @endforeach
         </select>
     </div>

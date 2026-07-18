@@ -24,12 +24,9 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
-        'department',
-        'department_id',
         'designation',
         'role',
         'status',
-        'team_id',
         'reporting_manager_id',
         'company_id',
         'password',
@@ -140,22 +137,6 @@ class User extends Authenticatable
         return $this->hasMany(self::class, 'reporting_manager_id');
     }
 
-    public function team(): BelongsTo
-    {
-        return $this->belongsTo(Team::class);
-    }
-
-    /**
-     * Named to avoid colliding with the legacy `department` string column
-     * (still present, still used by the profile self-edit form) — Eloquent
-     * always resolves a raw attribute before a same-named relationship
-     * method, so `department()` here would be permanently unreachable.
-     */
-    public function assignedDepartment(): BelongsTo
-    {
-        return $this->belongsTo(Department::class, 'department_id');
-    }
-
     /**
      * No BelongsToCompany trait here deliberately: a global scope on the
      * users table would call Auth::user() while the guard is still
@@ -208,7 +189,7 @@ class User extends Authenticatable
 
     /**
      * Individual Job Descriptions assigned directly to this user (as opposed
-     * to Sops/Department JDs, which are scoped via department()).
+     * to Sops, which are company-wide and apply to every active user).
      */
     public function individualPolicyDocuments(): HasMany
     {

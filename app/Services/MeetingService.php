@@ -14,25 +14,14 @@ class MeetingService
     }
 
     /**
-     * Scope options: "mine" (default: personal + team), "personal", "team", "all" (Manager/Super Admin only).
+     * Scope options: "mine" (default: meetings the user created), "all" (Manager/Super Admin only).
      */
     public function list(User $user, string $scope = 'mine', int $perPage = 15): LengthAwarePaginator
     {
-        $query = $this->meetings->query()->with(['team', 'creator']);
+        $query = $this->meetings->query()->with('creator');
 
-        if ($scope === 'all' && $user->isOverseer()) {
-            // No additional constraint — overseers see every meeting.
-        } elseif ($scope === 'team') {
-            $query->where('team_id', $user->team_id);
-        } elseif ($scope === 'personal') {
-            $query->where('created_by', $user->id)->whereNull('team_id');
-        } else {
-            $query->where(function ($q) use ($user) {
-                $q->where('created_by', $user->id);
-                if ($user->team_id) {
-                    $q->orWhere('team_id', $user->team_id);
-                }
-            });
+        if ($scope !== 'all' || ! $user->isOverseer()) {
+            $query->where('created_by', $user->id);
         }
 
         return $query->orderByDesc('meeting_date')->orderByDesc('meeting_time')->paginate($perPage)->withQueryString();

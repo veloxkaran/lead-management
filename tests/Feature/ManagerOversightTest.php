@@ -11,7 +11,6 @@ use App\Models\Goal;
 use App\Models\Lead;
 use App\Models\LeadActivity;
 use App\Models\Meeting;
-use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -70,11 +69,11 @@ class ManagerOversightTest extends TestCase
         $response->assertViewHas('followUps', fn ($followUps) => $followUps->total() === 1);
     }
 
-    public function test_manager_sees_every_teams_goals(): void
+    public function test_manager_sees_every_users_individual_goals(): void
     {
         $manager = User::factory()->create(['role' => UserRole::Manager]);
-        $otherTeam = Team::factory()->create();
-        Goal::factory()->create(['goal_type' => GoalType::Team, 'team_id' => $otherTeam->id]);
+        $other = User::factory()->create();
+        Goal::factory()->create(['goal_type' => GoalType::Individual, 'user_id' => $other->id]);
 
         $response = $this->actingAs($manager)->get(route('goals.index'));
 
@@ -86,7 +85,7 @@ class ManagerOversightTest extends TestCase
     {
         $manager = User::factory()->create(['role' => UserRole::Manager]);
         $other = User::factory()->create();
-        Meeting::factory()->create(['created_by' => $other->id, 'team_id' => null]);
+        Meeting::factory()->create(['created_by' => $other->id]);
 
         $response = $this->actingAs($manager)->get(route('meetings.index', ['scope' => 'all']));
 

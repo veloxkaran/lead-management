@@ -52,11 +52,10 @@ class LeadService
     {
         return DB::transaction(function () use ($lead, $attributes) {
             $previousAssignedUserId = $lead->assigned_user_id;
-            $previousTeamId = $lead->assignedUser?->team_id;
 
             $lead = $this->leads->update($lead, $attributes);
 
-            $this->goalAchievements->syncForLead($lead, $previousAssignedUserId, $previousTeamId);
+            $this->goalAchievements->syncForLead($lead, $previousAssignedUserId);
 
             return $lead;
         });

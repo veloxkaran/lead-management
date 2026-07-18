@@ -5,25 +5,24 @@ namespace App\Enums;
 enum PolicyDocumentType: string
 {
     case Sop = 'sop';
-    case DepartmentJd = 'department_jd';
     case IndividualJd = 'individual_jd';
 
     public function label(): string
     {
         return match ($this) {
             self::Sop => 'SOP',
-            self::DepartmentJd => 'Department Job Description',
             self::IndividualJd => 'Individual Job Description',
         };
     }
 
     /**
-     * Sop and DepartmentJd are assigned to a Department; IndividualJd is
+     * Sop applies to every active user in the company; IndividualJd is
      * assigned to a single User — this drives which field is required in
-     * PolicyDocumentService/FormRequest validation.
+     * PolicyDocumentService/FormRequest validation and how assignedUsers()
+     * resolves.
      */
-    public function isDepartmentAssigned(): bool
+    public function isCompanyWide(): bool
     {
-        return $this !== self::IndividualJd;
+        return $this === self::Sop;
     }
 }

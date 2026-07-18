@@ -25,7 +25,7 @@
                         <tr>
                             <td>{{ $goal->title }}</td>
                             <td>{{ $goal->goal_type->label() }}</td>
-                            <td class="small">{{ $goal->team?->name ?? $goal->user?->name ?? 'Organization' }}</td>
+                            <td class="small">{{ $goal->user?->name ?? 'Organization' }}</td>
                             <td><x-currency :amount="$goal->target" /></td>
                             <td><x-currency :amount="$goal->achieved" /></td>
                             <td style="min-width: 160px;">

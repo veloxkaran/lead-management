@@ -20,7 +20,6 @@ class UpdateTrainingRequest extends FormRequest
             'training_date' => ['nullable', 'date'],
             'trainer_name' => ['nullable', 'string', 'max:255'],
             'attendees_count' => ['nullable', 'integer', 'min:0'],
-            'department_id' => ['nullable', 'exists:departments,id'],
             'completion_percentage' => ['nullable', 'integer', 'min:0', 'max:100'],
             'feedback' => ['nullable', 'string'],
         ];

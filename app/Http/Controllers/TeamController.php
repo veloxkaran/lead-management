@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Department;
 use App\Models\User;
 use App\Services\OrganizationHierarchyService;
 use Illuminate\Http\Request;
@@ -23,14 +22,12 @@ class TeamController extends Controller
 
         $members = User::query()
             ->whereIn('id', $visibleIds)
-            ->with(['assignedDepartment', 'team'])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->string('search');
                 $query->where(fn ($q) => $q
                     ->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%"));
             })
-            ->when($request->filled('department_id'), fn ($query) => $query->where('department_id', $request->integer('department_id')))
             ->orderBy('name')
             ->paginate(15)
             ->withQueryString();
@@ -39,8 +36,7 @@ class TeamController extends Controller
 
         return view('team.index', [
             'members' => $members,
-            'filters' => $request->only(['search', 'department_id']),
-            'departments' => Department::orderBy('name')->get(),
+            'filters' => $request->only(['search']),
             'reportedToday' => $stats['reported_today'],
             'latestSummary' => $stats['latest_summary'],
             'latestActivity' => $stats['latest_activity'],

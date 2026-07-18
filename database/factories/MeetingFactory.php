@@ -21,7 +21,6 @@ class MeetingFactory extends Factory
             'meeting_time' => fake()->time('H:i:s'),
             'meeting_link' => 'https://meet.google.com/'.fake()->lexify('???-????-???'),
             'participants' => collect(range(1, fake()->numberBetween(2, 5)))->map(fn () => fake()->safeEmail())->all(),
-            'team_id' => null,
             'created_by' => User::factory(),
         ];
     }

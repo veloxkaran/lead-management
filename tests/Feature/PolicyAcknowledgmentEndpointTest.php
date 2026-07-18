@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Department;
 use App\Models\PolicyDocument;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,9 +13,8 @@ class PolicyAcknowledgmentEndpointTest extends TestCase
 
     public function test_assigned_user_can_view_and_acknowledge_a_document(): void
     {
-        $department = Department::factory()->create();
-        $user = User::factory()->create(['department_id' => $department->id]);
-        $document = PolicyDocument::factory()->create(['department_id' => $department->id]);
+        $user = User::factory()->create();
+        $document = PolicyDocument::factory()->create();
         $version = $document->versions()->create([
             'version' => '1.0', 'content' => '<p>Body</p>', 'effective_date' => now()->toDateString(),
             'published_at' => now(), 'created_by' => $user->id,
@@ -46,13 +44,12 @@ class PolicyAcknowledgmentEndpointTest extends TestCase
 
     public function test_unassigned_user_cannot_view_or_acknowledge_a_document(): void
     {
-        $department = Department::factory()->create();
-        $otherDepartment = Department::factory()->create();
-        $user = User::factory()->create(['department_id' => $otherDepartment->id]);
-        $document = PolicyDocument::factory()->create(['department_id' => $department->id]);
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $document = PolicyDocument::factory()->individualJd()->create(['user_id' => $otherUser->id]);
         $version = $document->versions()->create([
             'version' => '1.0', 'content' => '<p>Body</p>', 'effective_date' => now()->toDateString(),
-            'published_at' => now(), 'created_by' => $user->id,
+            'published_at' => now(), 'created_by' => $otherUser->id,
         ]);
 
         $this->actingAs($user)->postJson(route('policy-documents.view', $version))->assertForbidden();

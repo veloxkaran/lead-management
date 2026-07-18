@@ -13,7 +13,7 @@ class Goal extends Model
     use BelongsToCompany, HasFactory;
 
     protected $fillable = [
-        'company_id', 'title', 'target', 'achieved', 'goal_type', 'team_id', 'user_id',
+        'company_id', 'title', 'target', 'achieved', 'goal_type', 'user_id',
         'start_date', 'end_date', 'bs_year', 'bs_month', 'created_by',
     ];
 
@@ -26,11 +26,6 @@ class Goal extends Model
             'start_date' => 'date',
             'end_date' => 'date',
         ];
-    }
-
-    public function team(): BelongsTo
-    {
-        return $this->belongsTo(Team::class);
     }
 
     public function user(): BelongsTo

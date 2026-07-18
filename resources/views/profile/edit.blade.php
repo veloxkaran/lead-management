@@ -30,10 +30,6 @@
                         <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" class="form-control">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Department</label>
-                        <input type="text" name="department" value="{{ old('department', $user->department) }}" class="form-control">
-                    </div>
-                    <div class="col-md-6">
                         <label class="form-label small fw-semibold">Designation</label>
                         <input type="text" name="designation" value="{{ old('designation', $user->designation) }}" class="form-control">
                     </div>

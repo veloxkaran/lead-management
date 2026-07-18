@@ -13,7 +13,7 @@ class PolicyDocumentReportController extends Controller
         $this->authorize('viewAny', PolicyDocument::class);
 
         $rows = PolicyDocument::query()
-            ->with(['department.users', 'user', 'currentVersion.acknowledgments'])
+            ->with(['user', 'currentVersion.acknowledgments'])
             ->active()
             ->get()
             ->map(fn (PolicyDocument $document) => $this->summarize($document));
@@ -25,7 +25,7 @@ class PolicyDocumentReportController extends Controller
     {
         $this->authorize('viewAny', PolicyDocument::class);
 
-        $policy_document->load(['department.users', 'user', 'currentVersion.acknowledgments']);
+        $policy_document->load(['user', 'currentVersion.acknowledgments']);
 
         $assignedUsers = $policy_document->assignedUsers();
 

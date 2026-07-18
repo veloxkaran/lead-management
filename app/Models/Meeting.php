@@ -12,7 +12,7 @@ class Meeting extends Model
     use BelongsToCompany, HasFactory;
 
     protected $fillable = [
-        'company_id', 'title', 'meeting_date', 'meeting_time', 'meeting_link', 'participants', 'team_id', 'created_by',
+        'company_id', 'title', 'meeting_date', 'meeting_time', 'meeting_link', 'participants', 'created_by',
     ];
 
     protected function casts(): array
@@ -21,11 +21,6 @@ class Meeting extends Model
             'meeting_date' => 'date',
             'participants' => 'array',
         ];
-    }
-
-    public function team(): BelongsTo
-    {
-        return $this->belongsTo(Team::class);
     }
 
     public function creator(): BelongsTo

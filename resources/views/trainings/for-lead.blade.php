@@ -20,7 +20,6 @@
                         <th>Training Date</th>
                         <th>Trainer</th>
                         <th>Attendees</th>
-                        <th>Department</th>
                         <th>Completion</th>
                         <th>Status</th>
                         <th class="text-end">Actions</th>
@@ -32,7 +31,6 @@
                             <td class="small">{{ $training->training_date?->format('M d, Y') ?? '—' }}</td>
                             <td class="small text-muted">{{ $training->trainer_name ?? '—' }}</td>
                             <td class="small">{{ $training->attendees_count ?? '—' }}</td>
-                            <td class="small">{{ $training->department?->name ?? '—' }}</td>
                             <td class="small">{{ $training->completion_percentage }}%</td>
                             <td><x-status-badge :status="$training->status" /></td>
                             <td class="text-end">

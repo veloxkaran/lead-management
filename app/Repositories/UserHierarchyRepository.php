@@ -66,7 +66,7 @@ class UserHierarchyRepository extends BaseRepository
     {
         return $this->query()
             ->when($companyId, fn ($query) => $query->where('company_id', $companyId))
-            ->select(['id', 'name', 'email', 'role', 'designation', 'department_id', 'team_id', 'reporting_manager_id'])
+            ->select(['id', 'name', 'email', 'role', 'designation', 'reporting_manager_id'])
             ->orderBy('name')
             ->get();
     }

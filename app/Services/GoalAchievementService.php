@@ -36,22 +36,17 @@ class GoalAchievementService
         $this->syncForLead($lead);
     }
 
-    public function syncForLead(Lead $lead, ?int $previousAssignedUserId = null, ?int $previousTeamId = null): void
+    public function syncForLead(Lead $lead, ?int $previousAssignedUserId = null): void
     {
         $lead->loadMissing('assignedUser');
 
         $goals = Goal::query()
-            ->where(function ($query) use ($lead, $previousAssignedUserId, $previousTeamId) {
+            ->where(function ($query) use ($lead, $previousAssignedUserId) {
                 $query->where('goal_type', GoalType::Organization);
 
                 $userIds = array_filter(array_unique([$lead->assigned_user_id, $previousAssignedUserId]));
                 if (! empty($userIds)) {
                     $query->orWhere(fn ($q) => $q->where('goal_type', GoalType::Individual)->whereIn('user_id', $userIds));
-                }
-
-                $teamIds = array_filter(array_unique([$lead->assignedUser?->team_id, $previousTeamId]));
-                if (! empty($teamIds)) {
-                    $query->orWhere(fn ($q) => $q->where('goal_type', GoalType::Team)->whereIn('team_id', $teamIds));
                 }
             })
             ->get();
@@ -66,7 +61,6 @@ class GoalAchievementService
 
         match ($goal->goal_type) {
             GoalType::Individual => $query->where('assigned_user_id', $goal->user_id),
-            GoalType::Team => $query->whereHas('assignedUser', fn ($q) => $q->where('team_id', $goal->team_id)),
             GoalType::Organization => null,
         };
 

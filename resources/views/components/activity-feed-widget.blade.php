@@ -29,7 +29,6 @@
                             <span class="badge bg-primary-subtle text-primary-emphasis small">
                                 <i :class="'bi ' + item.module_icon"></i> <span x-text="item.module_label"></span>
                             </span>
-                            <span class="text-muted small" x-show="item.department" x-text="item.department"></span>
                         </div>
                         <div class="small" x-text="item.description"></div>
                         <div class="text-muted" style="font-size: 0.75rem;" x-text="item.time_ago"></div>

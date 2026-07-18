@@ -13,8 +13,6 @@
         <div class="card-body">
             <div class="btn-group btn-group-sm" role="group">
                 <a href="{{ route('meetings.index', ['scope' => 'mine']) }}" class="btn btn-outline-primary {{ $scope === 'mine' ? 'active' : '' }}">My Meetings</a>
-                <a href="{{ route('meetings.index', ['scope' => 'personal']) }}" class="btn btn-outline-primary {{ $scope === 'personal' ? 'active' : '' }}">Personal Only</a>
-                <a href="{{ route('meetings.index', ['scope' => 'team']) }}" class="btn btn-outline-primary {{ $scope === 'team' ? 'active' : '' }}">Team Meetings</a>
                 @if (auth()->user()->isOverseer())
                     <a href="{{ route('meetings.index', ['scope' => 'all']) }}" class="btn btn-outline-primary {{ $scope === 'all' ? 'active' : '' }}">All Meetings</a>
                 @endif
@@ -31,7 +29,6 @@
                         <th>Date</th>
                         <th>Time</th>
                         <th>Participants</th>
-                        <th>Team</th>
                         <th>Link</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -52,7 +49,6 @@
                                     {{ count($participants) }} participants
                                 @endif
                             </td>
-                            <td>{{ $meeting->team?->name ?? 'Personal' }}</td>
                             <td>
                                 <a href="{{ $meeting->meeting_link }}" target="_blank" class="btn btn-sm btn-outline-success"><i class="bi bi-camera-video"></i> Join</a>
                             </td>
@@ -71,7 +67,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7">
+                            <td colspan="6">
                                 <x-empty-state icon="bi-camera-video" title="No meetings found" description="Schedule a meeting to get started." />
                             </td>
                         </tr>

@@ -14,7 +14,7 @@ class PolicyDocumentService
     public function list(PolicyDocumentType $type)
     {
         return PolicyDocument::ofType($type)
-            ->with(['department', 'user', 'currentVersion'])
+            ->with(['user', 'currentVersion'])
             ->latest()
             ->get();
     }
@@ -25,7 +25,6 @@ class PolicyDocumentService
             $document = PolicyDocument::create([
                 'type' => $type,
                 'title' => $attributes['title'],
-                'department_id' => $attributes['department_id'] ?? null,
                 'user_id' => $attributes['user_id'] ?? null,
                 'allow_skip' => $attributes['allow_skip'] ?? false,
                 'is_active' => $attributes['is_active'] ?? true,
@@ -46,7 +45,6 @@ class PolicyDocumentService
     {
         $document->update([
             'title' => $attributes['title'],
-            'department_id' => $attributes['department_id'] ?? null,
             'user_id' => $attributes['user_id'] ?? null,
             'allow_skip' => $attributes['allow_skip'] ?? false,
             'is_active' => $attributes['is_active'] ?? true,

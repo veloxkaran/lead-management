@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PolicyDocumentType;
+use App\Enums\UserStatus;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +19,7 @@ class PolicyDocument extends Model
     use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'company_id', 'type', 'title', 'department_id', 'user_id',
+        'company_id', 'type', 'title', 'user_id',
         'allow_skip', 'is_active', 'created_by',
     ];
 
@@ -34,7 +35,7 @@ class PolicyDocument extends Model
     protected static function booted(): void
     {
         static::updated(function (self $document) {
-            if (! $document->wasChanged(['department_id', 'user_id', 'is_active'])) {
+            if (! $document->wasChanged(['user_id', 'is_active'])) {
                 return;
             }
 
@@ -42,7 +43,7 @@ class PolicyDocument extends Model
 
             self::forgetPendingCacheForUserIds(self::assignedUserIdsFor(
                 $document->type,
-                $document->getOriginal('department_id'),
+                $document->company_id,
                 $document->getOriginal('user_id'),
             ));
         });
@@ -55,16 +56,16 @@ class PolicyDocument extends Model
      */
     public function assignedUserIds(): Collection
     {
-        return self::assignedUserIdsFor($this->type, $this->department_id, $this->user_id);
+        return self::assignedUserIdsFor($this->type, $this->company_id, $this->user_id);
     }
 
     /**
      * @return Collection<int, int>
      */
-    private static function assignedUserIdsFor(PolicyDocumentType $type, ?int $departmentId, ?int $userId): Collection
+    private static function assignedUserIdsFor(PolicyDocumentType $type, ?int $companyId, ?int $userId): Collection
     {
-        if ($type->isDepartmentAssigned()) {
-            return $departmentId ? User::where('department_id', $departmentId)->pluck('id') : collect();
+        if ($type->isCompanyWide()) {
+            return User::where('company_id', $companyId)->where('status', UserStatus::Active)->pluck('id');
         }
 
         return $userId ? collect([$userId]) : collect();
@@ -81,17 +82,15 @@ class PolicyDocument extends Model
     }
 
     /**
-     * The users this document applies to: everyone in its department (for
-     * Sop/DepartmentJd), or its single assignee (for IndividualJd). Uses the
-     * `department`/`user` relations, so eager-loading `department.users`
-     * before calling this avoids an extra query per document.
+     * The users this document applies to: every active user in the company
+     * (for Sop), or its single assignee (for IndividualJd).
      *
      * @return Collection<int, User>
      */
     public function assignedUsers(): Collection
     {
-        if ($this->type->isDepartmentAssigned()) {
-            return $this->department?->users ?? collect();
+        if ($this->type->isCompanyWide()) {
+            return User::where('company_id', $this->company_id)->where('status', UserStatus::Active)->get();
         }
 
         return collect([$this->user])->filter();
@@ -106,13 +105,8 @@ class PolicyDocument extends Model
         ];
     }
 
-    public function department(): BelongsTo
-    {
-        return $this->belongsTo(Department::class);
-    }
-
     /**
-     * The assignee for an Individual JD. Not applicable to Sop/DepartmentJd.
+     * The assignee for an Individual JD. Not applicable to Sop.
      */
     public function user(): BelongsTo
     {
@@ -161,18 +155,17 @@ class PolicyDocument extends Model
     }
 
     /**
-     * Documents of $type that apply to $user: department-scoped ones where
-     * $user belongs to that department, or individual ones assigned to
-     * $user directly. Matches $type->isDepartmentAssigned() with $type
-     * itself rather than each document's own `type` column, since callers
-     * already filter to a single type via scopeOfType and pass it in.
+     * Documents of $type that apply to $user: every company-wide one (Sop —
+     * the model's own BelongsToCompany scope already restricts the query to
+     * the viewer's company, so no extra where is needed here), or individual
+     * ones assigned to $user directly. Matches $type->isCompanyWide() with
+     * $type itself rather than each document's own `type` column, since
+     * callers already filter to a single type via scopeOfType and pass it in.
      */
     public function scopeAssignedTo($query, User $user, PolicyDocumentType $type)
     {
-        if ($type->isDepartmentAssigned()) {
-            return $user->department_id
-                ? $query->where('department_id', $user->department_id)
-                : $query->whereRaw('0 = 1');
+        if ($type->isCompanyWide()) {
+            return $query;
         }
 
         return $query->where('user_id', $user->id);

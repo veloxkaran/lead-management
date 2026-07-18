@@ -22,7 +22,6 @@ class GoalFactory extends Factory
             'target' => $target,
             'achieved' => fake()->randomFloat(2, 0, $target),
             'goal_type' => GoalType::Individual,
-            'team_id' => null,
             'user_id' => User::factory(),
             'start_date' => $start,
             'end_date' => $end,
@@ -36,15 +35,6 @@ class GoalFactory extends Factory
     {
         return $this->state(fn () => [
             'goal_type' => GoalType::Organization,
-            'team_id' => null,
-            'user_id' => null,
-        ]);
-    }
-
-    public function team(): static
-    {
-        return $this->state(fn () => [
-            'goal_type' => GoalType::Team,
             'user_id' => null,
         ]);
     }
@@ -53,7 +43,6 @@ class GoalFactory extends Factory
     {
         return $this->state(fn () => [
             'goal_type' => GoalType::Individual,
-            'team_id' => null,
         ]);
     }
 }

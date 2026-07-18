@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Goal\StoreGoalRequest;
 use App\Http\Requests\Goal\UpdateGoalRequest;
 use App\Models\Goal;
-use App\Models\Team;
 use App\Models\User;
 use App\Services\GoalService;
 use Illuminate\Http\RedirectResponse;
@@ -38,7 +37,6 @@ class GoalController extends Controller
         $this->authorize('create', Goal::class);
 
         return view('goals.create', [
-            'teams' => Team::orderBy('name')->get(),
             'users' => User::orderBy('name')->get(),
         ]);
     }
@@ -56,7 +54,6 @@ class GoalController extends Controller
 
         return view('goals.edit', [
             'goal' => $goal,
-            'teams' => Team::orderBy('name')->get(),
             'users' => User::orderBy('name')->get(),
         ]);
     }

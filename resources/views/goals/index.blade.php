@@ -3,7 +3,7 @@
 @section('title', 'Goals')
 
 @section('content')
-    <x-page-header title="Goals" icon="bi-bullseye" subtitle="Organization, team, and individual targets.">
+    <x-page-header title="Goals" icon="bi-bullseye" subtitle="Organization and individual targets.">
         <x-slot:actions>
             @can('create', App\Models\Goal::class)
                 <a href="{{ route('goals.create') }}" class="btn btn-primary btn-sm">
@@ -52,9 +52,7 @@
                             <td class="fw-semibold">{{ $goal->title }}</td>
                             <td><span class="badge bg-secondary">{{ $goal->goal_type->label() }}</span></td>
                             <td class="small text-muted">
-                                @if ($goal->goal_type === \App\Enums\GoalType::Team)
-                                    {{ $goal->team?->name ?? '—' }}
-                                @elseif ($goal->goal_type === \App\Enums\GoalType::Individual)
+                                @if ($goal->goal_type === \App\Enums\GoalType::Individual)
                                     {{ $goal->user?->name ?? '—' }}
                                 @else
                                     Organization-wide

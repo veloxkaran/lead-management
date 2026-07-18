@@ -18,7 +18,6 @@ class UpdateMeetingRequest extends FormRequest
             'meeting_date' => ['required', 'date'],
             'meeting_time' => ['required'],
             'meeting_link' => ['required', 'url', 'max:2048'],
-            'team_id' => ['nullable', 'exists:teams,id'],
             'participants' => ['nullable', 'string'],
         ];
     }

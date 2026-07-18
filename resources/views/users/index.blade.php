@@ -45,7 +45,7 @@
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
-                    <tr><th>Name</th><th>Department</th><th>Role</th><th>Status</th><th>Team</th><th class="text-end">Actions</th></tr>
+                    <tr><th>Name</th><th>Designation</th><th>Role</th><th>Status</th><th class="text-end">Actions</th></tr>
                 </thead>
                 <tbody>
                     @forelse ($users as $user)
@@ -54,10 +54,9 @@
                                 <div class="fw-semibold">{{ $user->name }}</div>
                                 <div class="text-muted small">{{ $user->email }}</div>
                             </td>
-                            <td class="small">{{ $user->assignedDepartment?->name }} @if($user->designation) <div class="text-muted">{{ $user->designation }}</div> @endif</td>
+                            <td class="small">{{ $user->designation ?? '—' }}</td>
                             <td><span class="badge bg-primary-subtle text-primary-emphasis">{{ $user->role->label() }}</span></td>
                             <td><x-status-badge :status="$user->status" /></td>
-                            <td class="small">{{ $user->team?->name ?? '—' }}</td>
                             <td class="text-end">
                                 <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
                                 @can('impersonate', $user)
@@ -84,7 +83,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6"><x-empty-state icon="bi-people" title="No users found" /></td></tr>
+                        <tr><td colspan="5"><x-empty-state icon="bi-people" title="No users found" /></td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -15,12 +15,12 @@ class PolicyAcknowledgmentResolver
     }
 
     /**
-     * Sop → DepartmentJd → IndividualJd, in that order, excluding any
-     * document whose current version the user has already acknowledged.
+     * Sop → IndividualJd, in that order, excluding any document whose
+     * current version the user has already acknowledged.
      */
     public function pendingFor(User $user): Collection
     {
-        return collect([PolicyDocumentType::Sop, PolicyDocumentType::DepartmentJd, PolicyDocumentType::IndividualJd])
+        return collect([PolicyDocumentType::Sop, PolicyDocumentType::IndividualJd])
             ->flatMap(fn (PolicyDocumentType $type) => $this->pendingOfType($user, $type))
             ->values();
     }

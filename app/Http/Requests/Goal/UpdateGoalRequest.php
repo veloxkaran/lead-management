@@ -19,7 +19,6 @@ class UpdateGoalRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'target' => ['required', 'numeric', 'min:0'],
             'goal_type' => ['required', new Enum(GoalType::class)],
-            'team_id' => ['required_if:goal_type,team', 'nullable', 'exists:teams,id'],
             'user_id' => ['required_if:goal_type,individual', 'nullable', 'exists:users,id'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],

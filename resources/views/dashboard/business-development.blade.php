@@ -121,7 +121,7 @@
                     <a href="{{ route('goals.index') }}" class="small">View all</a>
                 </div>
                 <div class="card-body">
-                    @forelse ($individualGoals->concat($teamGoals) as $goal)
+                    @forelse ($individualGoals as $goal)
                         <div class="mb-3">
                             <div class="d-flex justify-content-between small mb-1">
                                 <span>{{ $goal->title }}</span>

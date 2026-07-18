@@ -10,10 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Shared shape for the three Super-Admin document-type resources (Sop,
- * DepartmentJd, IndividualJd) — they're the same model and service under the
- * hood, differing only in which assignment field is required and which
- * views/routes they render. Kept as three thin controllers (not one
+ * Shared shape for the two Super-Admin document-type resources (Sop,
+ * IndividualJd) — they're the same model and service under the hood,
+ * differing only in which assignment field is required and which
+ * views/routes they render. Kept as two thin controllers (not one
  * type-switching controller) to match this codebase's existing convention of
  * one controller per resource (compare KnowledgeBaseController vs
  * KnowledgeBaseCategoryController).

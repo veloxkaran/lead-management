@@ -117,14 +117,8 @@
             <a href="{{ route('whatsapp-settings.edit') }}" class="nav-link {{ request()->routeIs('whatsapp-settings.*') ? 'active' : '' }}" title="WhatsApp Settings" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-whatsapp"></i> <span class="nav-label">WhatsApp Settings</span>
             </a>
-            <a href="{{ route('departments.index') }}" class="nav-link {{ request()->routeIs('departments.*') ? 'active' : '' }}" title="Departments" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-diagram-2"></i> <span class="nav-label">Departments</span>
-            </a>
             <a href="{{ route('sops.index') }}" class="nav-link {{ request()->routeIs('sops.*') ? 'active' : '' }}" title="SOPs" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-journal-check"></i> <span class="nav-label">SOPs</span>
-            </a>
-            <a href="{{ route('department-jds.index') }}" class="nav-link {{ request()->routeIs('department-jds.*') ? 'active' : '' }}" title="Department Job Descriptions" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-diagram-3"></i> <span class="nav-label">Department Job Descriptions</span>
             </a>
             <a href="{{ route('individual-jds.index') }}" class="nav-link {{ request()->routeIs('individual-jds.*') ? 'active' : '' }}" title="Individual Job Descriptions" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-person-badge"></i> <span class="nav-label">Individual Job Descriptions</span>

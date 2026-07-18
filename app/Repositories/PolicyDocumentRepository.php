@@ -29,7 +29,7 @@ class PolicyDocumentRepository extends BaseRepository
             ->ofType($type)
             ->assignedTo($user, $type)
             ->with(array_merge([
-                'department', 'user',
+                'user',
                 'currentVersion.acknowledgments' => fn ($query) => $query->where('user_id', $user->id),
             ], $with))
             ->get()

@@ -10,15 +10,11 @@
             <i class="bi bi-person-badge me-1"></i> {{ auth()->user()->name }}
         </div>
         <div class="card-body row g-2">
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="text-muted small">Designation</div>
                 <div class="fw-semibold small">{{ auth()->user()->designation ?? '—' }}</div>
             </div>
-            <div class="col-md-4">
-                <div class="text-muted small">Department</div>
-                <div class="fw-semibold small">{{ auth()->user()->assignedDepartment?->name ?? '—' }}</div>
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="text-muted small">Team Size</div>
                 <div class="fw-semibold small">{{ $members->total() }}</div>
             </div>
@@ -28,18 +24,9 @@
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
             <form method="GET" class="row g-2 align-items-end">
-                <div class="col-md-5">
+                <div class="col-md-10">
                     <label class="form-label small">Search</label>
                     <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control form-control-sm" placeholder="Name or email">
-                </div>
-                <div class="col-md-5">
-                    <label class="form-label small">Department</label>
-                    <select name="department_id" class="form-select form-select-sm">
-                        <option value="">All departments</option>
-                        @foreach ($departments as $department)
-                            <option value="{{ $department->id }}" @selected(($filters['department_id'] ?? null) == $department->id)>{{ $department->name }}</option>
-                        @endforeach
-                    </select>
                 </div>
                 <div class="col-md-2">
                     <button class="btn btn-sm btn-primary w-100"><i class="bi bi-funnel"></i> Filter</button>

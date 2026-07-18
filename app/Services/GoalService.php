@@ -56,10 +56,6 @@ class GoalService
         $type = $attributes['goal_type'] ?? null;
         $type = $type instanceof \App\Enums\GoalType ? $type->value : $type;
 
-        if ($type !== 'team') {
-            $attributes['team_id'] = null;
-        }
-
         if ($type !== 'individual') {
             $attributes['user_id'] = null;
         }

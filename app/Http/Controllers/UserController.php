@@ -6,8 +6,6 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
-use App\Models\Department;
-use App\Models\Team;
 use App\Models\User;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
@@ -35,8 +33,6 @@ class UserController extends Controller
         $this->authorize('create', User::class);
 
         return view('users.create', [
-            'teams' => Team::orderBy('name')->get(),
-            'departments' => Department::orderBy('name')->get(),
             'managers' => User::orderBy('name')->get(),
             'roles' => UserRole::cases(),
             'statuses' => UserStatus::cases(),
@@ -54,8 +50,6 @@ class UserController extends Controller
     {
         $this->authorize('view', $user);
 
-        $user->load('team', 'assignedDepartment');
-
         return view('users.show', ['user' => $user]);
     }
 
@@ -65,8 +59,6 @@ class UserController extends Controller
 
         return view('users.edit', [
             'user' => $user,
-            'teams' => Team::orderBy('name')->get(),
-            'departments' => Department::orderBy('name')->get(),
             'managers' => User::whereKeyNot($user->id)->orderBy('name')->get(),
             'roles' => UserRole::cases(),
             'statuses' => UserStatus::cases(),

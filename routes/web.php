@@ -7,8 +7,6 @@ use App\Http\Controllers\ActivityFeedSettingsController;
 use App\Http\Controllers\CommonReportController;
 use App\Http\Controllers\DailySummaryController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\DepartmentJdController;
 use App\Http\Controllers\EmailAccountController;
 use App\Http\Controllers\FollowUpController;
 use App\Http\Controllers\GoalController;
@@ -123,7 +121,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('meetings', MeetingController::class)->except('show');
 
     Route::get('common-reports/goal-vs-achievement', [CommonReportController::class, 'goalVsAchievement'])->name('common-reports.goal-vs-achievement');
-    Route::get('common-reports/team-achievement', [CommonReportController::class, 'teamAchievement'])->name('common-reports.team-achievement');
     Route::get('common-reports/personal-achievement', [CommonReportController::class, 'personalAchievement'])->name('common-reports.personal-achievement');
 
     // Available while impersonating (the active session is a regular user at this point).
@@ -195,16 +192,11 @@ Route::middleware('auth')->group(function () {
 
         Route::put('leads/{lead}/whatsapp-users', [LeadWhatsappUserController::class, 'update'])->name('leads.whatsapp-users.update');
 
-        Route::resource('departments', DepartmentController::class)->except('show');
-
-        // All three share one route parameter name ("policy_document") so the
+        // Both share one route parameter name ("policy_document") so the
         // shared PolicyDocumentTypeController base class can use a single
         // consistent method signature for implicit route-model binding.
         Route::resource('sops', SopController::class)->except('show')->parameters(['sops' => 'policy_document']);
         Route::post('sops/{policy_document}/versions', [SopController::class, 'storeVersion'])->name('sops.versions.store');
-
-        Route::resource('department-jds', DepartmentJdController::class)->except('show')->parameters(['department-jds' => 'policy_document']);
-        Route::post('department-jds/{policy_document}/versions', [DepartmentJdController::class, 'storeVersion'])->name('department-jds.versions.store');
 
         Route::resource('individual-jds', IndividualJdController::class)->except('show')->parameters(['individual-jds' => 'policy_document']);
         Route::post('individual-jds/{policy_document}/versions', [IndividualJdController::class, 'storeVersion'])->name('individual-jds.versions.store');

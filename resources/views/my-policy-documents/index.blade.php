@@ -6,7 +6,7 @@
     <x-page-header title="My SOPs & Job Descriptions" icon="bi-journal-check" subtitle="Everything assigned to you — reopen and review anytime." />
 
     <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white fw-semibold">Department SOPs</div>
+        <div class="card-header bg-white fw-semibold">SOPs</div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -38,47 +38,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6"><x-empty-state icon="bi-journal-check" title="No SOPs assigned" description="Nothing has been assigned to your department yet." /></td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white fw-semibold">Department Job Descriptions</div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Title</th>
-                        <th>Status</th>
-                        <th>Version</th>
-                        <th>Effective Date</th>
-                        <th>Last Acknowledged</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($departmentJds as $row)
-                        <tr>
-                            <td class="fw-semibold">{{ $row->document->title }}</td>
-                            <td>
-                                @if ($row->is_read)
-                                    <span class="badge bg-success-subtle text-success-emphasis">Read</span>
-                                @else
-                                    <span class="badge bg-danger-subtle text-danger-emphasis">Unread</span>
-                                @endif
-                            </td>
-                            <td>{{ $row->version->version }}</td>
-                            <td>{{ $row->version->effective_date->format('M d, Y') }}</td>
-                            <td>{{ $row->last_acknowledged?->format('M d, Y H:i') ?? '—' }}</td>
-                            <td class="text-end">
-                                <a href="{{ route('my-policy-documents.show', $row->version) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i> Review</a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="6"><x-empty-state icon="bi-diagram-3" title="No job descriptions assigned" description="Nothing has been assigned to your department yet." /></td></tr>
+                        <tr><td colspan="6"><x-empty-state icon="bi-journal-check" title="No SOPs assigned" description="Nothing has been published yet." /></td></tr>
                     @endforelse
                 </tbody>
             </table>

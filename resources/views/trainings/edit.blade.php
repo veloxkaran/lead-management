@@ -36,16 +36,6 @@
                         @error('attendees_count')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Department Covered</label>
-                        <select name="department_id" class="form-select" data-select2>
-                            <option value="">—</option>
-                            @foreach ($departments as $department)
-                                <option value="{{ $department->id }}" @selected(old('department_id', $training->department_id) == $department->id)>{{ $department->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('department_id')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="col-md-6">
                         <label class="form-label small fw-semibold">Completion %</label>
                         <input type="number" name="completion_percentage" class="form-control" min="0" max="100" value="{{ old('completion_percentage', $training->completion_percentage) }}">
                         @error('completion_percentage')<div class="text-danger small mt-1">{{ $message }}</div>@enderror

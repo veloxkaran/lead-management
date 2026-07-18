@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Enums\PolicyDocumentType;
-use App\Models\Department;
 use App\Models\PolicyDocument;
 use App\Models\User;
 use App\Services\PolicyAcknowledgmentThrottleService;
@@ -26,9 +25,8 @@ class PolicyAcknowledgmentThrottleServiceTest extends TestCase
 
     public function test_prompts_and_persists_fingerprint_on_first_call(): void
     {
-        $department = Department::factory()->create();
-        $user = User::factory()->create(['department_id' => $department->id]);
-        $document = PolicyDocument::factory()->create(['department_id' => $department->id, 'type' => PolicyDocumentType::Sop]);
+        $user = User::factory()->create();
+        $document = PolicyDocument::factory()->create(['type' => PolicyDocumentType::Sop]);
         $document->versions()->create([
             'version' => '1.0', 'content' => '<p>Body</p>', 'effective_date' => now()->toDateString(),
             'published_at' => now(), 'created_by' => $user->id,
@@ -44,9 +42,8 @@ class PolicyAcknowledgmentThrottleServiceTest extends TestCase
 
     public function test_second_call_within_12_hours_with_same_fingerprint_is_throttled(): void
     {
-        $department = Department::factory()->create();
-        $user = User::factory()->create(['department_id' => $department->id]);
-        $document = PolicyDocument::factory()->create(['department_id' => $department->id, 'type' => PolicyDocumentType::Sop]);
+        $user = User::factory()->create();
+        $document = PolicyDocument::factory()->create(['type' => PolicyDocumentType::Sop]);
         $document->versions()->create([
             'version' => '1.0', 'content' => '<p>Body</p>', 'effective_date' => now()->toDateString(),
             'published_at' => now(), 'created_by' => $user->id,

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Department;
 use App\Models\PolicyDocument;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,9 +13,8 @@ class PolicyAcknowledgmentThrottleTest extends TestCase
 
     public function test_modal_shows_on_first_load_then_is_throttled_for_12_hours(): void
     {
-        $department = Department::factory()->create();
-        $user = User::factory()->create(['department_id' => $department->id]);
-        $document = PolicyDocument::factory()->create(['department_id' => $department->id, 'title' => 'Fire Safety SOP']);
+        $user = User::factory()->create();
+        $document = PolicyDocument::factory()->create(['title' => 'Fire Safety SOP']);
         $document->versions()->create([
             'version' => '1.0', 'content' => '<p>Body</p>', 'effective_date' => now()->toDateString(),
             'published_at' => now(), 'created_by' => $user->id,
@@ -37,9 +35,8 @@ class PolicyAcknowledgmentThrottleTest extends TestCase
 
     public function test_a_newly_published_version_bypasses_the_throttle_immediately(): void
     {
-        $department = Department::factory()->create();
-        $user = User::factory()->create(['department_id' => $department->id]);
-        $document = PolicyDocument::factory()->create(['department_id' => $department->id, 'title' => 'Fire Safety SOP']);
+        $user = User::factory()->create();
+        $document = PolicyDocument::factory()->create(['title' => 'Fire Safety SOP']);
         $document->versions()->create([
             'version' => '1.0', 'content' => '<p>Body</p>', 'effective_date' => now()->toDateString(),
             'published_at' => now(), 'created_by' => $user->id,

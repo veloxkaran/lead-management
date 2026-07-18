@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Goal;
-use App\Models\Team;
 use App\Models\User;
 use App\Services\GoalAchievementService;
 use Illuminate\Database\Seeder;
@@ -11,7 +10,7 @@ use Illuminate\Database\Seeder;
 class GoalSeeder extends Seeder
 {
     /**
-     * Seed sample goals. Assumes Users/Teams already exist in the database.
+     * Seed sample goals. Assumes Users already exist in the database.
      * Achieved amounts are not faked — GoalAchievementService recalculates
      * them from real achievement-flagged leads right after each is created,
      * the same way it would in production.
@@ -32,19 +31,6 @@ class GoalSeeder extends Seeder
             $goal = Goal::factory()->organization()->create([
                 'title' => $title,
                 'target' => fake()->randomFloat(2, 500000, 2000000),
-                'created_by' => $creator->id,
-            ]);
-
-            $goalAchievements->recalculate($goal);
-        }
-
-        // 2-3 Team goals: one per existing team, else skip gracefully.
-        $teams = Team::inRandomOrder()->limit(3)->get();
-        foreach ($teams as $team) {
-            $goal = Goal::factory()->team()->create([
-                'title' => "{$team->name} Quarterly Target",
-                'target' => fake()->randomFloat(2, 100000, 500000),
-                'team_id' => $team->id,
                 'created_by' => $creator->id,
             ]);
 

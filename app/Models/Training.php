@@ -14,7 +14,7 @@ class Training extends Model
 
     protected $fillable = [
         'company_id', 'lead_id', 'status', 'training_date', 'trainer_name', 'attendees_count',
-        'department_id', 'completion_percentage', 'feedback', 'conducted_by',
+        'completion_percentage', 'feedback', 'conducted_by',
     ];
 
     protected function casts(): array
@@ -30,11 +30,6 @@ class Training extends Model
     public function lead(): BelongsTo
     {
         return $this->belongsTo(Lead::class);
-    }
-
-    public function department(): BelongsTo
-    {
-        return $this->belongsTo(Department::class);
     }
 
     public function conductor(): BelongsTo

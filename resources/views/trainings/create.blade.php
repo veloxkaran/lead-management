@@ -35,16 +35,6 @@
                         <input type="number" name="attendees_count" class="form-control" min="0" value="{{ old('attendees_count') }}">
                         @error('attendees_count')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Department Covered</label>
-                        <select name="department_id" class="form-select" data-select2>
-                            <option value="">—</option>
-                            @foreach ($departments as $department)
-                                <option value="{{ $department->id }}" @selected(old('department_id') == $department->id)>{{ $department->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('department_id')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                    </div>
                 </div>
                 <div class="mt-3">
                     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Schedule Training</button>

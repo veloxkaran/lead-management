@@ -49,7 +49,7 @@ class ActivityLogRepository extends BaseRepository
         return Cache::remember($cacheKey, now()->addSeconds(5), fn () => $this->query()
             ->whereIn('module', $enabledModules)
             ->with([
-                'user.assignedDepartment',
+                'user',
                 // Eager-loads the right nested relation per subject type in
                 // one query per type (not one query per row) — without this,
                 // ActivityLinkResolver's per-row `$subject->lead` /

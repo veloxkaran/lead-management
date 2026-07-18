@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Department;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -29,7 +28,6 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),
-            'department_id' => Department::factory(),
             'designation' => fake()->randomElement(['Executive', 'Senior Executive', 'Manager', 'Associate']),
             'role' => \App\Enums\UserRole::BusinessDevelopment,
             'status' => \App\Enums\UserStatus::Active,

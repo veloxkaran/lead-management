@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
-use App\Models\Department;
 use App\Models\PolicyDocument;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,11 +15,9 @@ class PolicyDocumentManagementTest extends TestCase
     public function test_non_super_admin_cannot_create_a_sop(): void
     {
         $manager = User::factory()->create(['role' => UserRole::Manager]);
-        $department = Department::factory()->create();
 
         $this->actingAs($manager)->post(route('sops.store'), [
             'title' => 'Onboarding SOP',
-            'department_id' => $department->id,
             'content' => '<p>Body</p>',
             'effective_date' => now()->toDateString(),
         ])->assertForbidden();
@@ -29,11 +26,9 @@ class PolicyDocumentManagementTest extends TestCase
     public function test_super_admin_can_create_a_sop_with_its_first_version(): void
     {
         $superAdmin = User::factory()->create(['role' => UserRole::SuperAdmin]);
-        $department = Department::factory()->create();
 
         $this->actingAs($superAdmin)->post(route('sops.store'), [
             'title' => 'Onboarding SOP',
-            'department_id' => $department->id,
             'content' => '<p>Body</p>',
             'effective_date' => now()->toDateString(),
             'version' => '1.0',
@@ -43,15 +38,18 @@ class PolicyDocumentManagementTest extends TestCase
         $this->assertDatabaseHas('policy_document_versions', ['version' => '1.0']);
     }
 
-    public function test_creating_a_sop_without_a_department_fails_validation(): void
+    public function test_a_sop_applies_to_every_active_user_in_the_company(): void
     {
         $superAdmin = User::factory()->create(['role' => UserRole::SuperAdmin]);
+        $activeUser = User::factory()->create(['status' => \App\Enums\UserStatus::Active]);
+        $suspendedUser = User::factory()->create(['status' => \App\Enums\UserStatus::Suspended]);
 
-        $this->actingAs($superAdmin)->post(route('sops.store'), [
-            'title' => 'Onboarding SOP',
-            'content' => '<p>Body</p>',
-            'effective_date' => now()->toDateString(),
-        ])->assertSessionHasErrors('department_id');
+        $document = PolicyDocument::factory()->create();
+
+        $assignedIds = $document->assignedUsers()->pluck('id');
+
+        $this->assertTrue($assignedIds->contains($activeUser->id));
+        $this->assertFalse($assignedIds->contains($suspendedUser->id));
     }
 
     public function test_creating_an_individual_jd_without_a_user_fails_validation(): void
@@ -87,19 +85,15 @@ class PolicyDocumentManagementTest extends TestCase
     public function test_updating_a_document_only_touches_metadata(): void
     {
         $superAdmin = User::factory()->create(['role' => UserRole::SuperAdmin]);
-        $department = Department::factory()->create();
-        $otherDepartment = Department::factory()->create();
-        $document = PolicyDocument::factory()->create(['department_id' => $department->id, 'title' => 'Old title']);
+        $document = PolicyDocument::factory()->create(['title' => 'Old title']);
 
         $this->actingAs($superAdmin)->put(route('sops.update', $document), [
             'title' => 'New title',
-            'department_id' => $otherDepartment->id,
         ])->assertRedirect(route('sops.index'));
 
         $this->assertDatabaseHas('policy_documents', [
             'id' => $document->id,
             'title' => 'New title',
-            'department_id' => $otherDepartment->id,
         ]);
     }
 

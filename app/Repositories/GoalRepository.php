@@ -16,19 +16,15 @@ class GoalRepository extends BaseRepository
 
     /**
      * Filter goals, scoping visibility for non-overseer viewers to:
-     * all Organization goals, their own Team's goals, and their own Individual goals.
+     * all Organization goals, and their own Individual goals.
      */
     public function filter(array $filters, ?User $viewer = null, int $perPage = 15): LengthAwarePaginator
     {
-        $query = $this->query()->with(['team', 'user', 'creator']);
+        $query = $this->query()->with(['user', 'creator']);
 
         if ($viewer && ! $viewer->isOverseer()) {
             $query->where(function ($q) use ($viewer) {
                 $q->where('goal_type', GoalType::Organization->value)
-                    ->orWhere(function ($q2) use ($viewer) {
-                        $q2->where('goal_type', GoalType::Team->value)
-                            ->where('team_id', $viewer->team_id);
-                    })
                     ->orWhere(function ($q3) use ($viewer) {
                         $q3->where('goal_type', GoalType::Individual->value)
                             ->where('user_id', $viewer->id);

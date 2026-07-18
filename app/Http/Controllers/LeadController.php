@@ -70,7 +70,7 @@ class LeadController extends Controller
             'followUps.creator', 'requirements.assignee', 'requirements.creator',
             'statusHistories.fromStatus', 'statusHistories.toStatus', 'statusHistories.changedBy',
             'latestImplementationRequest.assignee',
-            'latestTraining.department', 'latestTraining.conductor',
+            'latestTraining.conductor',
             'latestSubscription.creator',
         ]);
 

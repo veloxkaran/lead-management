@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Enums\TrainingStatus;
 use App\Http\Requests\Training\StoreTrainingRequest;
 use App\Http\Requests\Training\UpdateTrainingRequest;
-use App\Models\Department;
 use App\Models\Lead;
 use App\Models\Training;
 use App\Models\User;
@@ -48,7 +47,6 @@ class TrainingController extends Controller
 
         return view('trainings.create', [
             'leads' => Lead::active()->orderBy('company_name')->get(),
-            'departments' => Department::orderBy('name')->get(),
         ]);
     }
 
@@ -63,12 +61,11 @@ class TrainingController extends Controller
     {
         $this->authorize('update', $training);
 
-        $training->load('lead', 'department', 'conductor');
+        $training->load('lead', 'conductor');
 
         return view('trainings.edit', [
             'training' => $training,
             'statuses' => TrainingStatus::cases(),
-            'departments' => Department::orderBy('name')->get(),
             'users' => User::orderBy('name')->get(),
         ]);
     }

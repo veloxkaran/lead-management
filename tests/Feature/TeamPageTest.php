@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Company;
-use App\Models\Department;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -17,10 +16,8 @@ class TeamPageTest extends TestCase
     private function makeChain(): array
     {
         $company = Company::factory()->create();
-        $department = Department::factory()->create(['company_id' => $company->id]);
         $make = fn (?User $manager = null) => User::factory()->create([
             'company_id' => $company->id,
-            'department_id' => $department->id,
             'reporting_manager_id' => $manager?->id,
         ]);
 
@@ -65,27 +62,12 @@ class TeamPageTest extends TestCase
         $response->assertOk()->assertSee('Findable Person');
     }
 
-    public function test_department_filter_narrows_results(): void
-    {
-        [$a, $b, $c] = $this->makeChain();
-        $otherDepartment = Department::factory()->create(['company_id' => $a->company_id]);
-        $c->update(['department_id' => $otherDepartment->id]);
-
-        $response = $this->actingAs($a)->get(route('team.index', ['department_id' => $otherDepartment->id]));
-
-        $response->assertOk();
-        $response->assertSee($c->name);
-        $response->assertDontSee($b->name);
-    }
-
     public function test_pagination_is_applied(): void
     {
         $company = Company::factory()->create();
-        $department = Department::factory()->create(['company_id' => $company->id]);
-        $manager = User::factory()->create(['company_id' => $company->id, 'department_id' => $department->id]);
+        $manager = User::factory()->create(['company_id' => $company->id]);
         User::factory()->count(20)->create([
             'company_id' => $company->id,
-            'department_id' => $department->id,
             'reporting_manager_id' => $manager->id,
         ]);
 
@@ -98,11 +80,10 @@ class TeamPageTest extends TestCase
     public function test_query_count_does_not_grow_with_team_size(): void
     {
         $company = Company::factory()->create();
-        $department = Department::factory()->create(['company_id' => $company->id]);
-        $manager = User::factory()->create(['company_id' => $company->id, 'department_id' => $department->id]);
+        $manager = User::factory()->create(['company_id' => $company->id]);
 
         User::factory()->count(2)->create([
-            'company_id' => $company->id, 'department_id' => $department->id, 'reporting_manager_id' => $manager->id,
+            'company_id' => $company->id, 'reporting_manager_id' => $manager->id,
         ]);
         // Flushed before each measured request: unrelated cross-cutting
         // caches (e.g. the pre-existing policy-acknowledgment throttle
@@ -118,15 +99,15 @@ class TeamPageTest extends TestCase
         DB::flushQueryLog();
 
         User::factory()->count(6)->create([
-            'company_id' => $company->id, 'department_id' => $department->id, 'reporting_manager_id' => $manager->id,
+            'company_id' => $company->id, 'reporting_manager_id' => $manager->id,
         ]);
         Cache::flush();
         // Refetch: actingAs() otherwise reuses the exact same PHP object
         // across both calls, so a relation lazily loaded on the first
-        // request (assignedDepartment, from the page header) stays cached
-        // on that object for the second — an artifact of reusing one
-        // in-memory instance across simulated requests, not something that
-        // happens across two genuinely separate real HTTP requests.
+        // request stays cached on that object for the second — an artifact
+        // of reusing one in-memory instance across simulated requests, not
+        // something that happens across two genuinely separate real HTTP
+        // requests.
         $manager = $manager->fresh();
         DB::enableQueryLog();
         $this->actingAs($manager)->get(route('team.index'))->assertOk();

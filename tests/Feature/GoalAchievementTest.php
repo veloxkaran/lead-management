@@ -29,7 +29,6 @@ class GoalAchievementTest extends TestCase
         $individualGoal = Goal::factory()->create([
             'goal_type' => GoalType::Individual,
             'user_id' => $user->id,
-            'team_id' => null,
             'target' => 10000,
             'achieved' => 0,
             'start_date' => now()->subDays(5),
@@ -39,7 +38,6 @@ class GoalAchievementTest extends TestCase
         $organizationGoal = Goal::factory()->create([
             'goal_type' => GoalType::Organization,
             'user_id' => null,
-            'team_id' => null,
             'target' => 20000,
             'achieved' => 0,
             'start_date' => now()->subDays(5),
@@ -71,7 +69,6 @@ class GoalAchievementTest extends TestCase
         $goal = Goal::factory()->create([
             'goal_type' => GoalType::Individual,
             'user_id' => $user->id,
-            'team_id' => null,
             'target' => 10000,
             'start_date' => now()->subDays(5),
             'end_date' => now()->addDays(25),
@@ -103,7 +100,6 @@ class GoalAchievementTest extends TestCase
         $goal = Goal::factory()->create([
             'goal_type' => GoalType::Individual,
             'user_id' => $user->id,
-            'team_id' => null,
             'target' => 10000,
             'start_date' => now()->subDays(5),
             'end_date' => now()->addDays(25),

@@ -150,18 +150,12 @@ class TaskTest extends TestCase
 
     public function test_task_index_query_count_does_not_grow_with_subordinate_count(): void
     {
-        // Pin a single shared department: creating many bare User::factory()
-        // rows would otherwise each default to a brand-new Department via
-        // Department::factory()'s fake()->unique()->randomElement() over
-        // only 6 possible names, exhausting that pool process-wide.
-        $department = \App\Models\Department::factory()->create();
-
-        $managerA = User::factory()->create(['role' => UserRole::BusinessDevelopment, 'department_id' => $department->id]);
-        $employeeA = User::factory()->create(['role' => UserRole::BusinessDevelopment, 'department_id' => $department->id, 'reporting_manager_id' => $managerA->id]);
+        $managerA = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
+        $employeeA = User::factory()->create(['role' => UserRole::BusinessDevelopment, 'reporting_manager_id' => $managerA->id]);
         Task::factory()->create(['assigned_to' => $employeeA->id, 'created_by' => $managerA->id]);
 
-        $managerB = User::factory()->create(['role' => UserRole::BusinessDevelopment, 'department_id' => $department->id]);
-        $subordinatesB = User::factory()->count(6)->create(['role' => UserRole::BusinessDevelopment, 'department_id' => $department->id, 'reporting_manager_id' => $managerB->id]);
+        $managerB = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
+        $subordinatesB = User::factory()->count(6)->create(['role' => UserRole::BusinessDevelopment, 'reporting_manager_id' => $managerB->id]);
         foreach ($subordinatesB as $sub) {
             Task::factory()->create(['assigned_to' => $sub->id, 'created_by' => $managerB->id]);
         }

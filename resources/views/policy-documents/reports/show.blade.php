@@ -39,7 +39,7 @@
                     @empty
                         <tr>
                             <td colspan="4">
-                                <x-empty-state icon="bi-people" title="No one assigned" description="This document has no department or employee assignment yet." />
+                                <x-empty-state icon="bi-people" title="No one assigned" description="This document has no employee assignment yet." />
                             </td>
                         </tr>
                     @endforelse

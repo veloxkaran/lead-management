@@ -3,7 +3,7 @@
 @section('title', 'SOPs')
 
 @section('content')
-    <x-page-header title="Standard Operating Procedures" icon="bi-journal-check" subtitle="Published to the assigned department's employees, with full version history.">
+    <x-page-header title="Standard Operating Procedures" icon="bi-journal-check" subtitle="Published to every active employee, with full version history.">
         <x-slot:actions>
             <a href="{{ route('sops.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> New SOP</a>
             <a href="{{ route('policy-documents.reports.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-bar-chart-line"></i> Acknowledgment Reports</a>
@@ -16,7 +16,6 @@
                 <thead class="table-light">
                     <tr>
                         <th>Title</th>
-                        <th>Department</th>
                         <th>Version</th>
                         <th>Effective Date</th>
                         <th>Status</th>
@@ -27,7 +26,6 @@
                     @forelse ($documents as $document)
                         <tr>
                             <td class="fw-semibold">{{ $document->title }}</td>
-                            <td>{{ $document->department?->name ?? '—' }}</td>
                             <td>{{ $document->currentVersion?->version ?? '—' }}</td>
                             <td>{{ $document->currentVersion?->effective_date?->format('M d, Y') ?? '—' }}</td>
                             <td>
@@ -49,8 +47,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6">
-                                <x-empty-state icon="bi-journal-check" title="No SOPs yet" description="Create a SOP and assign it to a department." />
+                            <td colspan="5">
+                                <x-empty-state icon="bi-journal-check" title="No SOPs yet" description="Create a SOP to publish it to every active employee." />
                             </td>
                         </tr>
                     @endforelse

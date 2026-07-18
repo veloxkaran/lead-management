@@ -13,7 +13,7 @@ class ReportService
 {
     public function master(array $filters): array
     {
-        $query = Lead::query()->with(['assignedUser.team', 'status', 'dealClosure']);
+        $query = Lead::query()->with(['assignedUser', 'status', 'dealClosure']);
         $this->applyCommonFilters($query, $filters);
 
         $rows = $query->latest()->get()->map(fn (Lead $lead) => [
@@ -21,7 +21,6 @@ class ReportService
             'Contact' => $lead->contact_person,
             'Status' => $lead->status?->name,
             'Assigned To' => $lead->assignedUser?->name,
-            'Team' => $lead->assignedUser?->team?->name,
             'Source' => $lead->source,
             'Created' => $lead->created_at->format('Y-m-d'),
             'Opportunity Cost' => $lead->opportunity_cost,
@@ -29,7 +28,7 @@ class ReportService
             'Deal Value' => $lead->dealClosure?->deal_value,
         ]);
 
-        return ['title' => 'Master Report', 'headings' => ['Company', 'Contact', 'Status', 'Assigned To', 'Team', 'Source', 'Created', 'Opportunity Cost', 'Achieved Cost', 'Deal Value'], 'rows' => $rows];
+        return ['title' => 'Master Report', 'headings' => ['Company', 'Contact', 'Status', 'Assigned To', 'Source', 'Created', 'Opportunity Cost', 'Achieved Cost', 'Deal Value'], 'rows' => $rows];
     }
 
     public function daily(string $date): array
@@ -181,9 +180,6 @@ class ReportService
     {
         if (! empty($filters['user_id'])) {
             $query->where('assigned_user_id', $filters['user_id']);
-        }
-        if (! empty($filters['team_id'])) {
-            $query->whereHas('assignedUser', fn ($q) => $q->where('team_id', $filters['team_id']));
         }
         if (! empty($filters['status_id'])) {
             $query->where('lead_status_id', $filters['status_id']);

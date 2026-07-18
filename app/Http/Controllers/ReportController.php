@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Exports\GenericTableExport;
 use App\Models\LeadStatus;
-use App\Models\Team;
 use App\Models\User;
 use App\Services\ReportService;
 use Illuminate\Http\Request;
@@ -54,12 +53,11 @@ class ReportController extends Controller
 
     public function master(Request $request): View
     {
-        $data = $this->reportService->master($request->only(['user_id', 'team_id', 'status_id', 'company', 'from', 'to']));
+        $data = $this->reportService->master($request->only(['user_id', 'status_id', 'company', 'from', 'to']));
 
         return view('reports.show', $data + [
             'type' => 'master',
             'users' => User::orderBy('name')->get(),
-            'teams' => Team::orderBy('name')->get(),
             'statuses' => LeadStatus::ordered()->get(),
         ]);
     }
@@ -103,7 +101,7 @@ class ReportController extends Controller
             'daily' => [$request->input('date', now()->toDateString())],
             'monthly' => [$request->input('month', now()->format('Y-m'))],
             'quarterly' => [(int) $request->input('year', now()->year), (int) $request->input('quarter', ceil(now()->month / 3))],
-            'master' => [$request->only(['user_id', 'team_id', 'status_id', 'company', 'from', 'to'])],
+            'master' => [$request->only(['user_id', 'status_id', 'company', 'from', 'to'])],
             'deal' => [$request->only(['from', 'to'])],
             'requirement' => [$request->only(['status'])],
             default => [],
