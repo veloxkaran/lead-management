@@ -1,7 +1,7 @@
 <form method="POST" action="{{ route('leads.requirements.store', $lead) }}" class="row g-2 mb-3">
     @csrf
     <div class="col-md-6">
-        <input type="text" name="requirement" class="form-control form-control-sm" placeholder="Describe the requirement" required>
+        <textarea name="requirement" rows="1" class="form-control form-control-sm" placeholder="Describe the requirement" required style="resize: none; overflow: hidden;" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'"></textarea>
     </div>
     <div class="col-md-2">
         <select name="priority" class="form-select form-select-sm">

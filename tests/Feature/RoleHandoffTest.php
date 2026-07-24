@@ -63,11 +63,11 @@ class RoleHandoffTest extends TestCase
         $this->assertNotNull($request->fresh()->completed_at);
     }
 
-    public function test_business_development_cannot_raise_a_support_ticket(): void
+    public function test_business_development_can_raise_a_support_ticket(): void
     {
         $bde = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
 
-        $this->actingAs($bde)->get(route('support-tickets.create'))->assertForbidden();
+        $this->actingAs($bde)->get(route('support-tickets.create'))->assertOk();
     }
 
     public function test_manager_can_raise_a_support_ticket_customer_success_sees_it(): void

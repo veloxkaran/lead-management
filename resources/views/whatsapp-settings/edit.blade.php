@@ -22,6 +22,11 @@
                     <label class="form-label small fw-semibold">WhatsApp Business Account ID</label>
                     <input type="text" name="whatsapp_business_account_id" value="{{ old('whatsapp_business_account_id', $settings['whatsapp_business_account_id']) }}" class="form-control">
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold">Meta App ID</label>
+                    <input type="text" name="whatsapp_app_id" value="{{ old('whatsapp_app_id', $settings['whatsapp_app_id']) }}" class="form-control">
+                    <div class="form-text">The Facebook App ID from the Meta App Dashboard (distinct from the WABA ID above).</div>
+                </div>
                 <div class="col-12">
                     <label class="form-label small fw-semibold">Access Token</label>
                     <input type="password" name="whatsapp_access_token" value="{{ old('whatsapp_access_token', $settings['whatsapp_access_token']) }}" class="form-control" autocomplete="new-password">

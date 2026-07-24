@@ -19,6 +19,7 @@ class WhatsappSettings
         'whatsapp_access_token',
         'whatsapp_webhook_verify_token',
         'whatsapp_app_secret',
+        'whatsapp_app_id',
     ];
 
     public function enabled(): bool
@@ -49,6 +50,16 @@ class WhatsappSettings
     public function appSecret(): ?string
     {
         return Setting::get('whatsapp_app_secret');
+    }
+
+    /**
+     * The Meta App ID (distinct from the WABA ID) — needed for app-level
+     * Graph API calls, e.g. subscribing the WABA to webhook events via
+     * `POST /{waba_id}/subscribed_apps`, or embedded signup.
+     */
+    public function appId(): ?string
+    {
+        return Setting::get('whatsapp_app_id');
     }
 
     public function apiVersion(): string

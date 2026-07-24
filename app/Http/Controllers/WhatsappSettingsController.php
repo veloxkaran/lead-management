@@ -23,6 +23,7 @@ class WhatsappSettingsController extends Controller
             'whatsapp_access_token' => ['nullable', 'string'],
             'whatsapp_webhook_verify_token' => ['nullable', 'string', 'max:255'],
             'whatsapp_app_secret' => ['nullable', 'string', 'max:255'],
+            'whatsapp_app_id' => ['nullable', 'string', 'max:255'],
         ]);
 
         $settings->save($validated, $request->boolean('whatsapp_enabled'));

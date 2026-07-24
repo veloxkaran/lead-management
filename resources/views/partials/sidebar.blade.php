@@ -50,9 +50,6 @@
             <a href="{{ route('implementation-requests.index') }}" class="nav-link {{ request()->routeIs('implementation-requests.*') ? 'active' : '' }}" title="Implementation Requests" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-box-arrow-in-up-right"></i> <span class="nav-label">Implementation Requests</span>
             </a>
-            <a href="{{ route('support-tickets.index') }}" class="nav-link {{ request()->routeIs('support-tickets.*') ? 'active' : '' }}" title="Support Tickets" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-life-preserver"></i> <span class="nav-label">Support Tickets</span>
-            </a>
             <a href="{{ route('trainings.index') }}" class="nav-link {{ request()->routeIs('trainings.*') ? 'active' : '' }}" title="Trainings" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-mortarboard"></i> <span class="nav-label">Trainings</span>
             </a>
@@ -67,6 +64,11 @@
                 <i class="bi bi-cash-coin"></i> <span class="nav-label">Account Requests</span>
             </a>
         @endif
+
+        <div class="nav-section-title">Support</div>
+        <a href="{{ route('support-tickets.index') }}" class="nav-link {{ request()->routeIs('support-tickets.*') ? 'active' : '' }}" title="Support Tickets" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-life-preserver"></i> <span class="nav-label">Support Tickets</span>
+        </a>
 
         <div class="nav-section-title">Messaging</div>
         <a href="{{ route('whatsapp.index') }}" class="nav-link {{ request()->routeIs('whatsapp.*') ? 'active' : '' }}" title="WhatsApp" data-bs-toggle="tooltip" data-bs-placement="right">

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
-use App\Enums\UserRole;
 use App\Http\Requests\SupportTicket\StoreSupportTicketRequest;
 use App\Http\Requests\SupportTicket\UpdateSupportTicketRequest;
 use App\Models\Lead;
@@ -62,7 +61,7 @@ class SupportTicketController extends Controller
             'supportTicket' => $supportTicket,
             'statuses' => RequirementStatus::cases(),
             'priorities' => RequirementPriority::cases(),
-            'users' => User::where('role', UserRole::CustomerSuccess)->orderBy('name')->get(),
+            'users' => User::orderBy('name')->get(),
         ]);
     }
 
