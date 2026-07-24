@@ -30,7 +30,7 @@ class RoleHandoffTest extends TestCase
             'lead_id' => $lead->id,
             'title' => 'Onboard Acme Corp',
             'requested_by' => $bde->id,
-            'status' => 'pending',
+            'status' => 'not_started',
         ]);
     }
 

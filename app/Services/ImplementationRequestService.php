@@ -24,6 +24,7 @@ class ImplementationRequestService
     public function create(array $attributes, User $requester): ImplementationRequest
     {
         $attributes['requested_by'] = $requester->id;
+        $attributes['status'] = $attributes['status'] ?? ImplementationStatus::NotStarted->value;
 
         /** @var ImplementationRequest $request */
         $request = $this->requests->create($attributes);
