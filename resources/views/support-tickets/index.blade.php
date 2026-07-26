@@ -59,13 +59,14 @@
                 <tbody>
                     @forelse ($tickets as $ticket)
                         <tr>
-                            <td class="small fw-semibold">{{ $ticket->subject }}</td>
+                            <td class="small fw-semibold"><a href="{{ route('support-tickets.show', $ticket) }}">{{ $ticket->subject }}</a></td>
                             <td class="small">{{ $ticket->lead?->company_name ?? '—' }}</td>
                             <td class="small text-muted">{{ $ticket->raiser?->name }}</td>
                             <td class="small">{{ $ticket->assignee?->name ?? '—' }}</td>
                             <td><x-status-badge :status="$ticket->priority" /></td>
                             <td><x-status-badge :status="$ticket->status" /></td>
                             <td class="text-end">
+                                <a href="{{ route('support-tickets.show', $ticket) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
                                 @can('update', $ticket)
                                     <a href="{{ route('support-tickets.edit', $ticket) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
                                 @endcan

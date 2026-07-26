@@ -51,6 +51,17 @@ class SupportTicketController extends Controller
         return redirect()->route('support-tickets.index')->with('success', 'Support ticket raised.');
     }
 
+    public function show(SupportTicket $supportTicket): View
+    {
+        $this->authorize('view', $supportTicket);
+
+        $supportTicket->load('lead', 'raiser', 'assignee', 'comments.author');
+
+        return view('support-tickets.show', [
+            'supportTicket' => $supportTicket,
+        ]);
+    }
+
     public function edit(SupportTicket $supportTicket): View
     {
         $this->authorize('update', $supportTicket);

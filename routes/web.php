@@ -35,6 +35,7 @@ use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SopController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\SupportTicketCommentController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\TaskChecklistItemController;
 use App\Http\Controllers\TaskCommentController;
@@ -110,8 +111,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('subscriptions', SubscriptionController::class)->except('show');
     Route::get('leads/{lead}/subscriptions', [SubscriptionController::class, 'forLead'])->name('leads.subscriptions.index');
 
-    // Raised by Managers, worked by Customer Success.
-    Route::resource('support-tickets', SupportTicketController::class)->except('show');
+    // Open to every role — see SupportTicketPolicy.
+    Route::resource('support-tickets', SupportTicketController::class);
+    Route::post('support-tickets/{support_ticket}/comments', [SupportTicketCommentController::class, 'store'])->name('support-tickets.comments.store');
+    Route::patch('support-tickets/{support_ticket}/comments/{comment}', [SupportTicketCommentController::class, 'update'])->name('support-tickets.comments.update');
 
     // Finance handoff — raised by Business Development, processed by Finance.
     Route::resource('account-requests', AccountRequestController::class)->except('show');

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\RequirementStatus;
 use App\Models\SupportTicket;
+use App\Models\SupportTicketComment;
 use App\Models\User;
 use App\Repositories\SupportTicketRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -38,5 +39,20 @@ class SupportTicketService
     public function delete(SupportTicket $ticket): void
     {
         $this->tickets->delete($ticket);
+    }
+
+    public function addComment(SupportTicket $ticket, array $attributes, User $author): SupportTicketComment
+    {
+        return $ticket->comments()->create([
+            ...$attributes,
+            'author_id' => $author->id,
+        ]);
+    }
+
+    public function updateComment(SupportTicketComment $comment, array $attributes): SupportTicketComment
+    {
+        $comment->update($attributes);
+
+        return $comment;
     }
 }

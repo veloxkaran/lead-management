@@ -13,14 +13,19 @@
                 <div class="row g-3">
                     <div class="col-md-12">
                         <label class="form-label small fw-semibold">Subject</label>
-                        <input type="text" name="subject" class="form-control" value="{{ old('subject', $supportTicket->subject) }}" required>
+                        <input type="text" name="subject" class="form-control" value="{{ old('subject', $supportTicket->subject) }}" required @readonly(! $supportTicket->detailsEditable())>
                         @error('subject')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-12">
                         <label class="form-label small fw-semibold">Details</label>
-                        <textarea name="details" rows="4" class="form-control">{{ old('details', $supportTicket->details) }}</textarea>
+                        <textarea name="details" rows="4" class="form-control" @readonly(! $supportTicket->detailsEditable())>{{ old('details', $supportTicket->details) }}</textarea>
                         @error('details')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
+                    @unless ($supportTicket->detailsEditable())
+                        <div class="col-12">
+                            <div class="small text-muted fst-italic">Subject and details are locked — they can only be edited within 12 hours of the ticket being raised.</div>
+                        </div>
+                    @endunless
                     <div class="col-md-4">
                         <label class="form-label small fw-semibold">Priority</label>
                         <select name="priority" class="form-select">

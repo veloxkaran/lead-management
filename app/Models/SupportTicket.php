@@ -8,6 +8,7 @@ use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SupportTicket extends Model
 {
@@ -39,5 +40,21 @@ class SupportTicket extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(SupportTicketComment::class)->oldest();
+    }
+
+    /**
+     * The subject/details describing the ticket lock 12 hours after it's
+     * raised — unlike priority/status/assignment, which stay editable for
+     * the ticket's whole working life since that's how its workflow
+     * progresses.
+     */
+    public function detailsEditable(): bool
+    {
+        return $this->created_at->addHours(12)->isFuture();
     }
 }
