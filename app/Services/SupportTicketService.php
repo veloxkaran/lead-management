@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\RequirementStatus;
+use App\Models\Lead;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketComment;
 use App\Models\User;
@@ -25,6 +26,13 @@ class SupportTicketService
         $attributes['raised_by'] = $raiser->id;
 
         return $this->tickets->create($attributes);
+    }
+
+    public function createForLead(Lead $lead, array $attributes, User $raiser): SupportTicket
+    {
+        $attributes['lead_id'] = $lead->id;
+
+        return $this->create($attributes, $raiser);
     }
 
     public function update(SupportTicket $ticket, array $attributes): SupportTicket

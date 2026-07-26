@@ -129,6 +129,11 @@ class Lead extends Model
         return $this->hasMany(SupportTicket::class);
     }
 
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
     public function accountRequests(): HasMany
     {
         return $this->hasMany(AccountRequest::class);

@@ -115,6 +115,8 @@
                 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#notes" type="button">Notes</button></li>
                 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#followups" type="button">Follow Ups</button></li>
                 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#requirements" type="button">Requirements</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#support-tickets" type="button">Support Tickets</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tasks" type="button">Tasks</button></li>
                 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#history" type="button">Status History</button></li>
             </ul>
             <div class="tab-content bg-white border border-top-0 rounded-bottom p-3 shadow-sm">
@@ -129,6 +131,12 @@
                 </div>
                 <div class="tab-pane fade" id="requirements">
                     @include('leads._requirements')
+                </div>
+                <div class="tab-pane fade" id="support-tickets">
+                    @include('leads._support_tickets')
+                </div>
+                <div class="tab-pane fade" id="tasks">
+                    @include('leads._tasks')
                 </div>
                 <div class="tab-pane fade" id="history">
                     @include('leads._status_history')

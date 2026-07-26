@@ -51,6 +51,13 @@ class SupportTicketController extends Controller
         return redirect()->route('support-tickets.index')->with('success', 'Support ticket raised.');
     }
 
+    public function storeForLead(StoreSupportTicketRequest $request, Lead $lead): RedirectResponse
+    {
+        $this->supportTickets->createForLead($lead, $request->validated(), $request->user());
+
+        return back()->with('success', 'Support ticket raised.');
+    }
+
     public function show(SupportTicket $supportTicket): View
     {
         $this->authorize('view', $supportTicket);

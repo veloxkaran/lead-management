@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ActivityType;
 use App\Enums\ReminderType;
 use App\Enums\RequirementPriority;
+use App\Enums\TaskPriority;
 use App\Http\Requests\Lead\StoreLeadRequest;
 use App\Http\Requests\Lead\UpdateLeadRequest;
 use App\Models\Lead;
@@ -78,6 +79,8 @@ class LeadController extends Controller
             'latestImplementationRequest.assignee',
             'latestTraining.conductor',
             'latestSubscription.creator',
+            'supportTickets.assignee',
+            'tasks.assignee',
         ]);
 
         return view('leads.show', [
@@ -87,6 +90,7 @@ class LeadController extends Controller
             'activityTypes' => array_values(array_filter(ActivityType::cases(), fn (ActivityType $type) => ! in_array($type, [ActivityType::ImplementationRequest, ActivityType::TrainingUpdate, ActivityType::SubscriptionUpdate], true))),
             'reminderTypes' => ReminderType::cases(),
             'priorities' => RequirementPriority::cases(),
+            'taskPriorities' => TaskPriority::cases(),
         ]);
     }
 

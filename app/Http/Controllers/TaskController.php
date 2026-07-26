@@ -58,6 +58,13 @@ class TaskController extends Controller
         return redirect()->route('tasks.show', $task)->with('success', 'Task created successfully.');
     }
 
+    public function storeForLead(StoreTaskRequest $request, Lead $lead): RedirectResponse
+    {
+        $this->tasks->createForLead($lead, $request->validated(), $request->user());
+
+        return back()->with('success', 'Task created successfully.');
+    }
+
     public function show(Task $task): View
     {
         $this->authorize('view', $task);

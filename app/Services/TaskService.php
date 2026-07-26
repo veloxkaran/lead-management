@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Enums\ActivityModule;
+use App\Enums\TaskModule;
 use App\Enums\TaskStatus;
 use App\Models\ActivityLogEntry;
+use App\Models\Lead;
 use App\Models\Task;
 use App\Models\TaskChecklistItem;
 use App\Models\TaskComment;
@@ -45,6 +47,14 @@ class TaskService
         $task = $this->tasks->create($attributes);
 
         return $task;
+    }
+
+    public function createForLead(Lead $lead, array $attributes, User $actor): Task
+    {
+        $attributes['lead_id'] = $lead->id;
+        $attributes['module'] = $attributes['module'] ?? TaskModule::Lead->value;
+
+        return $this->create($attributes, $actor);
     }
 
     public function update(Task $task, array $attributes, User $actor, ?string $ip, ?string $userAgent): Task

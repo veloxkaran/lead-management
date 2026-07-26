@@ -95,6 +95,7 @@ Route::middleware('auth')->group(function () {
 
     // Organization-wide task management, hierarchy-scoped.
     Route::resource('tasks', TaskController::class);
+    Route::post('leads/{lead}/tasks', [TaskController::class, 'storeForLead'])->name('leads.tasks.store');
     Route::post('tasks/{task}/checklist-items', [TaskChecklistItemController::class, 'store'])->name('tasks.checklist-items.store');
     Route::patch('tasks/{task}/checklist-items/{checklistItem}', [TaskChecklistItemController::class, 'update'])->name('tasks.checklist-items.update');
     Route::delete('tasks/{task}/checklist-items/{checklistItem}', [TaskChecklistItemController::class, 'destroy'])->name('tasks.checklist-items.destroy');
@@ -113,6 +114,7 @@ Route::middleware('auth')->group(function () {
 
     // Open to every role — see SupportTicketPolicy.
     Route::resource('support-tickets', SupportTicketController::class);
+    Route::post('leads/{lead}/support-tickets', [SupportTicketController::class, 'storeForLead'])->name('leads.support-tickets.store');
     Route::post('support-tickets/{support_ticket}/comments', [SupportTicketCommentController::class, 'store'])->name('support-tickets.comments.store');
     Route::patch('support-tickets/{support_ticket}/comments/{comment}', [SupportTicketCommentController::class, 'update'])->name('support-tickets.comments.update');
 
