@@ -75,6 +75,7 @@ Route::middleware('auth')->group(function () {
     Route::post('leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.status.update');
     Route::post('leads/{lead}/close', [LeadController::class, 'close'])->name('leads.close');
     Route::get('leads/{lead}/walkthrough', [LeadController::class, 'walkthrough'])->name('leads.walkthrough');
+    Route::get('leads/{lead}/export-pdf', [LeadController::class, 'exportPdf'])->name('leads.export-pdf');
 
     Route::post('leads/{lead}/activities', [ActivityController::class, 'store'])->name('leads.activities.store');
     Route::get('activities', [ActivityController::class, 'index'])->name('activities.index');

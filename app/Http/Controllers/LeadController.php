@@ -14,8 +14,10 @@ use App\Models\User;
 use App\Services\LeadService;
 use App\Services\OrganizationHierarchyService;
 use App\Support\LeadWalkthrough;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class LeadController extends Controller
@@ -109,6 +111,37 @@ class LeadController extends Controller
             'lead' => $lead,
             'steps' => LeadWalkthrough::build($lead),
         ]);
+    }
+
+    /**
+     * One document covering the lead's entire history end to end —
+     * deliberately loads every module directly off the model rather than
+     * going through each module's own hierarchy/handoff-scoped repository
+     * query, since exportPdf() is Super-Admin-only and meant to bypass
+     * those per-record visibility rules.
+     */
+    public function exportPdf(Lead $lead): Response
+    {
+        $this->authorize('exportPdf', Lead::class);
+
+        $lead->load([
+            'assignedUser', 'creator', 'status', 'dealClosure.closedBy',
+            'activities.creator',
+            'notes.author', 'notes.attachments',
+            'followUps.creator',
+            'requirements.assignee', 'requirements.creator',
+            'statusHistories.fromStatus', 'statusHistories.toStatus', 'statusHistories.changedBy',
+            'implementationRequests.requester', 'implementationRequests.assignee',
+            'trainings.conductor',
+            'subscriptions.creator',
+            'supportTickets.raiser', 'supportTickets.assignee', 'supportTickets.comments.author',
+            'tasks.creator', 'tasks.assignee', 'tasks.comments.author',
+            'accountRequests.requester', 'accountRequests.processor',
+        ]);
+
+        $filename = str($lead->company_name)->slug()."-full-history.pdf";
+
+        return Pdf::loadView('leads.pdf', ['lead' => $lead])->download($filename);
     }
 
     public function edit(Lead $lead): View

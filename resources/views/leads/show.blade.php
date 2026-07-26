@@ -6,6 +6,9 @@
     <x-page-header :title="$lead->company_name" icon="bi-building" :subtitle="$lead->industry">
         <x-slot:actions>
             <a href="{{ route('leads.walkthrough', $lead) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-stars"></i> Walkthrough</a>
+            @can('exportPdf', App\Models\Lead::class)
+                <a href="{{ route('leads.export-pdf', $lead) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-pdf"></i> Download PDF</a>
+            @endcan
             @can('update', $lead)
                 <a href="{{ route('leads.edit', $lead) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
             @endcan
