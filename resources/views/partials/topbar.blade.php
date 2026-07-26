@@ -25,10 +25,10 @@
             <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 320px; max-height: 380px; overflow-y: auto;">
                 <h6 class="dropdown-header">Notifications</h6>
                 @forelse ($user?->unreadNotifications()->take(8)->get() ?? [] as $notification)
-                    <div class="dropdown-item small text-wrap">
+                    <a href="{{ route('notifications.read', $notification->id) }}" class="dropdown-item small text-wrap">
                         {{ $notification->data['message'] ?? 'New notification' }}
                         <div class="text-muted" style="font-size: 0.72rem;">{{ $notification->created_at->diffForHumans() }}</div>
-                    </div>
+                    </a>
                 @empty
                     <div class="dropdown-item small text-muted">No new notifications</div>
                 @endforelse

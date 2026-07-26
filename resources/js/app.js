@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
-                confirmButtonText: 'Yes, delete it',
+                confirmButtonText: form.dataset.confirmButtonText || 'Yes, delete it',
             }).then((result) => {
                 if (result.isConfirmed) {
                     form.dataset.confirmed = 'true';

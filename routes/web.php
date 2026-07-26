@@ -22,6 +22,8 @@ use App\Http\Controllers\LeadNoteController;
 use App\Http\Controllers\LeadStatusController;
 use App\Http\Controllers\LeadWhatsappUserController;
 use App\Http\Controllers\MeetingController;
+use App\Http\Controllers\MeetingRoomController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\MyPolicyDocumentsController;
 use App\Http\Controllers\OrgTreeController;
 use App\Http\Controllers\PolicyDocumentAcknowledgmentController;
@@ -132,6 +134,18 @@ Route::middleware('auth')->group(function () {
     // Collaborative Activity Feed dashboard widget — one JSON endpoint reused
     // by the widget instance embedded in every role's dashboard.
     Route::get('activity-feed', [ActivityFeedController::class, 'index'])->name('activity-feed.index');
+
+    // Team Meeting Room — a single shared workspace, open to every user
+    // (see AgendaPolicy). Selection/search/filter/sort all live in the
+    // query string of one index route rather than a separate show route,
+    // so switching the selected agenda never loses the current filters.
+    Route::get('meeting-room', [MeetingRoomController::class, 'index'])->name('meeting-room.index');
+    Route::post('meeting-room', [MeetingRoomController::class, 'store'])->name('meeting-room.store');
+    Route::patch('meeting-room/{agenda}/status', [MeetingRoomController::class, 'updateStatus'])->name('meeting-room.status.update');
+    Route::get('meeting-room/{agenda}/discussions', [MeetingRoomController::class, 'discussions'])->name('meeting-room.discussions');
+    Route::post('meeting-room/{agenda}/discussions', [MeetingRoomController::class, 'storeComment'])->name('meeting-room.discussions.store');
+
+    Route::get('notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
 
     // WhatsApp inbox — visibility is enforced per-lead by LeadPolicy::chatWhatsapp,
     // not by a route middleware, since access is per-assignment rather than per-role.

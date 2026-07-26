@@ -3,6 +3,7 @@
 namespace App\Support\ActivityModules;
 
 use App\Enums\ActivityModule;
+use App\Models\Agenda;
 use App\Models\DealClosure;
 use App\Models\EmailAccount;
 use App\Models\FollowUp;
@@ -146,6 +147,10 @@ class ActivityModuleRegistry
                     return self::linkFor($subject->lead, $viewer, 'view', fn (Lead $lead) => route('leads.show', $lead));
                 },
             ),
+            new ActivityModuleDefinition(
+                ActivityModule::Agenda, 'Team Meeting Room', 'bi-people',
+                fn (Model $subject, User $viewer) => self::linkFor($subject, $viewer, 'view', fn ($a) => route('meeting-room.index', ['agenda' => $a->id])),
+            ),
         ];
     }
 
@@ -219,6 +224,11 @@ class ActivityModuleRegistry
                 LeadNote::class, ActivityModule::Note,
                 fn (LeadNote $note) => "added a note on {$note->lead->company_name}",
                 fn (LeadNote $note) => $note->author_id,
+            ),
+            new ActivityLoggingRegistration(
+                Agenda::class, ActivityModule::Agenda,
+                fn (Agenda $agenda) => "raised a team meeting agenda: {$agenda->title}",
+                fn (Agenda $agenda) => $agenda->created_by,
             ),
         ];
     }

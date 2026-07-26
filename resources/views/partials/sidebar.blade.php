@@ -13,6 +13,9 @@
         <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->routeIs('tasks.*') ? 'active' : '' }}" title="Tasks" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-list-task"></i> <span class="nav-label">Tasks</span>
         </a>
+        <a href="{{ route('meeting-room.index') }}" class="nav-link {{ request()->routeIs('meeting-room.*') ? 'active' : '' }}" title="Team Meeting Room" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-people"></i> <span class="nav-label">Team Meeting Room</span>
+        </a>
 
         @if ($user?->isBusinessDevelopment() || $user?->isManager() || $user?->isSuperAdmin())
             <div class="nav-section-title">Business Development</div>

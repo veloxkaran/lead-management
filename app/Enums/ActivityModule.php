@@ -17,6 +17,7 @@ enum ActivityModule: string
     case Task = 'task';
     case Email = 'email';
     case Note = 'note';
+    case Agenda = 'agenda';
 
     /**
      * Label/icon live in ActivityModuleRegistry (the single source of truth

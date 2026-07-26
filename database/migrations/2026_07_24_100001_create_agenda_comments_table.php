@@ -1,0 +1,28 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('agenda_comments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('company_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('agenda_id')->constrained('agendas')->cascadeOnDelete();
+            $table->foreignId('parent_id')->nullable()->constrained('agenda_comments')->cascadeOnDelete();
+            $table->foreignId('author_id')->constrained('users')->cascadeOnDelete();
+            $table->text('comment');
+            $table->timestamps();
+
+            $table->index(['agenda_id', 'parent_id']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('agenda_comments');
+    }
+};
