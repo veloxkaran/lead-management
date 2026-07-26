@@ -14,7 +14,7 @@ class Requirement extends Model
     use BelongsToCompany, HasFactory;
 
     protected $fillable = [
-        'company_id', 'lead_id', 'requirement', 'priority', 'status', 'assigned_to', 'created_by',
+        'company_id', 'lead_id', 'requirement', 'priority', 'status', 'due_date', 'assigned_to', 'created_by',
     ];
 
     protected function casts(): array
@@ -22,6 +22,7 @@ class Requirement extends Model
         return [
             'priority' => RequirementPriority::class,
             'status' => RequirementStatus::class,
+            'due_date' => 'date',
         ];
     }
 

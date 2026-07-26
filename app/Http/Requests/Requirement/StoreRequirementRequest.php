@@ -19,6 +19,7 @@ class StoreRequirementRequest extends FormRequest
         $rules = [
             'requirement' => ['required', 'string'],
             'priority' => ['required', new Enum(RequirementPriority::class)],
+            'due_date' => ['nullable', 'date'],
             'assigned_to' => ['nullable', 'exists:users,id'],
         ];
 

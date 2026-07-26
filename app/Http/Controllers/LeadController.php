@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ActivityModule;
 use App\Enums\ActivityType;
 use App\Enums\ReminderType;
 use App\Enums\RequirementPriority;
 use App\Enums\TaskPriority;
 use App\Http\Requests\Lead\StoreLeadRequest;
 use App\Http\Requests\Lead\UpdateLeadRequest;
+use App\Models\ActivityLogEntry;
 use App\Models\Lead;
 use App\Models\LeadStatus;
 use App\Models\User;
 use App\Services\LeadService;
-use App\Services\OrganizationHierarchyService;
 use App\Support\LeadWalkthrough;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -22,25 +23,13 @@ use Illuminate\View\View;
 
 class LeadController extends Controller
 {
-    public function __construct(
-        protected LeadService $leadService,
-        protected OrganizationHierarchyService $hierarchy,
-    ) {}
+    public function __construct(protected LeadService $leadService) {}
 
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Lead::class);
 
         $filters = $request->only(['search', 'status_id', 'assigned_user_id', 'source', 'archived']);
-
-        // Manager and Super Admin see the full pipeline; everyone else sees
-        // leads assigned to or created by anyone in their reporting
-        // hierarchy (direct + indirect reports) plus their own.
-        if (! $request->user()->isOverseer()) {
-            $filters['visible_user_ids'] = $this->hierarchy->getAllSubordinateIds($request->user())
-                ->push($request->user()->id)
-                ->all();
-        }
 
         $leads = $this->leadService->list($filters);
 
@@ -85,6 +74,14 @@ class LeadController extends Controller
             'tasks.assignee',
         ]);
 
+        $changeLog = ActivityLogEntry::where('module', ActivityModule::Lead)
+            ->where('subject_type', $lead->getMorphClass())
+            ->where('subject_id', $lead->id)
+            ->whereNotNull('new_values')
+            ->with('user')
+            ->latest('id')
+            ->get();
+
         return view('leads.show', [
             'lead' => $lead,
             'statuses' => LeadStatus::ordered()->get(),
@@ -93,6 +90,7 @@ class LeadController extends Controller
             'reminderTypes' => ReminderType::cases(),
             'priorities' => RequirementPriority::cases(),
             'taskPriorities' => TaskPriority::cases(),
+            'changeLog' => $changeLog,
         ]);
     }
 
@@ -158,7 +156,7 @@ class LeadController extends Controller
 
     public function update(UpdateLeadRequest $request, Lead $lead): RedirectResponse
     {
-        $this->leadService->update($lead, $request->validated());
+        $this->leadService->update($lead, $request->validated(), $request->user(), $request->ip(), $request->userAgent());
 
         return redirect()->route('leads.show', $lead)->with('success', 'Lead updated successfully.');
     }

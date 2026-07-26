@@ -16,7 +16,7 @@
                         <textarea name="requirement" rows="3" class="form-control" required>{{ old('requirement', $requirement->requirement) }}</textarea>
                         @error('requirement')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label small fw-semibold">Priority</label>
                         <select name="priority" class="form-select">
                             @foreach ($priorities as $priority)
@@ -25,7 +25,7 @@
                         </select>
                         @error('priority')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label small fw-semibold">Status</label>
                         <select name="status" class="form-select">
                             @foreach ($statuses as $status)
@@ -34,7 +34,12 @@
                         </select>
                         @error('status')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Due Date</label>
+                        <input type="date" name="due_date" class="form-control" value="{{ old('due_date', $requirement->due_date?->toDateString()) }}">
+                        @error('due_date')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-3">
                         <label class="form-label small fw-semibold">Assign To</label>
                         <select name="assigned_to" class="form-select" data-select2>
                             <option value="">Unassigned</option>
@@ -54,6 +59,28 @@
                     @endif
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-white fw-semibold"><i class="bi bi-clock-history"></i> Change Log</div>
+        <div class="card-body">
+            @forelse ($changeLog as $entry)
+                <div class="border-bottom pb-2 mb-2 small">
+                    <span class="fw-semibold">{{ $entry->user?->name ?? 'Unknown' }}</span>
+                    <span class="text-muted">{{ $entry->created_at->format('M d, Y g:i A') }}</span>
+                    <ul class="mb-0 mt-1">
+                        @foreach ($entry->new_values as $field => $newValue)
+                            <li>
+                                <strong>{{ \Illuminate\Support\Str::headline($field) }}:</strong>
+                                {{ $entry->old_values[$field] ?? '—' }} &rarr; {{ $newValue ?? '—' }}
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @empty
+                <p class="text-muted small mb-0">No changes logged yet.</p>
+            @endforelse
         </div>
     </div>
 @endsection

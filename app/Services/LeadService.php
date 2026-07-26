@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Enums\ActivityModule;
+use App\Models\ActivityLogEntry;
 use App\Models\Lead;
 use App\Models\LeadStatus;
 use App\Models\User;
@@ -46,9 +48,41 @@ class LeadService
         });
     }
 
-    public function update(Lead $lead, array $attributes): Lead
+    /**
+     * Now open to every user (see LeadPolicy::update()), so every field
+     * change is diff-logged with who/when — same getRawOriginal()-before
+     * getDirty()-after pattern as TaskService/RequirementService::update(),
+     * so the log stays correct regardless of anything downstream touching
+     * the model afterward.
+     */
+    public function update(Lead $lead, array $attributes, User $actor, ?string $ip, ?string $userAgent): Lead
     {
-        return $this->leads->update($lead, $attributes);
+        $originalRaw = collect(array_keys($attributes))
+            ->mapWithKeys(fn ($key) => [$key => $lead->getRawOriginal($key)])
+            ->all();
+
+        $lead->fill($attributes);
+        $changed = $lead->getDirty();
+        unset($changed['updated_at']);
+
+        $lead->save();
+
+        if (! empty($changed)) {
+            ActivityLogEntry::create([
+                'company_id' => $lead->company_id ?? $actor->company_id,
+                'user_id' => $actor->id,
+                'module' => ActivityModule::Lead,
+                'description' => "updated lead \"{$lead->company_name}\"",
+                'subject_type' => $lead->getMorphClass(),
+                'subject_id' => $lead->getKey(),
+                'old_values' => array_intersect_key($originalRaw, $changed),
+                'new_values' => $changed,
+                'ip_address' => $ip,
+                'user_agent' => $userAgent,
+            ]);
+        }
+
+        return $lead;
     }
 
     public function changeStatus(Lead $lead, int $newStatusId, User $changedBy): Lead

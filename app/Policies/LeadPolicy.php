@@ -15,9 +15,15 @@ class LeadPolicy
         return true;
     }
 
+    /**
+     * Open to every user, not just the assignee/creator/reporting-manager
+     * chain or a department that's been handed off to — every field change
+     * is logged (see LeadService::update()'s diff logging), so opening
+     * visibility/editing this wide stays auditable rather than anonymous.
+     */
     public function view(User $user, Lead $lead): bool
     {
-        return $this->isOwnerOrOverseer($user, $lead) || $this->hasBeenHandedOffTo($user, $lead);
+        return true;
     }
 
     public function create(User $user): bool
@@ -27,7 +33,7 @@ class LeadPolicy
 
     public function update(User $user, Lead $lead): bool
     {
-        return $this->isOwnerOrOverseer($user, $lead) || $this->hasBeenHandedOffTo($user, $lead);
+        return true;
     }
 
     public function delete(User $user, Lead $lead): bool
@@ -119,24 +125,12 @@ class LeadPolicy
      * The full-history PDF pulls together every module's records for this
      * lead (requirements, support tickets + comments, tasks + comments,
      * account handoffs, etc.) into one document — restricted to Super Admin
-     * only, unlike view() which is hierarchy/handoff-scoped, since this
+     * only, unlike view()/update() which are open to everyone, since this
      * bypasses each module's own per-record visibility rules to compile
      * everything in one place.
      */
     public function exportPdf(User $user): bool
     {
         return $user->isSuperAdmin();
-    }
-
-    /**
-     * Once a lead has an Implementation Request or Support Ticket (Customer
-     * Success) or an Account Request (Finance) raised against it, that
-     * department's whole team can view and update the lead — not just the
-     * one request record.
-     */
-    private function hasBeenHandedOffTo(User $user, Lead $lead): bool
-    {
-        return ($user->isCustomerSuccess() && $lead->isHandedOffToCustomerSuccess())
-            || ($user->isFinance() && $lead->isHandedOffToFinance());
     }
 }

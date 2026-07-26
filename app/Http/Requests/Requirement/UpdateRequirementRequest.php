@@ -20,6 +20,7 @@ class UpdateRequirementRequest extends FormRequest
             'requirement' => ['required', 'string'],
             'priority' => ['required', new Enum(RequirementPriority::class)],
             'status' => ['required', new Enum(RequirementStatus::class)],
+            'due_date' => ['nullable', 'date'],
             'assigned_to' => ['nullable', 'exists:users,id'],
         ];
     }

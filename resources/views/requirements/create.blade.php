@@ -25,7 +25,7 @@
                         <textarea name="requirement" rows="3" class="form-control" required>{{ old('requirement') }}</textarea>
                         @error('requirement')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label small fw-semibold">Priority</label>
                         <select name="priority" class="form-select">
                             @foreach ($priorities as $priority)
@@ -34,7 +34,12 @@
                         </select>
                         @error('priority')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Due Date</label>
+                        <input type="date" name="due_date" class="form-control" value="{{ old('due_date') }}">
+                        @error('due_date')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label small fw-semibold">Assign To</label>
                         <select name="assigned_to" class="form-select" data-select2>
                             <option value="">Unassigned</option>

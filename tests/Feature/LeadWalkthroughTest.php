@@ -89,12 +89,13 @@ class LeadWalkthroughTest extends TestCase
         $this->actingAs($user)->get(route('leads.walkthrough', $lead))->assertOk();
     }
 
-    public function test_a_user_cannot_walk_through_someone_elses_lead(): void
+    public function test_a_user_can_now_walk_through_someone_elses_lead(): void
     {
+        // Lead view is open to every user now (see LeadPolicy::view()).
         $owner = User::factory()->create();
         $other = User::factory()->create();
         $lead = Lead::factory()->create(['assigned_user_id' => $owner->id, 'created_by' => $owner->id]);
 
-        $this->actingAs($other)->get(route('leads.walkthrough', $lead))->assertForbidden();
+        $this->actingAs($other)->get(route('leads.walkthrough', $lead))->assertOk();
     }
 }

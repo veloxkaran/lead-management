@@ -175,22 +175,6 @@ class Lead extends Model
         return $timestamp !== null && $timestamp->gt(now()->subHours(24));
     }
 
-    /**
-     * Once Business Development hands a lead to another department via a
-     * request, that department's whole team gains access to the lead
-     * itself — not just the request record — so they aren't stuck asking
-     * BD to relay context back and forth.
-     */
-    public function isHandedOffToCustomerSuccess(): bool
-    {
-        return $this->implementationRequests()->exists() || $this->supportTickets()->exists();
-    }
-
-    public function isHandedOffToFinance(): bool
-    {
-        return $this->accountRequests()->exists();
-    }
-
     public function scopeArchived($query)
     {
         return $query->whereNotNull('archived_at');

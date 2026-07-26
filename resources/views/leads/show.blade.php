@@ -121,6 +121,7 @@
                 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#support-tickets" type="button">Support Tickets</button></li>
                 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tasks" type="button">Tasks</button></li>
                 <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#history" type="button">Status History</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#change-log" type="button">Change Log</button></li>
             </ul>
             <div class="tab-content bg-white border border-top-0 rounded-bottom p-3 shadow-sm">
                 <div class="tab-pane fade show active" id="activities">
@@ -143,6 +144,9 @@
                 </div>
                 <div class="tab-pane fade" id="history">
                     @include('leads._status_history')
+                </div>
+                <div class="tab-pane fade" id="change-log">
+                    @include('leads._change_log')
                 </div>
             </div>
         </div>

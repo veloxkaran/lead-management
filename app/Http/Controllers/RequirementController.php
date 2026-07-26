@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ActivityModule;
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
 use App\Http\Requests\Requirement\StoreRequirementRequest;
 use App\Http\Requests\Requirement\UpdateRequirementRequest;
+use App\Models\ActivityLogEntry;
 use App\Models\Lead;
 use App\Models\Requirement;
 use App\Models\User;
@@ -70,17 +72,26 @@ class RequirementController extends Controller
 
         $requirement->load('lead');
 
+        $changeLog = ActivityLogEntry::where('module', ActivityModule::Requirement)
+            ->where('subject_type', $requirement->getMorphClass())
+            ->where('subject_id', $requirement->id)
+            ->whereNotNull('new_values')
+            ->with('user')
+            ->latest('id')
+            ->get();
+
         return view('requirements.edit', [
             'requirement' => $requirement,
             'priorities' => RequirementPriority::cases(),
             'statuses' => RequirementStatus::cases(),
             'users' => User::orderBy('name')->get(),
+            'changeLog' => $changeLog,
         ]);
     }
 
     public function update(UpdateRequirementRequest $request, Requirement $requirement): RedirectResponse
     {
-        $this->requirementService->update($requirement, $request->validated());
+        $this->requirementService->update($requirement, $request->validated(), $request->user(), $request->ip(), $request->userAgent());
 
         return redirect()->route('requirements.index')->with('success', 'Requirement updated successfully.');
     }

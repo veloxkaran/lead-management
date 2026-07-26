@@ -41,8 +41,10 @@ class LeadHierarchyVisibilityTest extends TestCase
         $this->assertDatabaseHas('leads', ['id' => $lead->id, 'company_name' => 'Updated by Senior Rep']);
     }
 
-    public function test_an_unrelated_peer_still_cannot_see_or_view_the_lead(): void
+    public function test_an_unrelated_peer_can_now_see_and_view_the_lead(): void
     {
+        // Lead view/update is open to every user now (see LeadPolicy) —
+        // hierarchy no longer restricts visibility, only who's "assigned".
         $senior = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
         $junior = User::factory()->create(['role' => UserRole::BusinessDevelopment, 'reporting_manager_id' => $senior->id]);
         $lead = Lead::factory()->create(['assigned_user_id' => $junior->id, 'created_by' => $junior->id]);
@@ -51,9 +53,9 @@ class LeadHierarchyVisibilityTest extends TestCase
 
         $response = $this->actingAs($peer)->get(route('leads.index'));
         $response->assertOk();
-        $response->assertViewHas('leads', fn ($leads) => $leads->total() === 0);
+        $response->assertViewHas('leads', fn ($leads) => $leads->total() === 1);
 
-        $this->actingAs($peer)->get(route('leads.show', $lead))->assertForbidden();
+        $this->actingAs($peer)->get(route('leads.show', $lead))->assertOk();
     }
 
     public function test_a_lead_created_by_a_report_but_assigned_elsewhere_is_still_visible(): void
