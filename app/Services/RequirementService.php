@@ -9,6 +9,7 @@ use App\Models\Lead;
 use App\Models\Requirement;
 use App\Models\User;
 use App\Repositories\RequirementRepository;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class RequirementService
@@ -20,6 +21,14 @@ class RequirementService
     public function list(array $filters, int $perPage = 20): LengthAwarePaginator
     {
         return $this->requirements->filter($filters, $perPage);
+    }
+
+    /**
+     * @return Collection<int, Requirement>
+     */
+    public function listAllForExport(array $filters): Collection
+    {
+        return $this->requirements->allFiltered($filters);
     }
 
     public function create(array $attributes, User $creator): Requirement

@@ -37,6 +37,7 @@
                 <div class="col-md-4 d-flex gap-2">
                     <button type="submit" class="btn btn-sm btn-primary flex-fill"><i class="bi bi-funnel"></i> Filter</button>
                     <a href="{{ route('requirements.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+                    <a href="{{ route('requirements.export-pdf', $filters) }}" class="btn btn-sm btn-outline-secondary text-nowrap"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
                 </div>
             </form>
         </div>
@@ -51,6 +52,7 @@
                         <th>Requirement</th>
                         <th>Priority</th>
                         <th>Status</th>
+                        <th>Due Date</th>
                         <th>Assigned To</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -68,6 +70,12 @@
                             <td class="small">{{ $requirement->requirement }}</td>
                             <td><x-status-badge :status="$requirement->priority" /></td>
                             <td><x-status-badge :status="$requirement->status" /></td>
+                            <td class="small">
+                                {{ $requirement->due_date?->format('M d, Y') ?? '—' }}
+                                @if ($requirement->due_date && $requirement->due_date->isPast() && $requirement->status->value !== 'completed')
+                                    <span class="badge bg-danger-subtle text-danger-emphasis">Overdue</span>
+                                @endif
+                            </td>
                             <td class="small">{{ $requirement->assignee?->name ?? '—' }}</td>
                             <td class="text-end">
                                 @can('update', $requirement)
@@ -83,7 +91,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6">
+                            <td colspan="7">
                                 <x-empty-state icon="bi-list-check" title="No requirements found" description="Try adjusting your filters or add a new requirement." />
                             </td>
                         </tr>

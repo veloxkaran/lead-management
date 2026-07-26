@@ -98,4 +98,16 @@ class RequirementDueDateTest extends TestCase
         $response->assertSee('Due Date');
         $response->assertSee('Aug 20, 2026');
     }
+
+    public function test_requirements_index_page_shows_due_date_column(): void
+    {
+        $user = User::factory()->create();
+        Requirement::factory()->create(['due_date' => '2026-08-20']);
+
+        $response = $this->actingAs($user)->get(route('requirements.index'));
+
+        $response->assertOk();
+        $response->assertSee('Due Date');
+        $response->assertSee('Aug 20, 2026');
+    }
 }

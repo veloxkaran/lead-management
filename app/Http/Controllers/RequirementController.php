@@ -12,8 +12,10 @@ use App\Models\Lead;
 use App\Models\Requirement;
 use App\Models\User;
 use App\Services\RequirementService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 class RequirementController extends Controller
@@ -36,6 +38,27 @@ class RequirementController extends Controller
             'priorities' => RequirementPriority::cases(),
             'filters' => $filters,
         ]);
+    }
+
+    /**
+     * Exports whatever the index's current status/priority filters match —
+     * every matching row (not just the current page), so the PDF reflects
+     * the exact same filtered set the user is looking at.
+     */
+    public function exportPdf(Request $request): Response
+    {
+        $this->authorize('viewAny', Requirement::class);
+
+        $filters = $request->only(['status', 'priority']);
+
+        $requirements = $this->requirementService->listAllForExport($filters);
+
+        return Pdf::loadView('requirements.pdf', [
+            'requirements' => $requirements,
+            'filters' => $filters,
+            'statuses' => RequirementStatus::cases(),
+            'priorities' => RequirementPriority::cases(),
+        ])->download('requirements.pdf');
     }
 
     public function create(): View
