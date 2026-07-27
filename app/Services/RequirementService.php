@@ -7,6 +7,7 @@ use App\Events\RequirementSaved;
 use App\Models\ActivityLogEntry;
 use App\Models\Lead;
 use App\Models\Requirement;
+use App\Models\RequirementComment;
 use App\Models\User;
 use App\Repositories\RequirementRepository;
 use Illuminate\Database\Eloquent\Collection;
@@ -81,6 +82,14 @@ class RequirementService
     public function delete(Requirement $requirement): void
     {
         $this->requirements->delete($requirement);
+    }
+
+    public function addComment(Requirement $requirement, array $attributes, User $author): RequirementComment
+    {
+        return $requirement->comments()->create([
+            ...$attributes,
+            'author_id' => $author->id,
+        ]);
     }
 
     private function logChange(Requirement $requirement, User $actor, ?string $ip, ?string $userAgent, array $oldValues, array $newValues): void

@@ -139,22 +139,35 @@
     </table>
 
     <h2>Requirements</h2>
-    <table>
-        <thead><tr><th>Requirement</th><th>Priority</th><th>Status</th><th>Assigned</th><th>Raised By</th></tr></thead>
-        <tbody>
-            @forelse ($lead->requirements as $requirement)
+    @forelse ($lead->requirements as $requirement)
+        <table>
+            <thead><tr><th>Requirement</th><th>Priority</th><th>Status</th><th>Assigned</th><th>Raised By</th></tr></thead>
+            <tbody>
                 <tr>
                     <td>{{ $requirement->requirement }}</td>
                     <td>{{ $requirement->priority->label() }}</td>
                     <td>{{ $requirement->status->label() }}</td>
                     <td>{{ $requirement->assignee?->name ?? '—' }}</td>
-                    <td>{{ $requirement->creator?->name ?? '—' }}</td>
+                    <td>{{ $requirement->creator?->name ?? '—' }} on {{ $requirement->created_at->format('M d, Y g:i A') }}</td>
                 </tr>
-            @empty
-                <tr><td colspan="5" class="empty">No requirements recorded.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+                <tr>
+                    <td colspan="5">
+                        <strong>Comments:</strong>
+                        @forelse ($requirement->comments as $comment)
+                            <div>
+                                <span class="muted">{{ $comment->created_at->format('M d, Y g:i A') }} &middot; {{ $comment->author?->name ?? '—' }}:</span>
+                                {{ $comment->comment }}
+                            </div>
+                        @empty
+                            <span class="empty">No comments.</span>
+                        @endforelse
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    @empty
+        <p class="empty">No requirements recorded.</p>
+    @endforelse
 
     <h2>Support Tickets</h2>
     @forelse ($lead->supportTickets as $ticket)

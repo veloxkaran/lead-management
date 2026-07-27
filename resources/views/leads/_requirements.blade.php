@@ -32,7 +32,12 @@
         <tbody>
             @forelse ($lead->requirements as $requirement)
                 <tr>
-                    <td class="small">{{ $requirement->requirement }}</td>
+                    <td class="small">
+                        <a href="{{ route('requirements.show', $requirement) }}" class="text-decoration-none">{{ $requirement->requirement }}</a>
+                        @if ($requirement->comments->count())
+                            <span class="text-muted"><i class="bi bi-chat-left-text"></i> {{ $requirement->comments->count() }}</span>
+                        @endif
+                    </td>
                     <td><x-status-badge :status="$requirement->priority" /></td>
                     <td><x-status-badge :status="$requirement->status" /></td>
                     <td class="small">
@@ -50,7 +55,10 @@
                     </td>
                     <td class="small">{{ $requirement->assignee?->name ?? '—' }}</td>
                     <td>
-                        <a href="{{ route('requirements.edit', $requirement) }}" class="btn btn-sm btn-outline-secondary" title="Edit &amp; view change log"><i class="bi bi-pencil"></i></a>
+                        <a href="{{ route('requirements.show', $requirement) }}" class="btn btn-sm btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
+                        @can('update', $requirement)
+                            <a href="{{ route('requirements.edit', $requirement) }}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="bi bi-pencil"></i></a>
+                        @endcan
                     </td>
                 </tr>
             @empty

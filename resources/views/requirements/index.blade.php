@@ -68,7 +68,12 @@
                                     <span class="text-muted">&mdash;</span>
                                 @endif
                             </td>
-                            <td class="small">{{ $requirement->requirement }}</td>
+                            <td class="small">
+                                <a href="{{ route('requirements.show', $requirement) }}" class="text-decoration-none">{{ $requirement->requirement }}</a>
+                                @if ($requirement->comments_count)
+                                    <span class="text-muted"><i class="bi bi-chat-left-text"></i> {{ $requirement->comments_count }}</span>
+                                @endif
+                            </td>
                             <td><x-status-badge :status="$requirement->priority" /></td>
                             <td><x-status-badge :status="$requirement->status" /></td>
                             <td class="small">
@@ -86,6 +91,7 @@
                             </td>
                             <td class="small">{{ $requirement->assignee?->name ?? '—' }}</td>
                             <td class="text-end">
+                                <a href="{{ route('requirements.show', $requirement) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
                                 @can('update', $requirement)
                                     <a href="{{ route('requirements.edit', $requirement) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
                                 @endcan

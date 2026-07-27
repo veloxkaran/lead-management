@@ -3,7 +3,21 @@
 @section('title', 'Edit Requirement')
 
 @section('content')
-    <x-page-header title="Edit Requirement" icon="bi-list-check" :subtitle="$requirement->lead?->company_name" />
+    <x-page-header title="Edit Requirement" icon="bi-list-check" :subtitle="$requirement->lead?->company_name">
+        <x-slot:actions>
+            <a href="{{ route('requirements.show', $requirement) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-eye"></i> View
+            </a>
+        </x-slot:actions>
+    </x-page-header>
+
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body py-2">
+            <div class="small text-muted">
+                Created by <strong>{{ $requirement->creator?->name ?? 'Unknown' }}</strong> on {{ $requirement->created_at->format('M d, Y g:i A') }}
+            </div>
+        </div>
+    </div>
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
@@ -67,25 +81,5 @@
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm mt-3">
-        <div class="card-header bg-white fw-semibold"><i class="bi bi-clock-history"></i> Change Log</div>
-        <div class="card-body">
-            @forelse ($changeLog as $entry)
-                <div class="border-bottom pb-2 mb-2 small">
-                    <span class="fw-semibold">{{ $entry->user?->name ?? 'Unknown' }}</span>
-                    <span class="text-muted">{{ $entry->created_at->format('M d, Y g:i A') }}</span>
-                    <ul class="mb-0 mt-1">
-                        @foreach ($entry->new_values as $field => $newValue)
-                            <li>
-                                <strong>{{ \Illuminate\Support\Str::headline($field) }}:</strong>
-                                {{ $entry->old_values[$field] ?? '—' }} &rarr; {{ $newValue ?? '—' }}
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            @empty
-                <p class="text-muted small mb-0">No changes logged yet.</p>
-            @endforelse
-        </div>
-    </div>
+    @include('requirements._change_log')
 @endsection

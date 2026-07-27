@@ -65,7 +65,7 @@ class LeadController extends Controller
         $lead->load([
             'assignedUser', 'creator', 'status', 'dealClosure',
             'activities.creator', 'notes.author', 'notes.attachments',
-            'followUps.creator', 'requirements.assignee', 'requirements.creator',
+            'followUps.creator', 'requirements.assignee', 'requirements.creator', 'requirements.comments',
             'statusHistories.fromStatus', 'statusHistories.toStatus', 'statusHistories.changedBy',
             'latestImplementationRequest.assignee',
             'latestTraining.conductor',
@@ -127,7 +127,7 @@ class LeadController extends Controller
             'activities.creator',
             'notes.author', 'notes.attachments',
             'followUps.creator',
-            'requirements.assignee', 'requirements.creator',
+            'requirements.assignee', 'requirements.creator', 'requirements.comments.author',
             'statusHistories.fromStatus', 'statusHistories.toStatus', 'statusHistories.changedBy',
             'implementationRequests.requester', 'implementationRequests.assignee',
             'trainings.conductor',

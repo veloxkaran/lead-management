@@ -11,6 +11,7 @@ use App\Models\ActivityLogEntry;
 use App\Models\Lead;
 use App\Models\Requirement;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use App\Services\RequirementService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -89,26 +90,36 @@ class RequirementController extends Controller
         return back()->with('success', 'Requirement created successfully.');
     }
 
+    /**
+     * Open to anyone who can view the requirement (RequirementPolicy::view()
+     * is universal), unlike edit() which stays restricted to whoever can
+     * update it — this is where the comment thread and Created By/At live,
+     * so it can't be gated behind update-only access.
+     */
+    public function show(Requirement $requirement): View
+    {
+        $this->authorize('view', $requirement);
+
+        $requirement->load('lead', 'creator', 'assignee', 'comments.author');
+
+        return view('requirements.show', [
+            'requirement' => $requirement,
+            'changeLog' => $this->changeLogFor($requirement),
+        ]);
+    }
+
     public function edit(Requirement $requirement): View
     {
         $this->authorize('update', $requirement);
 
-        $requirement->load('lead');
-
-        $changeLog = ActivityLogEntry::where('module', ActivityModule::Requirement)
-            ->where('subject_type', $requirement->getMorphClass())
-            ->where('subject_id', $requirement->id)
-            ->whereNotNull('new_values')
-            ->with('user')
-            ->latest('id')
-            ->get();
+        $requirement->load('lead', 'creator');
 
         return view('requirements.edit', [
             'requirement' => $requirement,
             'priorities' => RequirementPriority::cases(),
             'statuses' => RequirementStatus::cases(),
             'users' => User::orderBy('name')->get(),
-            'changeLog' => $changeLog,
+            'changeLog' => $this->changeLogFor($requirement),
         ]);
     }
 
@@ -126,5 +137,16 @@ class RequirementController extends Controller
         $this->requirementService->delete($requirement);
 
         return back()->with('success', 'Requirement deleted successfully.');
+    }
+
+    private function changeLogFor(Requirement $requirement): Collection
+    {
+        return ActivityLogEntry::where('module', ActivityModule::Requirement)
+            ->where('subject_type', $requirement->getMorphClass())
+            ->where('subject_id', $requirement->id)
+            ->whereNotNull('new_values')
+            ->with('user')
+            ->latest('id')
+            ->get();
     }
 }
