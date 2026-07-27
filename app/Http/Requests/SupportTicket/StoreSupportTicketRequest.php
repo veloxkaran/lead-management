@@ -22,6 +22,8 @@ class StoreSupportTicketRequest extends FormRequest
             'details' => ['nullable', 'string'],
             'priority' => ['required', new Enum(RequirementPriority::class)],
             'assigned_to' => ['nullable', 'exists:users,id'],
+            'attachments' => ['nullable', 'array'],
+            'attachments.*' => ['nullable', 'file', 'max:10240'],
         ];
     }
 }

@@ -53,6 +53,7 @@
                         <th>Priority</th>
                         <th>Status</th>
                         <th>Due Date</th>
+                        <th>Client Acknowledged</th>
                         <th>Assigned To</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -76,6 +77,13 @@
                                     <span class="badge bg-danger-subtle text-danger-emphasis">Overdue</span>
                                 @endif
                             </td>
+                            <td class="small">
+                                @if ($requirement->isAcknowledgedByClient())
+                                    <span class="badge bg-success-subtle text-success-emphasis"><i class="bi bi-check-circle"></i> {{ $requirement->client_acknowledged_at->format('M d, Y g:i A') }}</span>
+                                @else
+                                    <span class="badge bg-secondary-subtle text-secondary-emphasis">Not yet</span>
+                                @endif
+                            </td>
                             <td class="small">{{ $requirement->assignee?->name ?? '—' }}</td>
                             <td class="text-end">
                                 @can('update', $requirement)
@@ -91,7 +99,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 <x-empty-state icon="bi-list-check" title="No requirements found" description="Try adjusting your filters or add a new requirement." />
                             </td>
                         </tr>

@@ -23,6 +23,8 @@ class UpdateSupportTicketRequest extends FormRequest
             'priority' => ['required', new Enum(RequirementPriority::class)],
             'status' => ['required', new Enum(RequirementStatus::class)],
             'assigned_to' => ['nullable', 'exists:users,id'],
+            'attachments' => ['nullable', 'array'],
+            'attachments.*' => ['nullable', 'file', 'max:10240'],
         ];
     }
 

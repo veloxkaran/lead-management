@@ -40,6 +40,16 @@
                     <p class="mb-0">{{ $supportTicket->details ?: 'No details provided.' }}</p>
                 </div>
                 <div class="col-12">
+                    <div class="small text-muted">Documents</div>
+                    @forelse ($supportTicket->attachments as $attachment)
+                        <a href="{{ route('support-ticket-attachments.download', $attachment) }}" class="badge bg-light text-dark border text-decoration-none me-1">
+                            <i class="bi bi-paperclip"></i> {{ $attachment->original_name }}
+                        </a>
+                    @empty
+                        <span class="small text-muted">No documents attached.</span>
+                    @endforelse
+                </div>
+                <div class="col-12">
                     <div class="small text-muted">
                         Raised on {{ $supportTicket->created_at->format('M d, Y g:i A') }}
                         @unless ($supportTicket->detailsEditable())

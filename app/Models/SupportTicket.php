@@ -47,6 +47,11 @@ class SupportTicket extends Model
         return $this->hasMany(SupportTicketComment::class)->oldest();
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(SupportTicketAttachment::class)->latest();
+    }
+
     /**
      * The subject/details describing the ticket lock 12 hours after it's
      * raised — unlike priority/status/assignment, which stay editable for

@@ -30,6 +30,7 @@
                 <th>Priority</th>
                 <th>Status</th>
                 <th>Due Date</th>
+                <th>Client Acknowledged</th>
                 <th>Assigned To</th>
                 <th>Created By</th>
             </tr>
@@ -42,11 +43,12 @@
                     <td>{{ $requirement->priority->label() }}</td>
                     <td>{{ $requirement->status->label() }}</td>
                     <td>{{ $requirement->due_date?->format('M d, Y') ?? '—' }}</td>
+                    <td>{{ $requirement->client_acknowledged_at?->format('M d, Y g:i A') ?? 'Not yet' }}</td>
                     <td>{{ $requirement->assignee?->name ?? '—' }}</td>
                     <td>{{ $requirement->creator?->name ?? '—' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="7">No requirements match the selected filters.</td></tr>
+                <tr><td colspan="8">No requirements match the selected filters.</td></tr>
             @endforelse
         </tbody>
     </table>

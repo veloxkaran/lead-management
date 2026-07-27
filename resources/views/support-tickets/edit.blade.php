@@ -7,7 +7,7 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <form method="POST" action="{{ route('support-tickets.update', $supportTicket) }}">
+            <form method="POST" action="{{ route('support-tickets.update', $supportTicket) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <div class="row g-3">
@@ -54,12 +54,30 @@
                         </select>
                         @error('assigned_to')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-semibold">Add Documents</label>
+                        <input type="file" name="attachments[]" multiple class="form-control">
+                        @error('attachments.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
                 </div>
                 <div class="mt-3">
                     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Update Ticket</button>
                     <a href="{{ route('support-tickets.index') }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-white fw-semibold"><i class="bi bi-paperclip"></i> Documents ({{ $supportTicket->attachments->count() }})</div>
+        <div class="card-body">
+            @forelse ($supportTicket->attachments as $attachment)
+                <a href="{{ route('support-ticket-attachments.download', $attachment) }}" class="badge bg-light text-dark border text-decoration-none me-1 mb-1">
+                    <i class="bi bi-paperclip"></i> {{ $attachment->original_name }}
+                </a>
+            @empty
+                <p class="text-muted small mb-0">No documents attached yet.</p>
+            @endforelse
         </div>
     </div>
 @endsection

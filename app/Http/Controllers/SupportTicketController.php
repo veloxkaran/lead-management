@@ -46,14 +46,23 @@ class SupportTicketController extends Controller
 
     public function store(StoreSupportTicketRequest $request): RedirectResponse
     {
-        $this->supportTickets->create($request->validated(), $request->user());
+        $this->supportTickets->create(
+            $request->safe()->except('attachments'),
+            $request->user(),
+            $request->file('attachments', [])
+        );
 
         return redirect()->route('support-tickets.index')->with('success', 'Support ticket raised.');
     }
 
     public function storeForLead(StoreSupportTicketRequest $request, Lead $lead): RedirectResponse
     {
-        $this->supportTickets->createForLead($lead, $request->validated(), $request->user());
+        $this->supportTickets->createForLead(
+            $lead,
+            $request->safe()->except('attachments'),
+            $request->user(),
+            $request->file('attachments', [])
+        );
 
         return back()->with('success', 'Support ticket raised.');
     }
@@ -62,7 +71,7 @@ class SupportTicketController extends Controller
     {
         $this->authorize('view', $supportTicket);
 
-        $supportTicket->load('lead', 'raiser', 'assignee', 'comments.author');
+        $supportTicket->load('lead', 'raiser', 'assignee', 'comments.author', 'attachments');
 
         return view('support-tickets.show', [
             'supportTicket' => $supportTicket,
@@ -73,7 +82,7 @@ class SupportTicketController extends Controller
     {
         $this->authorize('update', $supportTicket);
 
-        $supportTicket->load('lead', 'raiser', 'assignee');
+        $supportTicket->load('lead', 'raiser', 'assignee', 'attachments');
 
         return view('support-tickets.edit', [
             'supportTicket' => $supportTicket,
@@ -85,7 +94,11 @@ class SupportTicketController extends Controller
 
     public function update(UpdateSupportTicketRequest $request, SupportTicket $supportTicket): RedirectResponse
     {
-        $this->supportTickets->update($supportTicket, $request->validated());
+        $this->supportTickets->update(
+            $supportTicket,
+            $request->safe()->except('attachments'),
+            $request->file('attachments', [])
+        );
 
         return redirect()->route('support-tickets.index')->with('success', 'Support ticket updated.');
     }

@@ -7,7 +7,7 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <form method="POST" action="{{ route('support-tickets.store') }}">
+            <form method="POST" action="{{ route('support-tickets.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="row g-3">
                     <div class="col-md-12">
@@ -38,6 +38,11 @@
                             @endforeach
                         </select>
                         @error('priority')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-semibold">Documents (optional)</label>
+                        <input type="file" name="attachments[]" multiple class="form-control">
+                        @error('attachments.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                 </div>
                 <div class="mt-3">

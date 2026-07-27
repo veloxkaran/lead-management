@@ -14,7 +14,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
  */
 class NotDuplicateLeadName implements ValidationRule
 {
-    public function __construct(protected ?int $ignoreLeadId = null, protected float $threshold = 70.0)
+    public function __construct(protected ?int $ignoreLeadId = null, protected float $threshold = 97.0)
     {
     }
 

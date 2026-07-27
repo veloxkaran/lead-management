@@ -70,7 +70,7 @@ class LeadController extends Controller
             'latestImplementationRequest.assignee',
             'latestTraining.conductor',
             'latestSubscription.creator',
-            'supportTickets.assignee',
+            'supportTickets.assignee', 'supportTickets.attachments',
             'tasks.assignee',
         ]);
 
@@ -132,7 +132,7 @@ class LeadController extends Controller
             'implementationRequests.requester', 'implementationRequests.assignee',
             'trainings.conductor',
             'subscriptions.creator',
-            'supportTickets.raiser', 'supportTickets.assignee', 'supportTickets.comments.author',
+            'supportTickets.raiser', 'supportTickets.assignee', 'supportTickets.comments.author', 'supportTickets.attachments',
             'tasks.creator', 'tasks.assignee', 'tasks.comments.author',
             'accountRequests.requester', 'accountRequests.processor',
         ]);

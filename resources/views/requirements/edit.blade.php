@@ -16,7 +16,7 @@
                         <textarea name="requirement" rows="3" class="form-control" required>{{ old('requirement', $requirement->requirement) }}</textarea>
                         @error('requirement')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <label class="form-label small fw-semibold">Priority</label>
                         <select name="priority" class="form-select">
                             @foreach ($priorities as $priority)
@@ -25,7 +25,7 @@
                         </select>
                         @error('priority')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <label class="form-label small fw-semibold">Status</label>
                         <select name="status" class="form-select">
                             @foreach ($statuses as $status)
@@ -34,12 +34,17 @@
                         </select>
                         @error('status')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label small fw-semibold">Due Date</label>
                         <input type="date" name="due_date" class="form-control" value="{{ old('due_date', $requirement->due_date?->toDateString()) }}">
                         @error('due_date')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Client Acknowledged</label>
+                        <input type="datetime-local" name="client_acknowledged_at" class="form-control" value="{{ old('client_acknowledged_at', $requirement->client_acknowledged_at?->format('Y-m-d\TH:i')) }}">
+                        @error('client_acknowledged_at')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label small fw-semibold">Assign To</label>
                         <select name="assigned_to" class="form-select" data-select2>
                             <option value="">Unassigned</option>

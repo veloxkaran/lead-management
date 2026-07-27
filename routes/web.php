@@ -16,6 +16,7 @@ use App\Http\Controllers\ImplementationRequestController;
 use App\Http\Controllers\IndividualJdController;
 use App\Http\Controllers\KnowledgeBaseCategoryController;
 use App\Http\Controllers\KnowledgeBaseController;
+use App\Http\Controllers\LeadBulkUploadController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LeadNoteAttachmentController;
 use App\Http\Controllers\LeadNoteController;
@@ -35,6 +36,7 @@ use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SopController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\SupportTicketAttachmentController;
 use App\Http\Controllers\SupportTicketCommentController;
 use App\Http\Controllers\SupportTicketController;
 use App\Http\Controllers\TaskChecklistItemController;
@@ -69,6 +71,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('email-accounts/{email_account}/toggle-active', [EmailAccountController::class, 'toggleActive'])->name('email-accounts.toggle-active');
 
     // Leads
+    // Registered before the resource so /leads/bulk-upload isn't swallowed by the {lead} wildcard.
+    Route::get('leads/bulk-upload', [LeadBulkUploadController::class, 'create'])->name('leads.bulk-upload.create');
+    Route::get('leads/bulk-upload/template', [LeadBulkUploadController::class, 'template'])->name('leads.bulk-upload.template');
+    Route::post('leads/bulk-upload', [LeadBulkUploadController::class, 'store'])->name('leads.bulk-upload.store');
     Route::resource('leads', LeadController::class);
     Route::post('leads/{lead}/archive', [LeadController::class, 'archive'])->name('leads.archive');
     Route::post('leads/{lead}/restore', [LeadController::class, 'restore'])->name('leads.restore');
@@ -120,6 +126,7 @@ Route::middleware('auth')->group(function () {
     Route::post('leads/{lead}/support-tickets', [SupportTicketController::class, 'storeForLead'])->name('leads.support-tickets.store');
     Route::post('support-tickets/{support_ticket}/comments', [SupportTicketCommentController::class, 'store'])->name('support-tickets.comments.store');
     Route::patch('support-tickets/{support_ticket}/comments/{comment}', [SupportTicketCommentController::class, 'update'])->name('support-tickets.comments.update');
+    Route::get('support-ticket-attachments/{attachment}/download', [SupportTicketAttachmentController::class, 'download'])->name('support-ticket-attachments.download');
 
     // Finance handoff — raised by Business Development, processed by Finance.
     Route::resource('account-requests', AccountRequestController::class)->except('show');

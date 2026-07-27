@@ -14,7 +14,8 @@ class Requirement extends Model
     use BelongsToCompany, HasFactory;
 
     protected $fillable = [
-        'company_id', 'lead_id', 'requirement', 'priority', 'status', 'due_date', 'assigned_to', 'created_by',
+        'company_id', 'lead_id', 'requirement', 'priority', 'status', 'due_date',
+        'client_acknowledged_at', 'assigned_to', 'created_by',
     ];
 
     protected function casts(): array
@@ -23,7 +24,13 @@ class Requirement extends Model
             'priority' => RequirementPriority::class,
             'status' => RequirementStatus::class,
             'due_date' => 'date',
+            'client_acknowledged_at' => 'datetime',
         ];
+    }
+
+    public function isAcknowledgedByClient(): bool
+    {
+        return $this->client_acknowledged_at !== null;
     }
 
     public function lead(): BelongsTo

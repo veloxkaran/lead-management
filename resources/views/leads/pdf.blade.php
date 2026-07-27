@@ -173,6 +173,12 @@
                 @endif
                 <tr>
                     <td colspan="5">
+                        <strong>Documents:</strong>
+                        {{ $ticket->attachments->isNotEmpty() ? $ticket->attachments->pluck('original_name')->implode(', ') : 'None' }}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5">
                         <strong>Comments:</strong>
                         @forelse ($ticket->comments as $comment)
                             <div class="{{ $comment->parent_id ? 'reply' : '' }}">

@@ -15,15 +15,16 @@ class LeadValidationAndAgeTest extends TestCase
     public function test_a_near_duplicate_company_name_is_rejected_on_create(): void
     {
         $user = User::factory()->create();
-        Lead::factory()->create(['company_name' => 'Acme Corporation']);
+        Lead::factory()->create(['company_name' => 'Acme Corporation Group']);
 
         $response = $this->actingAs($user)->post(route('leads.store'), [
-            'company_name' => 'Acme Corporations', // near-identical, one char added
+            // one char added to a long-enough name to clear the 97% match threshold (~97.8%)
+            'company_name' => 'Acme Corporation Groups',
             'contact_person' => 'Jane Doe',
         ]);
 
         $response->assertSessionHasErrors('company_name');
-        $this->assertDatabaseMissing('leads', ['company_name' => 'Acme Corporations']);
+        $this->assertDatabaseMissing('leads', ['company_name' => 'Acme Corporation Groups']);
     }
 
     public function test_a_sufficiently_different_company_name_is_accepted(): void

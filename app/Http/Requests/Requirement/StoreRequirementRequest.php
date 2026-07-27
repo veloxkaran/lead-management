@@ -20,6 +20,7 @@ class StoreRequirementRequest extends FormRequest
             'requirement' => ['required', 'string'],
             'priority' => ['required', new Enum(RequirementPriority::class)],
             'due_date' => ['nullable', 'date'],
+            'client_acknowledged_at' => ['nullable', 'date'],
             'assigned_to' => ['nullable', 'exists:users,id'],
         ];
 

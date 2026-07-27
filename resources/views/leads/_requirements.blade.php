@@ -28,7 +28,7 @@
 
 <div class="table-responsive">
     <table class="table table-sm align-middle">
-        <thead class="table-light"><tr><th>Requirement</th><th>Priority</th><th>Status</th><th>Due Date</th><th>Assigned</th><th></th></tr></thead>
+        <thead class="table-light"><tr><th>Requirement</th><th>Priority</th><th>Status</th><th>Due Date</th><th>Client Acknowledged</th><th>Assigned</th><th></th></tr></thead>
         <tbody>
             @forelse ($lead->requirements as $requirement)
                 <tr>
@@ -41,13 +41,20 @@
                             <span class="badge bg-danger-subtle text-danger-emphasis">Overdue</span>
                         @endif
                     </td>
+                    <td class="small">
+                        @if ($requirement->isAcknowledgedByClient())
+                            <span class="badge bg-success-subtle text-success-emphasis"><i class="bi bi-check-circle"></i> {{ $requirement->client_acknowledged_at->format('M d, Y g:i A') }}</span>
+                        @else
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">Not yet</span>
+                        @endif
+                    </td>
                     <td class="small">{{ $requirement->assignee?->name ?? '—' }}</td>
                     <td>
                         <a href="{{ route('requirements.edit', $requirement) }}" class="btn btn-sm btn-outline-secondary" title="Edit &amp; view change log"><i class="bi bi-pencil"></i></a>
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6"><x-empty-state icon="bi-list-check" title="No requirements yet" /></td></tr>
+                <tr><td colspan="7"><x-empty-state icon="bi-list-check" title="No requirements yet" /></td></tr>
             @endforelse
         </tbody>
     </table>
