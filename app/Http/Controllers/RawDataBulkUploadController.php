@@ -52,7 +52,7 @@ class RawDataBulkUploadController extends Controller
         Excel::import($import, $request->file('file'));
 
         return redirect()->route('raw-data.bulk-upload.create')
-            ->with('success', "{$import->importedCount()} raw data entries imported successfully.")
+            ->with('success', "{$import->importedCount()} raw data entries imported, {$import->updatedCount()} existing entries filled in with new details.")
             ->with('importFailures', $import->failures());
     }
 }

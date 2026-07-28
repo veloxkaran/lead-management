@@ -23,6 +23,9 @@
                     <p class="small text-muted mb-3">
                         Required columns: <strong>Contact Person</strong>, <strong>Phone</strong>.
                         Optional: Email, Source. Accepted formats: .xlsx, .xls, .csv.
+                        A row matching an existing entry (by phone or contact person) won't create a
+                        duplicate — it fills in that entry's missing Email/Source instead, without
+                        overwriting anything already set.
                     </p>
                     <form method="POST" action="{{ route('raw-data.bulk-upload.store') }}" enctype="multipart/form-data">
                         @csrf

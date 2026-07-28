@@ -65,6 +65,43 @@ class RawDataService
         });
     }
 
+    /**
+     * Bulk-upload-only lookup: matches by phone first (the more reliable
+     * identifier), falling back to contact person, so a re-uploaded row for
+     * someone already on file gets reconciled with fillMissingDetails()
+     * instead of being rejected as a duplicate.
+     */
+    public function findExistingForImportRow(string $contactPerson, string $phone): ?RawData
+    {
+        return $this->rawData->query()->whereRaw('lower(phone) = ?', [mb_strtolower(trim($phone))])->first()
+            ?? $this->rawData->query()->whereRaw('lower(contact_person) = ?', [mb_strtolower(trim($contactPerson))])->first();
+    }
+
+    /**
+     * Fills in only the fields that are currently null on the existing
+     * entry — never overwrites a value that's already set. Returns whether
+     * anything actually changed, so the importer can report an accurate
+     * "updated" count.
+     */
+    public function fillMissingDetails(RawData $rawData, array $attributes): bool
+    {
+        $updates = [];
+
+        foreach (['email', 'source'] as $field) {
+            if (blank($rawData->{$field}) && filled($attributes[$field] ?? null)) {
+                $updates[$field] = $attributes[$field];
+            }
+        }
+
+        if (empty($updates)) {
+            return false;
+        }
+
+        $rawData->update($updates);
+
+        return true;
+    }
+
     public function addComment(RawData $rawData, array $attributes, User $author): RawDataComment
     {
         return $rawData->comments()->create([
