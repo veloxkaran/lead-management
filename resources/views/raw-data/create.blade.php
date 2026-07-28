@@ -20,6 +20,16 @@
                         <input type="text" name="phone" class="form-control" value="{{ old('phone') }}" required>
                         @error('phone')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Email (optional)</label>
+                        <input type="email" name="email" class="form-control" value="{{ old('email') }}">
+                        @error('email')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Source (optional)</label>
+                        <input type="text" name="source" class="form-control" maxlength="20" value="{{ old('source') }}">
+                        @error('source')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
                 </div>
                 <div class="mt-3">
                     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save</button>

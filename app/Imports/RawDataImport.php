@@ -35,6 +35,8 @@ class RawDataImport implements ToCollection, WithHeadingRow, WithValidation, Ski
         return [
             'contact_person' => ['required', 'max:255', new NotDuplicateRawContact('contact_person')],
             'phone' => ['required', 'max:30', new NotDuplicateRawContact('phone')],
+            'email' => ['nullable', 'email', 'max:255'],
+            'source' => ['nullable', 'max:20'],
         ];
     }
 
@@ -44,6 +46,8 @@ class RawDataImport implements ToCollection, WithHeadingRow, WithValidation, Ski
             $this->rawDataService->create([
                 'contact_person' => $row['contact_person'],
                 'phone' => $row['phone'],
+                'email' => $row['email'] ?? null,
+                'source' => $row['source'] ?? null,
             ], $this->creator);
 
             $this->importedCount++;

@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RawDataBulkUploadController extends Controller
 {
-    private const COLUMNS = ['Contact Person', 'Phone'];
+    private const COLUMNS = ['Contact Person', 'Phone', 'Email', 'Source'];
 
     public function __construct(protected RawDataService $rawDataService)
     {
@@ -33,7 +33,7 @@ class RawDataBulkUploadController extends Controller
 
         return Excel::download(
             new GenericTableExport(self::COLUMNS, [
-                ['Jane Doe', '9800000000'],
+                ['Jane Doe', '9800000000', 'jane@example.test', 'Referral'],
             ]),
             'raw-data-bulk-upload-template.xlsx'
         );

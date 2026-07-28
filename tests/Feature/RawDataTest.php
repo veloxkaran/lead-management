@@ -31,6 +31,38 @@ class RawDataTest extends TestCase
         ]);
     }
 
+    public function test_email_and_source_are_optional_and_saved_when_provided(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('raw-data.store'), [
+            'contact_person' => 'Jane Doe',
+            'phone' => '9800000000',
+            'email' => 'jane@example.test',
+            'source' => 'Referral',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('raw_data', [
+            'contact_person' => 'Jane Doe',
+            'email' => 'jane@example.test',
+            'source' => 'Referral',
+        ]);
+    }
+
+    public function test_source_longer_than_20_characters_is_rejected(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('raw-data.store'), [
+            'contact_person' => 'Jane Doe',
+            'phone' => '9800000000',
+            'source' => str_repeat('a', 21),
+        ]);
+
+        $response->assertSessionHasErrors('source');
+        $this->assertDatabaseMissing('raw_data', ['contact_person' => 'Jane Doe']);
+    }
+
     public function test_duplicate_contact_person_is_rejected(): void
     {
         $user = User::factory()->create();
@@ -117,6 +149,7 @@ class RawDataTest extends TestCase
             'contact_person' => 'Jane Doe',
             'phone' => '9800000000',
             'email' => 'jane@acme.test',
+            'source' => 'Referral',
         ]);
 
         $lead = Lead::firstWhere('company_name', 'Acme Corp');
@@ -124,6 +157,7 @@ class RawDataTest extends TestCase
         $this->assertNotNull($lead);
         $response->assertRedirect(route('leads.show', $lead));
         $this->assertSame('Jane Doe', $lead->contact_person);
+        $this->assertSame('Referral', $lead->source);
         $this->assertSame($status->id, $lead->lead_status_id);
 
         $entry->refresh();

@@ -29,6 +29,7 @@ class ConvertRawDataRequest extends FormRequest
             'contact_person' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
+            'source' => ['nullable', 'string', 'max:20'],
         ];
     }
 }

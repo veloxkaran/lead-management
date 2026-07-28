@@ -21,7 +21,8 @@
                 <div class="card-body">
                     <h6 class="fw-semibold mb-2"><i class="bi bi-2-circle"></i> Upload your file</h6>
                     <p class="small text-muted mb-3">
-                        Required columns: <strong>Contact Person</strong>, <strong>Phone</strong>. Accepted formats: .xlsx, .xls, .csv.
+                        Required columns: <strong>Contact Person</strong>, <strong>Phone</strong>.
+                        Optional: Email, Source. Accepted formats: .xlsx, .xls, .csv.
                     </p>
                     <form method="POST" action="{{ route('raw-data.bulk-upload.store') }}" enctype="multipart/form-data">
                         @csrf

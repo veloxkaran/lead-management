@@ -41,6 +41,14 @@
                     <div class="small text-muted">Added By</div>
                     <div class="small fw-semibold">{{ $rawData->creator?->name ?? 'Unknown' }}</div>
                 </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Email</div>
+                    <div class="small fw-semibold">{{ $rawData->email ?? '—' }}</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Source</div>
+                    <div class="small fw-semibold">{{ $rawData->source ?? '—' }}</div>
+                </div>
                 @if ($rawData->convertedLead)
                     <div class="col-12">
                         <div class="small text-muted">Converted Lead</div>
@@ -109,8 +117,13 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Email (optional)</label>
-                                <input type="email" name="email" class="form-control" value="{{ old('email') }}">
+                                <input type="email" name="email" class="form-control" value="{{ old('email', $rawData->email) }}">
                                 @error('email')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Source (optional)</label>
+                                <input type="text" name="source" class="form-control" maxlength="20" value="{{ old('source', $rawData->source) }}">
+                                @error('source')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                             </div>
                         </div>
                         <div class="modal-footer">
