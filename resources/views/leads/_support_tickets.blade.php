@@ -1,15 +1,23 @@
 <form method="POST" action="{{ route('leads.support-tickets.store', $lead) }}" enctype="multipart/form-data" class="row g-2 mb-3">
     @csrf
-    <div class="col-md-4">
+    <div class="col-md-3">
         <input type="text" name="subject" class="form-control form-control-sm" placeholder="Ticket subject" required>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <textarea name="details" rows="1" class="form-control form-control-sm" placeholder="Details (optional)" style="resize: none; overflow: hidden;" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'"></textarea>
     </div>
     <div class="col-md-2">
         <select name="priority" class="form-select form-select-sm">
             @foreach ($priorities as $priority)
                 <option value="{{ $priority->value }}" @selected($priority->value === 'medium')>{{ $priority->label() }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="assigned_to" class="form-select form-select-sm">
+            <option value="">Unassigned</option>
+            @foreach ($users as $u)
+                <option value="{{ $u->id }}">{{ $u->name }}</option>
             @endforeach
         </select>
     </div>

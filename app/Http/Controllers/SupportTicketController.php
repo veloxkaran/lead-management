@@ -41,6 +41,7 @@ class SupportTicketController extends Controller
         return view('support-tickets.create', [
             'leads' => Lead::active()->orderBy('company_name')->get(),
             'priorities' => RequirementPriority::cases(),
+            'users' => User::orderBy('name')->get(),
         ]);
     }
 

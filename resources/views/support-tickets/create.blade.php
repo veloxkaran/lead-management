@@ -39,6 +39,16 @@
                         </select>
                         @error('priority')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Assign To (optional)</label>
+                        <select name="assigned_to" class="form-select" data-select2>
+                            <option value="">Unassigned</option>
+                            @foreach ($users as $u)
+                                <option value="{{ $u->id }}" @selected(old('assigned_to') == $u->id)>{{ $u->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('assigned_to')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
                     <div class="col-md-12">
                         <label class="form-label small fw-semibold">Documents (optional)</label>
                         <input type="file" name="attachments[]" multiple class="form-control">
