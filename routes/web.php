@@ -3,6 +3,7 @@
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ActivityFeedController;
 use App\Http\Controllers\ActivityFeedSettingsController;
+use App\Http\Controllers\BulkUploadController;
 use App\Http\Controllers\CommonReportController;
 use App\Http\Controllers\DailySummaryController;
 use App\Http\Controllers\DashboardController;
@@ -24,6 +25,9 @@ use App\Http\Controllers\MeetingRoomController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrgTreeController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RawDataBulkUploadController;
+use App\Http\Controllers\RawDataCommentController;
+use App\Http\Controllers\RawDataController;
 use App\Http\Controllers\ReleaseNoteController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RequirementCommentController;
@@ -63,6 +67,9 @@ Route::middleware('auth')->group(function () {
     Route::post('email-accounts/{email_account}/set-default', [EmailAccountController::class, 'setDefault'])->name('email-accounts.set-default');
     Route::patch('email-accounts/{email_account}/toggle-active', [EmailAccountController::class, 'toggleActive'])->name('email-accounts.toggle-active');
 
+    // Bulk Upload hub — links out to each resource's own bulk-upload flow below.
+    Route::get('bulk-upload', [BulkUploadController::class, 'index'])->name('bulk-upload.index');
+
     // Leads
     // Registered before the resource so /leads/bulk-upload isn't swallowed by the {lead} wildcard.
     Route::get('leads/bulk-upload', [LeadBulkUploadController::class, 'create'])->name('leads.bulk-upload.create');
@@ -78,6 +85,16 @@ Route::middleware('auth')->group(function () {
 
     Route::post('leads/{lead}/activities', [ActivityController::class, 'store'])->name('leads.activities.store');
     Route::get('activities', [ActivityController::class, 'index'])->name('activities.index');
+
+    // Raw Data — minimal contact records, later converted into full Leads.
+    // Registered before the resource so /raw-data/bulk-upload isn't swallowed by the {raw_data} wildcard.
+    Route::get('raw-data/bulk-upload', [RawDataBulkUploadController::class, 'create'])->name('raw-data.bulk-upload.create');
+    Route::get('raw-data/bulk-upload/template', [RawDataBulkUploadController::class, 'template'])->name('raw-data.bulk-upload.template');
+    Route::post('raw-data/bulk-upload', [RawDataBulkUploadController::class, 'store'])->name('raw-data.bulk-upload.store');
+    Route::resource('raw-data', RawDataController::class)->parameters(['raw-data' => 'raw_data'])->except('edit', 'update');
+    Route::post('raw-data/{raw_data}/mark-not-valid', [RawDataController::class, 'markNotValid'])->name('raw-data.mark-not-valid');
+    Route::post('raw-data/{raw_data}/convert', [RawDataController::class, 'convert'])->name('raw-data.convert');
+    Route::post('raw-data/{raw_data}/comments', [RawDataCommentController::class, 'store'])->name('raw-data.comments.store');
 
     Route::post('leads/{lead}/notes', [LeadNoteController::class, 'store'])->name('leads.notes.store');
     Route::delete('leads/{lead}/notes/{note}', [LeadNoteController::class, 'destroy'])->name('leads.notes.destroy');

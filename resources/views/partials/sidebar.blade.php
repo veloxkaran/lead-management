@@ -22,7 +22,10 @@
             <a href="{{ route('leads.index') }}" class="nav-link {{ request()->routeIs('leads.*') ? 'active' : '' }}" title="Lead Management" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-diagram-3"></i> <span class="nav-label">Lead Management</span>
             </a>
-            <a href="{{ route('leads.bulk-upload.create') }}" class="nav-link {{ request()->routeIs('leads.bulk-upload.*') ? 'active' : '' }}" title="Bulk Upload" data-bs-toggle="tooltip" data-bs-placement="right">
+            <a href="{{ route('raw-data.index') }}" class="nav-link {{ request()->routeIs('raw-data.*') && ! request()->routeIs('raw-data.bulk-upload.*') ? 'active' : '' }}" title="Raw Data" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-inbox"></i> <span class="nav-label">Raw Data</span>
+            </a>
+            <a href="{{ route('bulk-upload.index') }}" class="nav-link {{ request()->routeIs('bulk-upload.*') || request()->routeIs('leads.bulk-upload.*') || request()->routeIs('raw-data.bulk-upload.*') ? 'active' : '' }}" title="Bulk Upload" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-upload"></i> <span class="nav-label">Bulk Upload</span>
             </a>
             <a href="{{ route('activities.index') }}" class="nav-link {{ request()->routeIs('activities.*') ? 'active' : '' }}" title="Activities" data-bs-toggle="tooltip" data-bs-placement="right">
