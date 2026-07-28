@@ -19,10 +19,6 @@ window.$ = window.jQuery = jQuery;
 import 'datatables.net-bs5';
 import 'select2';
 
-import 'trix';
-import 'trix/dist/trix.css';
-
-import './policy-acknowledgment';
 import './activity-feed';
 
 document.addEventListener('DOMContentLoaded', () => {

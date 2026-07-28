@@ -6,7 +6,6 @@ use App\Enums\ActivityModule;
 use App\Enums\WhatsappMessageDirection;
 use App\Models\Lead;
 use App\Models\LeadNote;
-use App\Models\PolicyDocument;
 use App\Models\Requirement;
 use App\Models\User;
 use App\Models\WhatsappMessage;
@@ -81,27 +80,6 @@ class ActivityLoggingTest extends TestCase
         $this->assertDatabaseMissing('activity_log_entries', [
             'subject_type' => WhatsappMessage::class,
             'subject_id' => $message->id,
-        ]);
-    }
-
-    public function test_publishing_a_policy_document_version_logs_an_activity(): void
-    {
-        $user = User::factory()->create();
-        $document = PolicyDocument::factory()->create(['title' => 'Fire Safety SOP']);
-
-        $version = $document->versions()->create([
-            'version' => '1.0',
-            'content' => '<p>Body</p>',
-            'effective_date' => now()->toDateString(),
-            'published_at' => now(),
-            'created_by' => $user->id,
-        ]);
-
-        $this->assertDatabaseHas('activity_log_entries', [
-            'module' => ActivityModule::PolicyDocument->value,
-            'user_id' => $user->id,
-            'subject_id' => $version->id,
-            'description' => 'published SOP: Fire Safety SOP (v1.0)',
         ]);
     }
 

@@ -12,10 +12,11 @@ use Illuminate\Support\Facades\Schema;
  * documents or trainings actually referenced one — a fresh db:backup was
  * taken beforehand per this project's CLAUDE.md.
  *
- * SOPs move to a company-wide assignment model (every active user) instead
- * of per-department, and the "Department JD" policy-document type is
- * removed outright (Individual JD already covers "assign to one person") —
- * see App\Enums\PolicyDocumentType and App\Models\PolicyDocument.
+ * SOPs moved to a company-wide assignment model (every active user) instead
+ * of per-department, and the "Department JD" policy-document type was
+ * removed outright (Individual JD already covered "assign to one person").
+ * The whole PolicyDocument/SOP feature was later removed entirely — see
+ * 2026_07_28_090000_remove_policy_document_concept.
  *
  * Each step is guarded with hasColumn/hasTable so this migration is safe to
  * re-run after a partial failure (the first attempt failed on

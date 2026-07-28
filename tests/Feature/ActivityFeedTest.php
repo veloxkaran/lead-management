@@ -8,8 +8,7 @@ use App\Models\ActivityLogEntry;
 use App\Models\Company;
 use App\Models\DealClosure;
 use App\Models\Lead;
-use App\Models\PolicyDocument;
-use App\Models\PolicyDocumentVersion;
+use App\Models\LeadNote;
 use App\Models\Requirement;
 use App\Models\Setting;
 use App\Models\User;
@@ -108,19 +107,18 @@ class ActivityFeedTest extends TestCase
 
     /**
      * Regression test for the N+1 fixed in ActivityLogRepository::feedForViewer
-     * via morphWith(): ActivityLinkResolver accesses $subject->lead (for
-     * DealClosure/Whatsapp-style entries) and $subject->policyDocument (for
-     * PolicyDocument entries). Without eager-loading those nested relations
-     * per subject type, each row triggers its own lazy query — so the total
-     * query count would grow with the number of rows. It must not.
+     * via morphWith(): ActivityLinkResolver accesses $subject->lead for
+     * several different subject types (DealClosure, LeadNote, etc). Without
+     * eager-loading that relation per subject type, each row triggers its
+     * own lazy query — so the total query count would grow with the number
+     * of rows. It must not.
      */
     public function test_feed_query_count_does_not_grow_with_the_number_of_mixed_module_rows(): void
     {
         Setting::set('activity_feed_per_page', '20');
         $user = User::factory()->create();
-        $policyDocument = PolicyDocument::factory()->create();
 
-        $seedMixedEntries = function (int $count) use ($user, $policyDocument) {
+        $seedMixedEntries = function (int $count) use ($user) {
             foreach (range(1, $count) as $i) {
                 // deal_closures.lead_id is unique, so each deal needs its own
                 // lead — but assigned_user_id/created_by/closed_by are
@@ -135,15 +133,12 @@ class ActivityFeedTest extends TestCase
                     'subject_id' => $deal->id,
                 ]);
 
-                $version = $policyDocument->versions()->create([
-                    'version' => "1.{$i}", 'content' => '<p>Body</p>', 'effective_date' => now()->toDateString(),
-                    'published_at' => now(), 'created_by' => $user->id,
-                ]);
+                $note = LeadNote::factory()->create(['lead_id' => $lead->id, 'author_id' => $user->id]);
                 ActivityLogEntry::factory()->create([
                     'user_id' => $user->id,
-                    'module' => ActivityModule::PolicyDocument,
-                    'subject_type' => PolicyDocumentVersion::class,
-                    'subject_id' => $version->id,
+                    'module' => ActivityModule::Note,
+                    'subject_type' => LeadNote::class,
+                    'subject_id' => $note->id,
                 ]);
             }
         };

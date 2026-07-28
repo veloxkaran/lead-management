@@ -29,10 +29,6 @@
         </div>
     </div>
 
-    @auth
-        <x-policy-acknowledgment-modal />
-    @endauth
-
     @stack('scripts')
 </body>
 </html>

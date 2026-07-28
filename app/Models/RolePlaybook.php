@@ -7,16 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class RolePlaybook extends Model
 {
-    protected $fillable = ['role', 'responsibilities', 'sops', 'success_metrics', 'motivation'];
-
-    protected function casts(): array
-    {
-        return [
-            'responsibilities' => 'array',
-            'sops' => 'array',
-            'success_metrics' => 'array',
-        ];
-    }
+    protected $fillable = ['role', 'motivation'];
 
     public static function forRole(UserRole $role): ?self
     {

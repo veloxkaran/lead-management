@@ -13,7 +13,6 @@ use App\Http\Controllers\GoalController;
 use App\Http\Controllers\GoalLeaderboardController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\ImplementationRequestController;
-use App\Http\Controllers\IndividualJdController;
 use App\Http\Controllers\KnowledgeBaseCategoryController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\LeadBulkUploadController;
@@ -25,17 +24,13 @@ use App\Http\Controllers\LeadWhatsappUserController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\MeetingRoomController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\MyPolicyDocumentsController;
 use App\Http\Controllers\OrgTreeController;
-use App\Http\Controllers\PolicyDocumentAcknowledgmentController;
-use App\Http\Controllers\PolicyDocumentReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReleaseNoteController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RequirementCommentController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\SopController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SupportTicketAttachmentController;
 use App\Http\Controllers\SupportTicketCommentController;
@@ -173,15 +168,6 @@ Route::middleware('auth')->group(function () {
     Route::post('whatsapp/{lead}/messages', [WhatsappChatController::class, 'sendMessage'])->name('whatsapp.messages.store');
     Route::post('whatsapp/{lead}/templates', [WhatsappChatController::class, 'sendTemplate'])->name('whatsapp.templates.store');
 
-    // "My SOPs & Job Descriptions" — any employee reviews what's assigned to them,
-    // and reopens/re-reads a document any time outside the forced onboarding flow.
-    Route::get('my-policy-documents', [MyPolicyDocumentsController::class, 'index'])->name('my-policy-documents.index');
-    Route::get('my-policy-documents/{policy_document_version}', [MyPolicyDocumentsController::class, 'show'])->name('my-policy-documents.show');
-
-    // Backing endpoints for both the forced onboarding modal and the reopen/review page.
-    Route::post('policy-documents/{policy_document_version}/view', [PolicyDocumentAcknowledgmentController::class, 'view'])->name('policy-documents.view');
-    Route::post('policy-documents/{policy_document_version}/acknowledge', [PolicyDocumentAcknowledgmentController::class, 'acknowledge'])->name('policy-documents.acknowledge');
-
     // Team & Org Hierarchy — visibility derived from reporting_manager_id,
     // available to any authenticated user regardless of role (an IC with no
     // direct reports just sees an empty state, per OrganizationHierarchyPolicy).
@@ -226,18 +212,6 @@ Route::middleware('auth')->group(function () {
         Route::post('whatsapp-settings/test', [WhatsappSettingsController::class, 'test'])->name('whatsapp-settings.test');
 
         Route::put('leads/{lead}/whatsapp-users', [LeadWhatsappUserController::class, 'update'])->name('leads.whatsapp-users.update');
-
-        // Both share one route parameter name ("policy_document") so the
-        // shared PolicyDocumentTypeController base class can use a single
-        // consistent method signature for implicit route-model binding.
-        Route::resource('sops', SopController::class)->except('show')->parameters(['sops' => 'policy_document']);
-        Route::post('sops/{policy_document}/versions', [SopController::class, 'storeVersion'])->name('sops.versions.store');
-
-        Route::resource('individual-jds', IndividualJdController::class)->except('show')->parameters(['individual-jds' => 'policy_document']);
-        Route::post('individual-jds/{policy_document}/versions', [IndividualJdController::class, 'storeVersion'])->name('individual-jds.versions.store');
-
-        Route::get('policy-documents/reports', [PolicyDocumentReportController::class, 'index'])->name('policy-documents.reports.index');
-        Route::get('policy-documents/reports/{policy_document}', [PolicyDocumentReportController::class, 'show'])->name('policy-documents.reports.show');
 
         Route::get('activity-feed-settings', [ActivityFeedSettingsController::class, 'edit'])->name('activity-feed-settings.edit');
         Route::put('activity-feed-settings', [ActivityFeedSettingsController::class, 'update'])->name('activity-feed-settings.update');

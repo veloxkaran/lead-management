@@ -13,8 +13,6 @@ use App\Models\Lead;
 use App\Models\LeadNote;
 use App\Models\LeadStatusHistory;
 use App\Models\Meeting;
-use App\Models\PolicyDocument;
-use App\Models\PolicyDocumentVersion;
 use App\Models\Requirement;
 use App\Models\Task;
 use App\Models\User;
@@ -102,22 +100,6 @@ class ActivityModuleRegistry
                 },
             ),
             new ActivityModuleDefinition(
-                ActivityModule::PolicyDocument, 'SOPs & Job Descriptions', 'bi-journal-check',
-                function (Model $subject, User $viewer): array {
-                    // Ability is checked against the PolicyDocument class itself
-                    // (viewAny is Super-Admin-only), not the version instance.
-                    $document = $subject->policyDocument;
-
-                    if (! $document) {
-                        return ['can_view' => false, 'url' => null];
-                    }
-
-                    $canView = Gate::forUser($viewer)->allows('viewAny', PolicyDocument::class);
-
-                    return ['can_view' => $canView, 'url' => $canView ? route('policy-documents.reports.show', $document) : null];
-                },
-            ),
-            new ActivityModuleDefinition(
                 ActivityModule::Goal, 'Goals', 'bi-bullseye',
                 fn (Model $subject, User $viewer) => self::linkFor($subject, $viewer, 'update', fn ($g) => route('goals.edit', $g)),
             ),
@@ -189,11 +171,6 @@ class ActivityModuleRegistry
                 WhatsappMessage::class, ActivityModule::Whatsapp,
                 fn (WhatsappMessage $message) => "sent a WhatsApp message to {$message->lead->company_name}",
                 fn (WhatsappMessage $message) => $message->sent_by,
-            ),
-            new ActivityLoggingRegistration(
-                PolicyDocumentVersion::class, ActivityModule::PolicyDocument,
-                fn (PolicyDocumentVersion $version) => "published {$version->policyDocument->type->label()}: {$version->policyDocument->title} (v{$version->version})",
-                fn (PolicyDocumentVersion $version) => $version->created_by,
             ),
             new ActivityLoggingRegistration(
                 Goal::class, ActivityModule::Goal,

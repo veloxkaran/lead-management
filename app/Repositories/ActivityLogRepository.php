@@ -6,7 +6,6 @@ use App\Models\ActivityLogEntry;
 use App\Models\DealClosure;
 use App\Models\LeadNote;
 use App\Models\LeadStatusHistory;
-use App\Models\PolicyDocumentVersion;
 use App\Models\User;
 use App\Models\WhatsappMessage;
 use App\Services\OrganizationHierarchyService;
@@ -116,9 +115,8 @@ class ActivityLogRepository extends BaseRepository
     /**
      * Eager-loads the right nested relation per subject type in one query
      * per type (not one query per row) — without this, per-row
-     * `$subject->lead` / `$subject->policyDocument` access (used by both
-     * ActivityLinkResolver and the Team Activities view) is a lazy N+1 on
-     * every page.
+     * `$subject->lead` access (used by both ActivityLinkResolver and the
+     * Team Activities view) is a lazy N+1 on every page.
      */
     private function morphSubjectRelations(): callable
     {
@@ -126,7 +124,6 @@ class ActivityLogRepository extends BaseRepository
             LeadStatusHistory::class => ['lead'],
             DealClosure::class => ['lead'],
             WhatsappMessage::class => ['lead'],
-            PolicyDocumentVersion::class => ['policyDocument'],
             LeadNote::class => ['lead'],
         ]);
     }

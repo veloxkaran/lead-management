@@ -44,7 +44,6 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'suspended_at' => 'datetime',
-            'policy_ack_last_prompted_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
             'status' => UserStatus::class,
@@ -183,19 +182,5 @@ class User extends Authenticatable
     public function dailySummaries(): HasMany
     {
         return $this->hasMany(DailySummary::class);
-    }
-
-    /**
-     * Individual Job Descriptions assigned directly to this user (as opposed
-     * to Sops, which are company-wide and apply to every active user).
-     */
-    public function individualPolicyDocuments(): HasMany
-    {
-        return $this->hasMany(PolicyDocument::class);
-    }
-
-    public function policyDocumentAcknowledgments(): HasMany
-    {
-        return $this->hasMany(PolicyDocumentAcknowledgment::class);
     }
 }

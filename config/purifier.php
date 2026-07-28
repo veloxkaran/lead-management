@@ -33,14 +33,6 @@ return [
         'test'    => [
             'Attr.EnableID' => 'true',
         ],
-        // Matches what the Trix editor's toolbar can actually produce
-        // (bold/italic/link/heading/quote/lists) — used for SOP/JD content.
-        'policy_document' => [
-            'HTML.Doctype'             => 'HTML 4.01 Transitional',
-            'HTML.Allowed'             => 'div,p,br,b,strong,i,em,u,a[href|title],ul,ol,li,h1,blockquote,pre,figure,figcaption,img[width|height|alt|src]',
-            'AutoFormat.AutoParagraph' => true,
-            'AutoFormat.RemoveEmpty'   => true,
-        ],
         "youtube" => [
             "HTML.SafeIframe"      => 'true',
             "URI.SafeIframeRegexp" => "%^(http://|https://|//)(www.youtube.com/embed/|player.vimeo.com/video/)%",

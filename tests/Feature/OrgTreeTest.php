@@ -54,9 +54,8 @@ class OrgTreeTest extends TestCase
         User::factory()->count(3)->create([
             'company_id' => $company->id, 'reporting_manager_id' => $manager->id,
         ]);
-        // Flushed before each measured request: unrelated cross-cutting
-        // caches (e.g. the pre-existing policy-acknowledgment throttle
-        // cache, keyed by this same manager's id) would otherwise warm up
+        // Flushed before each measured request: any unrelated cross-cutting
+        // cache keyed by this same manager's id would otherwise warm up
         // between the two calls and shrink the second call's query count
         // for reasons that have nothing to do with team size.
         Cache::flush();

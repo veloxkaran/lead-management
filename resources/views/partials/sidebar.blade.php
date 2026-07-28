@@ -88,9 +88,6 @@
         <a href="{{ route('release-notes.index') }}" class="nav-link {{ request()->routeIs('release-notes.*') ? 'active' : '' }}" title="Release Notes" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-megaphone"></i> <span class="nav-label">Release Notes</span>
         </a>
-        <a href="{{ route('my-policy-documents.index') }}" class="nav-link {{ request()->routeIs('my-policy-documents.*') ? 'active' : '' }}" title="My SOPs & Job Descriptions" data-bs-toggle="tooltip" data-bs-placement="right">
-            <i class="bi bi-journal-check"></i> <span class="nav-label">My SOPs &amp; Job Descriptions</span>
-        </a>
 
         <div class="nav-section-title">Reporting</div>
         <a href="{{ route('daily-summaries.index') }}" class="nav-link {{ request()->routeIs('daily-summaries.*') ? 'active' : '' }}" title="Daily Summary" data-bs-toggle="tooltip" data-bs-placement="right">
@@ -130,15 +127,6 @@
             </a>
             <a href="{{ route('whatsapp-settings.edit') }}" class="nav-link {{ request()->routeIs('whatsapp-settings.*') ? 'active' : '' }}" title="WhatsApp Settings" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-whatsapp"></i> <span class="nav-label">WhatsApp Settings</span>
-            </a>
-            <a href="{{ route('sops.index') }}" class="nav-link {{ request()->routeIs('sops.*') ? 'active' : '' }}" title="SOPs" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-journal-check"></i> <span class="nav-label">SOPs</span>
-            </a>
-            <a href="{{ route('individual-jds.index') }}" class="nav-link {{ request()->routeIs('individual-jds.*') ? 'active' : '' }}" title="Individual Job Descriptions" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-person-badge"></i> <span class="nav-label">Individual Job Descriptions</span>
-            </a>
-            <a href="{{ route('policy-documents.reports.index') }}" class="nav-link {{ request()->routeIs('policy-documents.reports.*') ? 'active' : '' }}" title="Acknowledgment Reports" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-bar-chart-line"></i> <span class="nav-label">Acknowledgment Reports</span>
             </a>
             <a href="{{ route('activity-feed-settings.edit') }}" class="nav-link {{ request()->routeIs('activity-feed-settings.*') ? 'active' : '' }}" title="Activity Feed Settings" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-activity"></i> <span class="nav-label">Activity Feed Settings</span>

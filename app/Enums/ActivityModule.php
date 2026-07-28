@@ -10,7 +10,6 @@ enum ActivityModule: string
     case Requirement = 'requirement';
     case FollowUp = 'follow_up';
     case Whatsapp = 'whatsapp';
-    case PolicyDocument = 'policy_document';
     case Goal = 'goal';
     case KnowledgeBase = 'knowledge_base';
     case Meeting = 'meeting';

@@ -81,11 +81,9 @@ class LeadProgressStatusTest extends TestCase
 
     public function test_lead_show_query_count_does_not_grow_with_progress_history_size(): void
     {
-        // Two separate viewers, each visiting for the first time: reusing one
-        // user for both measurements would conflate this assertion with the
-        // unrelated policy-acknowledgment-prompt throttle (fires on a user's
-        // first page view of the app, suppressed on their second, persisted
-        // per-user) rather than isolating the effect of history size.
+        // Two separate viewers, each visiting for the first time, so the
+        // measurement isolates the effect of history size rather than any
+        // per-user first-visit side effect.
         $csA = User::factory()->create(['role' => UserRole::CustomerSuccess]);
         $csB = User::factory()->create(['role' => UserRole::CustomerSuccess]);
 

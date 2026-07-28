@@ -16,38 +16,8 @@
 
         @if ($playbook)
             <div class="row g-3">
-                <div class="col-lg-3 col-sm-6">
-                    <div class="h-100 border rounded p-3">
-                        <div class="small fw-semibold text-uppercase text-muted mb-2"><i class="bi bi-person-check me-1"></i> Responsibilities</div>
-                        <ul class="small ps-3 mb-0">
-                            @foreach ($playbook->responsibilities as $item)
-                                <li>{{ $item }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-6">
-                    <div class="h-100 border rounded p-3">
-                        <div class="small fw-semibold text-uppercase text-muted mb-2"><i class="bi bi-list-check me-1"></i> SOPs</div>
-                        <ul class="small ps-3 mb-0">
-                            @foreach ($playbook->sops as $item)
-                                <li>{{ $item }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-6">
-                    <div class="h-100 border rounded p-3">
-                        <div class="small fw-semibold text-uppercase text-muted mb-2"><i class="bi bi-graph-up-arrow me-1"></i> Success Matrix</div>
-                        <ul class="small ps-3 mb-0">
-                            @foreach ($playbook->success_metrics as $item)
-                                <li>{{ $item }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-6">
-                    <div class="h-100 rounded p-3 text-white" style="background: linear-gradient(135deg,#2456a6,#1b2430);">
+                <div class="col-12">
+                    <div class="rounded p-3 text-white" style="background: linear-gradient(135deg,#2456a6,#1b2430);">
                         <div class="small fw-semibold text-uppercase mb-2 opacity-75"><i class="bi bi-stars me-1"></i> Motivation</div>
                         <p class="small mb-2">{{ $playbook->motivation }}</p>
                         @if ($quote)

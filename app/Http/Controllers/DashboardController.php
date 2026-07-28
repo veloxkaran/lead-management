@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\FollowUpStatus;
-use App\Enums\PolicyDocumentType;
 use App\Enums\RequirementStatus;
+use App\Enums\TaskStatus;
 use App\Enums\UserStatus;
 use App\Models\AccountRequest;
 use App\Models\DailySummary;
@@ -16,11 +16,11 @@ use App\Models\Lead;
 use App\Models\LeadNote;
 use App\Models\LeadStatus;
 use App\Models\Meeting;
-use App\Models\PolicyDocument;
 use App\Models\ReleaseNote;
 use App\Models\Requirement;
 use App\Models\RolePlaybook;
 use App\Models\SupportTicket;
+use App\Models\Task;
 use App\Models\User;
 use App\Support\MotivationQuote;
 use Illuminate\Http\Request;
@@ -43,8 +43,8 @@ class DashboardController extends Controller
 
     /**
      * Shared greeting data every role dashboard renders above its own
-     * content: role playbook (responsibilities/SOPs/success matrix/
-     * motivation) plus the rotating motivational quote.
+     * content: role playbook (motivation) plus the rotating motivational
+     * quote.
      */
     protected function greeting(User $user): array
     {
@@ -142,26 +142,6 @@ class DashboardController extends Controller
         ]);
     }
 
-    /**
-     * Aggregated across every active company-wide SOP's current version —
-     * same aggregation PolicyDocumentReportController::summarize() already
-     * does per-document, rolled up here into one dashboard-level figure.
-     */
-    protected function sopComplianceStats(): array
-    {
-        $sops = PolicyDocument::query()->active()->ofType(PolicyDocumentType::Sop)
-            ->with('currentVersion.acknowledgments')->get();
-
-        $assigned = $sops->sum(fn (PolicyDocument $sop) => $sop->assignedUsers()->count());
-        $acknowledged = $sops->sum(fn (PolicyDocument $sop) => $sop->currentVersion
-            ?->acknowledgments->whereNotNull('acknowledged_at')->count() ?? 0);
-
-        return [
-            'active_count' => $sops->count(),
-            'rate' => $assigned > 0 ? (int) round($acknowledged / $assigned * 100) : null,
-        ];
-    }
-
     protected function superAdminDashboard(User $user): View
     {
         $statusDistribution = LeadStatus::withCount(['leads' => fn ($q) => $q->active()])->ordered()->get();
@@ -172,7 +152,7 @@ class DashboardController extends Controller
         return view('dashboard.super-admin', $this->greeting($user) + [
             'totalLeads' => Lead::active()->count(),
             'totalUsers' => User::count(),
-            'sopStats' => $this->sopComplianceStats(),
+            'openTasks' => Task::whereNotIn('status', [TaskStatus::Completed, TaskStatus::Cancelled])->count(),
             'openRequirements' => Requirement::whereNotIn('status', [RequirementStatus::Completed])->count(),
             'dealStats' => [
                 'count' => DealClosure::count(),
