@@ -243,25 +243,6 @@
         <p class="empty">No tasks recorded.</p>
     @endforelse
 
-    <h2>Implementation Requests</h2>
-    <table>
-        <thead><tr><th>Title</th><th>Status</th><th>Phase</th><th>Progress</th><th>Requested By</th><th>Assigned</th></tr></thead>
-        <tbody>
-            @forelse ($lead->implementationRequests as $request)
-                <tr>
-                    <td>{{ $request->title }}</td>
-                    <td>{{ $request->status->label() }}</td>
-                    <td>{{ $request->phase ?: '—' }}</td>
-                    <td>{{ $request->completion_percentage }}%</td>
-                    <td>{{ $request->requester?->name ?? '—' }}</td>
-                    <td>{{ $request->assignee?->name ?? '—' }}</td>
-                </tr>
-            @empty
-                <tr><td colspan="6" class="empty">No implementation requests recorded.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-
     <h2>Trainings</h2>
     <table>
         <thead><tr><th>Date</th><th>Status</th><th>Trainer</th><th>Attendees</th><th>Progress</th></tr></thead>
@@ -276,43 +257,6 @@
                 </tr>
             @empty
                 <tr><td colspan="5" class="empty">No trainings recorded.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    <h2>Subscriptions</h2>
-    <table>
-        <thead><tr><th>Plan</th><th>Status</th><th>Start</th><th>Expiry</th><th>Billing</th><th>Renewal</th></tr></thead>
-        <tbody>
-            @forelse ($lead->subscriptions as $subscription)
-                <tr>
-                    <td>{{ $subscription->plan_name }}</td>
-                    <td>{{ $subscription->status->label() }}</td>
-                    <td>{{ $subscription->contract_start_date?->format('M d, Y') ?? '—' }}</td>
-                    <td>{{ $subscription->expiry_date?->format('M d, Y') ?? '—' }}</td>
-                    <td>{{ $subscription->billing_cycle?->label() ?? '—' }}</td>
-                    <td>{{ \App\Support\Currency::format($subscription->renewal_amount) }}</td>
-                </tr>
-            @empty
-                <tr><td colspan="6" class="empty">No subscriptions recorded.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    <h2>Account Requests</h2>
-    <table>
-        <thead><tr><th>Type</th><th>Amount</th><th>Status</th><th>Requested By</th><th>Processed By</th></tr></thead>
-        <tbody>
-            @forelse ($lead->accountRequests as $request)
-                <tr>
-                    <td>{{ $request->request_type->label() }}</td>
-                    <td>{{ \App\Support\Currency::format($request->amount) }}</td>
-                    <td>{{ $request->status->label() }}</td>
-                    <td>{{ $request->requester?->name ?? '—' }}</td>
-                    <td>{{ $request->processor?->name ?? '—' }}</td>
-                </tr>
-            @empty
-                <tr><td colspan="5" class="empty">No account requests recorded.</td></tr>
             @endforelse
         </tbody>
     </table>

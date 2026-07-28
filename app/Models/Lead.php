@@ -90,20 +90,6 @@ class Lead extends Model
         return $this->hasOne(DealClosure::class);
     }
 
-    public function implementationRequests(): HasMany
-    {
-        return $this->hasMany(ImplementationRequest::class);
-    }
-
-    /**
-     * The lead's current implementation status, for efficient one-per-lead
-     * eager loading — same latestOfMany idiom as latestStatusHistory().
-     */
-    public function latestImplementationRequest(): HasOne
-    {
-        return $this->hasOne(ImplementationRequest::class)->latestOfMany('created_at');
-    }
-
     public function trainings(): HasMany
     {
         return $this->hasMany(Training::class);
@@ -114,16 +100,6 @@ class Lead extends Model
         return $this->hasOne(Training::class)->latestOfMany('created_at');
     }
 
-    public function subscriptions(): HasMany
-    {
-        return $this->hasMany(Subscription::class);
-    }
-
-    public function latestSubscription(): HasOne
-    {
-        return $this->hasOne(Subscription::class)->latestOfMany('created_at');
-    }
-
     public function supportTickets(): HasMany
     {
         return $this->hasMany(SupportTicket::class);
@@ -132,11 +108,6 @@ class Lead extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
-    }
-
-    public function accountRequests(): HasMany
-    {
-        return $this->hasMany(AccountRequest::class);
     }
 
     public function whatsappUsers(): BelongsToMany

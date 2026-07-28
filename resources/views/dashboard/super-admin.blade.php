@@ -51,9 +51,7 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white fw-semibold">Operations Snapshot</div>
                 <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2"><span>Open Implementation Requests</span><span class="badge bg-primary">{{ $openImplementationRequests }}</span></div>
-                    <div class="d-flex justify-content-between mb-2"><span>Open Support Tickets</span><span class="badge bg-warning text-dark">{{ $openSupportTickets }}</span></div>
-                    <div class="d-flex justify-content-between"><span>Open Account Requests</span><span class="badge bg-info text-dark">{{ $openAccountRequests }}</span></div>
+                    <div class="d-flex justify-content-between"><span>Open Support Tickets</span><span class="badge bg-warning text-dark">{{ $openSupportTickets }}</span></div>
                 </div>
             </div>
         </div>

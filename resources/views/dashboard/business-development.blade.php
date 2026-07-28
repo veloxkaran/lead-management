@@ -8,7 +8,7 @@
     <x-role-playbook :user="$user" :playbook="$playbook" :quote="$quote" />
 
     <div class="row g-3 mb-3">
-        <div class="col-lg-6">
+        <div class="col-12">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white fw-semibold d-flex justify-content-between">
                     <span><i class="bi bi-diagram-3 me-1"></i> My Leads</span>
@@ -29,37 +29,6 @@
                             @endforelse
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white fw-semibold d-flex justify-content-between">
-                    <span><i class="bi bi-box-arrow-in-up-right me-1"></i> My Handoffs</span>
-                </div>
-                <div class="card-body">
-                    <div class="small fw-semibold text-muted mb-1">Implementation Requests</div>
-                    <ul class="list-group list-group-flush mb-3">
-                        @forelse ($myImplementationRequests as $req)
-                            <li class="list-group-item small d-flex justify-content-between px-0">
-                                <span>{{ $req->lead?->company_name }} — {{ $req->title }}</span>
-                                <x-status-badge :status="$req->status" />
-                            </li>
-                        @empty
-                            <li class="list-group-item px-0"><x-empty-state icon="bi-box-arrow-in-up-right" title="No implementation requests raised yet" /></li>
-                        @endforelse
-                    </ul>
-                    <div class="small fw-semibold text-muted mb-1">Account Requests</div>
-                    <ul class="list-group list-group-flush">
-                        @forelse ($myAccountRequests as $req)
-                            <li class="list-group-item small d-flex justify-content-between px-0">
-                                <span>{{ $req->lead?->company_name }} — {{ $req->request_type->label() }}</span>
-                                <x-status-badge :status="$req->status" />
-                            </li>
-                        @empty
-                            <li class="list-group-item px-0"><x-empty-state icon="bi-cash-coin" title="No account requests raised yet" /></li>
-                        @endforelse
-                    </ul>
                 </div>
             </div>
         </div>

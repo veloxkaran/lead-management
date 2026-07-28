@@ -106,9 +106,7 @@
             @endif
 
             @can('viewProgressStatus', $lead)
-                @include('leads._implementation_status')
                 @include('leads._training_status')
-                @include('leads._subscription_status')
             @endcan
         </div>
 

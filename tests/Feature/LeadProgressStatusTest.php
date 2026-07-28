@@ -3,9 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
-use App\Models\ImplementationRequest;
 use App\Models\Lead;
-use App\Models\Subscription;
 use App\Models\Training;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,9 +22,7 @@ class LeadProgressStatusTest extends TestCase
         $response = $this->actingAs($bde)->get(route('leads.show', $lead));
 
         $response->assertOk();
-        $response->assertDontSeeText('Implementation Status');
         $response->assertDontSeeText('Training Status');
-        $response->assertDontSeeText('Subscription Status');
     }
 
     public function test_customer_success_sees_the_progress_cards(): void
@@ -34,14 +30,11 @@ class LeadProgressStatusTest extends TestCase
         $cs = User::factory()->create(['role' => UserRole::CustomerSuccess]);
         $bde = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
         $lead = Lead::factory()->create(['assigned_user_id' => $bde->id, 'created_by' => $bde->id]);
-        ImplementationRequest::factory()->create(['lead_id' => $lead->id, 'requested_by' => $cs->id]);
 
         $response = $this->actingAs($cs)->get(route('leads.show', $lead));
 
         $response->assertOk();
-        $response->assertSeeText('Implementation Status');
         $response->assertSeeText('Training Status');
-        $response->assertSeeText('Subscription Status');
     }
 
     public function test_reporting_line_manager_of_the_assigned_user_passes_the_policy_read_only(): void
@@ -71,7 +64,6 @@ class LeadProgressStatusTest extends TestCase
         $bde = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
         $otherBde = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
         $lead = Lead::factory()->create(['assigned_user_id' => $otherBde->id, 'created_by' => $otherBde->id]);
-        ImplementationRequest::factory()->create(['lead_id' => $lead->id, 'requested_by' => $otherBde->id]);
 
         // $bde reaches the lead page only via the CS/Finance handoff rule, so
         // for this assertion we instead confirm the policy directly: an
@@ -88,14 +80,10 @@ class LeadProgressStatusTest extends TestCase
         $csB = User::factory()->create(['role' => UserRole::CustomerSuccess]);
 
         $leadA = Lead::factory()->create();
-        ImplementationRequest::factory()->create(['lead_id' => $leadA->id, 'requested_by' => $csA->id]);
         Training::factory()->create(['lead_id' => $leadA->id]);
-        Subscription::factory()->create(['lead_id' => $leadA->id]);
 
         $leadB = Lead::factory()->create();
-        ImplementationRequest::factory()->count(5)->create(['lead_id' => $leadB->id, 'requested_by' => $csB->id]);
         Training::factory()->count(5)->create(['lead_id' => $leadB->id]);
-        Subscription::factory()->count(5)->create(['lead_id' => $leadB->id]);
 
         DB::enableQueryLog();
         $this->actingAs($csA)->get(route('leads.show', $leadA))->assertOk();

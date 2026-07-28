@@ -43,31 +43,12 @@
             <a href="{{ route('meetings.index') }}" class="nav-link {{ request()->routeIs('meetings.*') ? 'active' : '' }}" title="Google Meet" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-camera-video"></i> <span class="nav-label">Google Meet</span>
             </a>
-            <a href="{{ route('implementation-requests.index') }}" class="nav-link {{ request()->routeIs('implementation-requests.*') ? 'active' : '' }}" title="Implementation Requests" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-box-arrow-in-up-right"></i> <span class="nav-label">Implementation Requests</span>
-            </a>
-            <a href="{{ route('account-requests.index') }}" class="nav-link {{ request()->routeIs('account-requests.*') ? 'active' : '' }}" title="Account Requests" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-cash-coin"></i> <span class="nav-label">Account Requests</span>
-            </a>
         @endif
 
         @if ($user?->isCustomerSuccess() || $user?->isManager() || $user?->isSuperAdmin())
             <div class="nav-section-title">Customer Success</div>
-            <a href="{{ route('implementation-requests.index') }}" class="nav-link {{ request()->routeIs('implementation-requests.*') ? 'active' : '' }}" title="Implementation Requests" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-box-arrow-in-up-right"></i> <span class="nav-label">Implementation Requests</span>
-            </a>
             <a href="{{ route('trainings.index') }}" class="nav-link {{ request()->routeIs('trainings.*') ? 'active' : '' }}" title="Trainings" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-mortarboard"></i> <span class="nav-label">Trainings</span>
-            </a>
-            <a href="{{ route('subscriptions.index') }}" class="nav-link {{ request()->routeIs('subscriptions.*') ? 'active' : '' }}" title="Subscriptions" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-credit-card"></i> <span class="nav-label">Subscriptions</span>
-            </a>
-        @endif
-
-        @if ($user?->isFinance() || $user?->isManager() || $user?->isSuperAdmin())
-            <div class="nav-section-title">Finance</div>
-            <a href="{{ route('account-requests.index') }}" class="nav-link {{ request()->routeIs('account-requests.*') ? 'active' : '' }}" title="Account Requests" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-cash-coin"></i> <span class="nav-label">Account Requests</span>
             </a>
         @endif
 

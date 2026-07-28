@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AccountRequestController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ActivityFeedController;
 use App\Http\Controllers\ActivityFeedSettingsController;
@@ -12,7 +11,6 @@ use App\Http\Controllers\FollowUpController;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\GoalLeaderboardController;
 use App\Http\Controllers\ImpersonationController;
-use App\Http\Controllers\ImplementationRequestController;
 use App\Http\Controllers\KnowledgeBaseCategoryController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\LeadBulkUploadController;
@@ -31,7 +29,6 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RequirementCommentController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\SupportTicketAttachmentController;
 use App\Http\Controllers\SupportTicketCommentController;
 use App\Http\Controllers\SupportTicketController;
@@ -108,15 +105,9 @@ Route::middleware('auth')->group(function () {
     Route::post('tasks/{task}/comments', [TaskCommentController::class, 'store'])->name('tasks.comments.store');
     Route::delete('tasks/{task}/comments/{comment}', [TaskCommentController::class, 'destroy'])->name('tasks.comments.destroy');
 
-    // Customer Success handoff — raised by Business Development, worked by Customer Success.
-    Route::resource('implementation-requests', ImplementationRequestController::class)->except('show');
-
     // Lead progress tracking — managed by Customer Success/Management.
     Route::resource('trainings', TrainingController::class)->except('show');
     Route::get('leads/{lead}/trainings', [TrainingController::class, 'forLead'])->name('leads.trainings.index');
-
-    Route::resource('subscriptions', SubscriptionController::class)->except('show');
-    Route::get('leads/{lead}/subscriptions', [SubscriptionController::class, 'forLead'])->name('leads.subscriptions.index');
 
     // Open to every role — see SupportTicketPolicy.
     Route::resource('support-tickets', SupportTicketController::class);
@@ -124,9 +115,6 @@ Route::middleware('auth')->group(function () {
     Route::post('support-tickets/{support_ticket}/comments', [SupportTicketCommentController::class, 'store'])->name('support-tickets.comments.store');
     Route::patch('support-tickets/{support_ticket}/comments/{comment}', [SupportTicketCommentController::class, 'update'])->name('support-tickets.comments.update');
     Route::get('support-ticket-attachments/{attachment}/download', [SupportTicketAttachmentController::class, 'download'])->name('support-ticket-attachments.download');
-
-    // Finance handoff — raised by Business Development, processed by Finance.
-    Route::resource('account-requests', AccountRequestController::class)->except('show');
 
     Route::resource('daily-summaries', DailySummaryController::class)->only(['index', 'create', 'store', 'edit', 'update']);
 

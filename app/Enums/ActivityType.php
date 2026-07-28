@@ -16,21 +16,9 @@ enum ActivityType: string
     /**
      * System-generated only — not offered in the manual "log an activity"
      * form (see leads/_activities.blade.php), just the audit trail for
-     * Implementation Request create/update actions.
-     */
-    case ImplementationRequest = 'implementation_request';
-
-    /**
-     * System-generated only, same as ImplementationRequest above — the
-     * audit trail for Training create/update actions.
+     * Training create/update actions.
      */
     case TrainingUpdate = 'training_update';
-
-    /**
-     * System-generated only — the audit trail for Subscription create/
-     * update actions.
-     */
-    case SubscriptionUpdate = 'subscription_update';
 
     public function label(): string
     {
@@ -43,9 +31,7 @@ enum ActivityType: string
             self::Proposal => 'Proposal',
             self::RequirementDiscussion => 'Requirement Discussion',
             self::ContractDiscussion => 'Contract Discussion',
-            self::ImplementationRequest => 'Implementation Request',
             self::TrainingUpdate => 'Training Update',
-            self::SubscriptionUpdate => 'Subscription Update',
         };
     }
 
@@ -60,9 +46,7 @@ enum ActivityType: string
             self::Proposal => 'bi-file-earmark-text',
             self::RequirementDiscussion => 'bi-chat-left-text',
             self::ContractDiscussion => 'bi-file-earmark-ruled',
-            self::ImplementationRequest => 'bi-box-arrow-in-up-right',
             self::TrainingUpdate => 'bi-mortarboard',
-            self::SubscriptionUpdate => 'bi-credit-card',
         };
     }
 }

@@ -62,17 +62,17 @@ class LeadPolicy
     }
 
     /**
-     * Gates the Implementation/Training/Subscription progress cards on the
-     * Lead page — narrower than view(): the BD rep who owns the lead can
-     * see the page but not these cards, since progress tracking is a
-     * Customer Success/management concern, not a sales one. Reporting-line
-     * managers of the assigned salesperson get read-only visibility via the
-     * org hierarchy, independent of whether they hold a special role —
-     * editing still requires the per-module policy to pass too.
+     * Gates the Training progress card on the Lead page — narrower than
+     * view(): the BD rep who owns the lead can see the page but not this
+     * card, since progress tracking is a Customer Success/management
+     * concern, not a sales one. Reporting-line managers of the assigned
+     * salesperson get read-only visibility via the org hierarchy,
+     * independent of whether they hold a special role — editing still
+     * requires the per-module policy to pass too.
      *
      * Deliberately uses getAllSubordinateIds() rather than canView(): the
      * latter treats a user as able to view themselves, which would grant
-     * the assigned rep visibility into their own cards — exactly what this
+     * the assigned rep visibility into their own card — exactly what this
      * method exists to exclude.
      */
     public function viewProgressStatus(User $user, Lead $lead): bool

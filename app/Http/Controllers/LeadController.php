@@ -67,9 +67,7 @@ class LeadController extends Controller
             'activities.creator', 'notes.author', 'notes.attachments',
             'followUps.creator', 'requirements.assignee', 'requirements.creator', 'requirements.comments',
             'statusHistories.fromStatus', 'statusHistories.toStatus', 'statusHistories.changedBy',
-            'latestImplementationRequest.assignee',
             'latestTraining.conductor',
-            'latestSubscription.creator',
             'supportTickets.assignee', 'supportTickets.attachments',
             'tasks.assignee',
         ]);
@@ -86,7 +84,7 @@ class LeadController extends Controller
             'lead' => $lead,
             'statuses' => LeadStatus::ordered()->get(),
             'users' => User::orderBy('name')->get(),
-            'activityTypes' => array_values(array_filter(ActivityType::cases(), fn (ActivityType $type) => ! in_array($type, [ActivityType::ImplementationRequest, ActivityType::TrainingUpdate, ActivityType::SubscriptionUpdate], true))),
+            'activityTypes' => array_values(array_filter(ActivityType::cases(), fn (ActivityType $type) => $type !== ActivityType::TrainingUpdate)),
             'reminderTypes' => ReminderType::cases(),
             'priorities' => RequirementPriority::cases(),
             'taskPriorities' => TaskPriority::cases(),
@@ -129,12 +127,9 @@ class LeadController extends Controller
             'followUps.creator',
             'requirements.assignee', 'requirements.creator', 'requirements.comments.author',
             'statusHistories.fromStatus', 'statusHistories.toStatus', 'statusHistories.changedBy',
-            'implementationRequests.requester', 'implementationRequests.assignee',
             'trainings.conductor',
-            'subscriptions.creator',
             'supportTickets.raiser', 'supportTickets.assignee', 'supportTickets.comments.author', 'supportTickets.attachments',
             'tasks.creator', 'tasks.assignee', 'tasks.comments.author',
-            'accountRequests.requester', 'accountRequests.processor',
         ]);
 
         $filename = str($lead->company_name)->slug()."-full-history.pdf";

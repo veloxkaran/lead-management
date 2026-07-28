@@ -8,25 +8,19 @@
     <x-role-playbook :user="$user" :playbook="$playbook" :quote="$quote" />
 
     <div class="row g-3 mb-3">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="stat-card d-flex align-items-center gap-3">
                 <span class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-diagram-3"></i></span>
                 <div><div class="fs-4 fw-semibold">{{ $totalLeads }}</div><div class="text-muted small">Active Leads</div></div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="stat-card d-flex align-items-center gap-3">
                 <span class="stat-icon bg-success-subtle text-success"><i class="bi bi-trophy"></i></span>
                 <div><div class="fs-4 fw-semibold"><x-currency :amount="$dealStats['value']" :decimals="0" /></div><div class="text-muted small">Total Deal Value ({{ $dealStats['count'] }} deals)</div></div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card d-flex align-items-center gap-3">
-                <span class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-box-arrow-in-up-right"></i></span>
-                <div><div class="fs-4 fw-semibold">{{ $openImplementationRequests }}</div><div class="text-muted small">Open Implementation Requests</div></div>
-            </div>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="stat-card d-flex align-items-center gap-3">
                 <span class="stat-icon bg-info-subtle text-info"><i class="bi bi-life-preserver"></i></span>
                 <div><div class="fs-4 fw-semibold">{{ $openSupportTickets }}</div><div class="text-muted small">Open Support Tickets</div></div>
@@ -84,25 +78,7 @@
     </div>
 
     <div class="row g-3">
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white fw-semibold d-flex justify-content-between">
-                    <span><i class="bi bi-box-arrow-in-up-right me-1"></i> Recent Implementation Requests</span>
-                    <a href="{{ route('implementation-requests.index') }}" class="small">View all</a>
-                </div>
-                <ul class="list-group list-group-flush">
-                    @forelse ($recentImplementationRequests as $req)
-                        <li class="list-group-item small d-flex justify-content-between">
-                            <span>{{ $req->lead?->company_name }} — {{ $req->title }}</span>
-                            <x-status-badge :status="$req->status" />
-                        </li>
-                    @empty
-                        <li class="list-group-item"><x-empty-state icon="bi-box-arrow-in-up-right" title="No implementation requests yet" /></li>
-                    @endforelse
-                </ul>
-            </div>
-        </div>
-        <div class="col-lg-6">
+        <div class="col-12">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white fw-semibold d-flex justify-content-between">
                     <span><i class="bi bi-life-preserver me-1"></i> Recent Support Tickets</span>

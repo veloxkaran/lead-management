@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
-use App\Models\AccountRequest;
-use App\Models\ImplementationRequest;
 use App\Models\Lead;
 use App\Models\Requirement;
 use App\Models\SupportTicket;
@@ -27,9 +25,7 @@ class LeadPdfExportTest extends TestCase
         $ticket = SupportTicket::factory()->create(['lead_id' => $lead->id]);
         $ticket->comments()->create(['comment' => 'Working on it', 'author_id' => $superAdmin->id]);
         Task::factory()->create(['lead_id' => $lead->id]);
-        ImplementationRequest::factory()->create(['lead_id' => $lead->id]);
         Training::factory()->create(['lead_id' => $lead->id]);
-        AccountRequest::factory()->create(['lead_id' => $lead->id]);
 
         $response = $this->actingAs($superAdmin)->get(route('leads.export-pdf', $lead));
 

@@ -6,12 +6,10 @@ use App\Enums\FollowUpStatus;
 use App\Enums\RequirementStatus;
 use App\Enums\TaskStatus;
 use App\Enums\UserStatus;
-use App\Models\AccountRequest;
 use App\Models\DailySummary;
 use App\Models\DealClosure;
 use App\Models\FollowUp;
 use App\Models\Goal;
-use App\Models\ImplementationRequest;
 use App\Models\Lead;
 use App\Models\LeadNote;
 use App\Models\LeadStatus;
@@ -82,8 +80,6 @@ class DashboardController extends Controller
             'recentSummaries' => DailySummary::where('user_id', $user->id)->latest('summary_date')->take(5)->get(),
             'meetings' => Meeting::where('created_by', $user->id)
                 ->where('meeting_date', '>=', now()->toDateString())->orderBy('meeting_date')->orderBy('meeting_time')->take(5)->get(),
-            'myImplementationRequests' => ImplementationRequest::where('requested_by', $user->id)->with('lead')->latest()->take(5)->get(),
-            'myAccountRequests' => AccountRequest::where('requested_by', $user->id)->with('lead')->latest()->take(5)->get(),
         ]);
     }
 
@@ -104,10 +100,7 @@ class DashboardController extends Controller
             'organizationGoals' => Goal::latest()->get(),
             'statusDistribution' => $statusDistribution,
             'monthlyConversion' => $monthlyConversion,
-            'openImplementationRequests' => ImplementationRequest::whereNotIn('status', [RequirementStatus::Completed])->count(),
             'openSupportTickets' => SupportTicket::whereNotIn('status', [RequirementStatus::Completed])->count(),
-            'openAccountRequests' => AccountRequest::whereNotIn('status', [RequirementStatus::Completed])->count(),
-            'recentImplementationRequests' => ImplementationRequest::with(['lead', 'requester'])->latest()->take(5)->get(),
             'recentSupportTickets' => SupportTicket::with(['lead', 'raiser'])->latest()->take(5)->get(),
             'meetings' => Meeting::where('meeting_date', '>=', now()->toDateString())->orderBy('meeting_date')->orderBy('meeting_time')->take(6)->get(),
         ]);
@@ -117,13 +110,7 @@ class DashboardController extends Controller
     {
         return view('dashboard.customer-success', $this->greeting($user) + [
             'organizationGoals' => Goal::latest()->get(),
-            'pendingImplementations' => ImplementationRequest::where('status', RequirementStatus::Pending)->count(),
-            'inProgressImplementations' => ImplementationRequest::where('status', RequirementStatus::InProgress)->count(),
-            'completedThisMonth' => ImplementationRequest::where('status', RequirementStatus::Completed)
-                ->whereMonth('completed_at', now()->month)->whereYear('completed_at', now()->year)->count(),
             'pendingTickets' => SupportTicket::where('status', RequirementStatus::Pending)->count(),
-            'implementationQueue' => ImplementationRequest::whereNotIn('status', [RequirementStatus::Completed])
-                ->with(['lead', 'requester', 'assignee'])->oldest()->take(8)->get(),
             'ticketQueue' => SupportTicket::whereNotIn('status', [RequirementStatus::Completed])
                 ->with(['lead', 'raiser', 'assignee'])->oldest()->take(8)->get(),
         ]);
@@ -133,12 +120,6 @@ class DashboardController extends Controller
     {
         return view('dashboard.finance', $this->greeting($user) + [
             'organizationGoals' => Goal::latest()->get(),
-            'pendingCount' => AccountRequest::where('status', RequirementStatus::Pending)->count(),
-            'pendingAmount' => AccountRequest::whereNotIn('status', [RequirementStatus::Completed])->sum('amount'),
-            'completedThisMonth' => AccountRequest::where('status', RequirementStatus::Completed)
-                ->whereMonth('processed_at', now()->month)->whereYear('processed_at', now()->year)->sum('amount'),
-            'requestQueue' => AccountRequest::whereNotIn('status', [RequirementStatus::Completed])
-                ->with(['lead', 'requester'])->oldest()->take(10)->get(),
         ]);
     }
 
@@ -173,9 +154,7 @@ class DashboardController extends Controller
             'meetings' => Meeting::where('meeting_date', '>=', now()->toDateString())->orderBy('meeting_date')->orderBy('meeting_time')->take(6)->get(),
             'statusDistribution' => $statusDistribution,
             'monthlyConversion' => $monthlyConversion,
-            'openImplementationRequests' => ImplementationRequest::whereNotIn('status', [RequirementStatus::Completed])->count(),
             'openSupportTickets' => SupportTicket::whereNotIn('status', [RequirementStatus::Completed])->count(),
-            'openAccountRequests' => AccountRequest::whereNotIn('status', [RequirementStatus::Completed])->count(),
         ]);
     }
 }
