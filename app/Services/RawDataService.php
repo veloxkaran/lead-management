@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\RawDataAssignmentAction;
 use App\Enums\RawDataStatus;
 use App\Models\Lead;
 use App\Models\RawData;
@@ -141,16 +142,46 @@ class RawDataService
      * than being independently settable — they log who performed *this*
      * assignment and when, so clearing assigned_to (unassigning) clears
      * them too instead of leaving a stale "assigned by/at" behind.
+     *
+     * Every actual transition also appends to assignmentLogs(): a change
+     * away from a previous assignee logs an Unassigned entry for them, and
+     * a change onto a new assignee logs an Assigned entry — a direct
+     * reassignment (A to B) logs both, so both event types are always
+     * individually visible in the history rather than only the latest
+     * assigned_to value. Resubmitting the same assignee is a no-op (no
+     * update, no log entry), so it can't reset assigned_at/the countdown.
      */
     public function assign(RawData $rawData, ?int $assignedTo, User $actor): RawData
     {
         $this->guardIsNew($rawData);
+
+        $previousAssignedTo = $rawData->assigned_to;
+
+        if ($assignedTo === $previousAssignedTo) {
+            return $rawData;
+        }
 
         $rawData->update([
             'assigned_to' => $assignedTo,
             'assigned_by' => $assignedTo ? $actor->id : null,
             'assigned_at' => $assignedTo ? now() : null,
         ]);
+
+        if ($previousAssignedTo !== null) {
+            $rawData->assignmentLogs()->create([
+                'action' => RawDataAssignmentAction::Unassigned,
+                'user_id' => $previousAssignedTo,
+                'performed_by' => $actor->id,
+            ]);
+        }
+
+        if ($assignedTo !== null) {
+            $rawData->assignmentLogs()->create([
+                'action' => RawDataAssignmentAction::Assigned,
+                'user_id' => $assignedTo,
+                'performed_by' => $actor->id,
+            ]);
+        }
 
         return $rawData;
     }

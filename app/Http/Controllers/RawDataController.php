@@ -48,7 +48,7 @@ class RawDataController extends Controller
     {
         $this->authorize('view', $rawData);
 
-        $rawData->load(['creator', 'convertedLead', 'comments.author', 'assignee', 'assignedBy']);
+        $rawData->load(['creator', 'convertedLead', 'comments.author', 'assignee', 'assignedBy', 'assignmentLogs.user', 'assignmentLogs.performedBy']);
 
         return view('raw-data.show', [
             'rawData' => $rawData,

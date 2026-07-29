@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\RawDataAssignmentAction;
 use App\Enums\RawDataStatus;
 use App\Models\RawData;
 use App\Models\User;
@@ -97,5 +98,113 @@ class RawDataAssignmentTest extends TestCase
         $response->assertSee('Assigned To');
         $response->assertSee('Alex Assignee');
         $response->assertSee('Time Remaining');
+    }
+
+    public function test_assigning_logs_an_assigned_entry(): void
+    {
+        $actor = User::factory()->create();
+        $assignee = User::factory()->create();
+        $rawData = RawData::factory()->create();
+
+        $this->actingAs($actor)->post(route('raw-data.assign', $rawData), [
+            'assigned_to' => $assignee->id,
+        ]);
+
+        $this->assertDatabaseHas('raw_data_assignment_logs', [
+            'raw_data_id' => $rawData->id,
+            'action' => RawDataAssignmentAction::Assigned->value,
+            'user_id' => $assignee->id,
+            'performed_by' => $actor->id,
+        ]);
+        $this->assertSame(1, $rawData->assignmentLogs()->count());
+    }
+
+    public function test_unassigning_logs_an_unassigned_entry(): void
+    {
+        $actor = User::factory()->create();
+        $assignee = User::factory()->create();
+        $rawData = RawData::factory()->create([
+            'assigned_to' => $assignee->id,
+            'assigned_by' => $assignee->id,
+            'assigned_at' => '2026-08-01 09:00:00',
+        ]);
+
+        $this->actingAs($actor)->post(route('raw-data.assign', $rawData), [
+            'assigned_to' => '',
+        ]);
+
+        $this->assertDatabaseHas('raw_data_assignment_logs', [
+            'raw_data_id' => $rawData->id,
+            'action' => RawDataAssignmentAction::Unassigned->value,
+            'user_id' => $assignee->id,
+            'performed_by' => $actor->id,
+        ]);
+    }
+
+    public function test_reassigning_to_someone_else_logs_both_unassigned_and_assigned_entries(): void
+    {
+        $actor = User::factory()->create();
+        $firstAssignee = User::factory()->create();
+        $secondAssignee = User::factory()->create();
+        $rawData = RawData::factory()->create([
+            'assigned_to' => $firstAssignee->id,
+            'assigned_by' => $firstAssignee->id,
+            'assigned_at' => '2026-08-01 09:00:00',
+        ]);
+
+        $this->actingAs($actor)->post(route('raw-data.assign', $rawData), [
+            'assigned_to' => $secondAssignee->id,
+        ]);
+
+        $this->assertDatabaseHas('raw_data_assignment_logs', [
+            'raw_data_id' => $rawData->id,
+            'action' => RawDataAssignmentAction::Unassigned->value,
+            'user_id' => $firstAssignee->id,
+        ]);
+        $this->assertDatabaseHas('raw_data_assignment_logs', [
+            'raw_data_id' => $rawData->id,
+            'action' => RawDataAssignmentAction::Assigned->value,
+            'user_id' => $secondAssignee->id,
+        ]);
+        $this->assertSame(2, $rawData->assignmentLogs()->count());
+    }
+
+    public function test_resubmitting_the_same_assignee_is_a_no_op(): void
+    {
+        $actor = User::factory()->create();
+        $assignee = User::factory()->create();
+        $rawData = RawData::factory()->create([
+            'assigned_to' => $assignee->id,
+            'assigned_by' => $assignee->id,
+            'assigned_at' => '2026-08-01 09:00:00',
+        ]);
+
+        $this->travelTo(Carbon::create(2026, 8, 2, 10, 0));
+
+        $this->actingAs($actor)->post(route('raw-data.assign', $rawData), [
+            'assigned_to' => $assignee->id,
+        ]);
+
+        $rawData->refresh();
+        $this->assertSame(0, $rawData->assignmentLogs()->count());
+        $this->assertSame('2026-08-01 09:00:00', $rawData->assigned_at->format('Y-m-d H:i:s'));
+    }
+
+    public function test_show_page_displays_assignment_history(): void
+    {
+        $user = User::factory()->create();
+        $assignee = User::factory()->create(['name' => 'Alex Assignee']);
+        $rawData = RawData::factory()->create();
+
+        $this->actingAs($user)->post(route('raw-data.assign', $rawData), [
+            'assigned_to' => $assignee->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('raw-data.show', $rawData));
+
+        $response->assertOk();
+        $response->assertSee('Assignment History');
+        $response->assertSee('Assigned');
+        $response->assertSee('Alex Assignee');
     }
 }

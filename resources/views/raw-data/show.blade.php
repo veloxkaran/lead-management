@@ -111,6 +111,8 @@
         @endif
     @endcan
 
+    @include('raw-data._assignment_log')
+
     <div class="card border-0 shadow-sm mt-3">
         <div class="card-header bg-white fw-semibold">
             <i class="bi bi-chat-left-text"></i> Comments ({{ $rawData->comments->count() }})

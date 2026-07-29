@@ -65,6 +65,11 @@ class RawData extends Model
         return $this->hasMany(RawDataComment::class)->oldest();
     }
 
+    public function assignmentLogs(): HasMany
+    {
+        return $this->hasMany(RawDataAssignmentLog::class)->latest();
+    }
+
     public function isNew(): bool
     {
         return $this->status === RawDataStatus::New;
