@@ -48,6 +48,8 @@
                         <th>Status</th>
                         <th>Comments</th>
                         <th>Added By</th>
+                        <th>Assigned To</th>
+                        <th>Time Remaining</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -60,6 +62,16 @@
                             <td><x-status-badge :status="$entry->status" /></td>
                             <td class="small">{{ $entry->comments_count }}</td>
                             <td class="small text-muted">{{ $entry->creator?->name ?? '—' }}</td>
+                            <td class="small">{{ $entry->assignee?->name ?? '—' }}</td>
+                            <td class="small">
+                                @if ($entry->assigned_at)
+                                    <span x-data="rawDataCountdown('{{ $entry->assignmentDeadline()->toIso8601String() }}')">
+                                        <span class="badge" :class="overdue ? 'bg-danger-subtle text-danger-emphasis' : 'bg-success-subtle text-success-emphasis'" x-text="remainingText"></span>
+                                    </span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
                             <td class="text-end">
                                 <a href="{{ route('raw-data.show', $entry) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
                                 @can('delete', $entry)
@@ -72,7 +84,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7">
+                            <td colspan="9">
                                 <x-empty-state icon="bi-inbox" title="No raw data found" description="Try adjusting your filters or add a new entry." />
                             </td>
                         </tr>

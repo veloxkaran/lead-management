@@ -63,11 +63,7 @@
                             @endforeach
                         </select>
                         @error('adopted_by')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label small fw-semibold">Adopted At</label>
-                        <input type="datetime-local" name="adopted_at" class="form-control" value="{{ old('adopted_at') }}">
-                        @error('adopted_at')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        <div class="form-text">Adopted At is set automatically to the moment this is assigned.</div>
                     </div>
                 </div>
                 <div class="mt-3">

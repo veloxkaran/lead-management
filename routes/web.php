@@ -95,6 +95,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('raw-data', RawDataController::class)->parameters(['raw-data' => 'raw_data'])->except('edit', 'update');
     Route::post('raw-data/{raw_data}/mark-not-valid', [RawDataController::class, 'markNotValid'])->name('raw-data.mark-not-valid');
     Route::post('raw-data/{raw_data}/convert', [RawDataController::class, 'convert'])->name('raw-data.convert');
+    Route::post('raw-data/{raw_data}/assign', [RawDataController::class, 'assign'])->name('raw-data.assign');
     Route::post('raw-data/{raw_data}/comments', [RawDataCommentController::class, 'store'])->name('raw-data.comments.store');
 
     Route::post('leads/{lead}/notes', [LeadNoteController::class, 'store'])->name('leads.notes.store');

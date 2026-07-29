@@ -36,6 +36,10 @@ class RequirementService
     {
         $attributes['created_by'] = $creator->id;
 
+        if (! empty($attributes['adopted_by'])) {
+            $attributes['adopted_at'] = now();
+        }
+
         /** @var Requirement $requirement */
         $requirement = $this->requirements->create($attributes);
 
@@ -60,6 +64,12 @@ class RequirementService
      */
     public function update(Requirement $requirement, array $attributes, User $actor, ?string $ip, ?string $userAgent): Requirement
     {
+        // adopted_at isn't user-editable — it tracks the moment adopted_by last
+        // changed, set here (not on the form) so it can't drift from that event.
+        if (array_key_exists('adopted_by', $attributes) && $attributes['adopted_by'] != $requirement->adopted_by) {
+            $attributes['adopted_at'] = $attributes['adopted_by'] ? now() : null;
+        }
+
         $originalRaw = collect(array_keys($attributes))
             ->mapWithKeys(fn ($key) => [$key => $requirement->getRawOriginal($key)])
             ->all();

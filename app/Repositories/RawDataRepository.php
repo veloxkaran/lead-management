@@ -14,7 +14,7 @@ class RawDataRepository extends BaseRepository
 
     public function filter(array $filters, int $perPage = 20): LengthAwarePaginator
     {
-        $query = $this->query()->with(['creator', 'convertedLead'])->withCount('comments');
+        $query = $this->query()->with(['creator', 'convertedLead', 'assignee'])->withCount('comments');
 
         if (! empty($filters['status']) && $filters['status'] !== 'all') {
             $query->where('status', $filters['status']);

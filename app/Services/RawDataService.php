@@ -136,6 +136,25 @@ class RawDataService
         return 'created';
     }
 
+    /**
+     * assigned_by/assigned_at always move together with assigned_to rather
+     * than being independently settable — they log who performed *this*
+     * assignment and when, so clearing assigned_to (unassigning) clears
+     * them too instead of leaving a stale "assigned by/at" behind.
+     */
+    public function assign(RawData $rawData, ?int $assignedTo, User $actor): RawData
+    {
+        $this->guardIsNew($rawData);
+
+        $rawData->update([
+            'assigned_to' => $assignedTo,
+            'assigned_by' => $assignedTo ? $actor->id : null,
+            'assigned_at' => $assignedTo ? now() : null,
+        ]);
+
+        return $rawData;
+    }
+
     public function addComment(RawData $rawData, array $attributes, User $author): RawDataComment
     {
         return $rawData->comments()->create([

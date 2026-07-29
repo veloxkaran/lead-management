@@ -53,6 +53,25 @@
                     <div class="small text-muted">Source</div>
                     <div class="small fw-semibold">{{ $rawData->source ?? '—' }}</div>
                 </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Assigned To</div>
+                    <div class="small fw-semibold">{{ $rawData->assignee?->name ?? 'Unassigned' }}</div>
+                    @if ($rawData->assigned_at)
+                        <div class="small text-muted">by {{ $rawData->assignedBy?->name ?? 'Unknown' }} on {{ $rawData->assigned_at->format('M d, Y g:i A') }}</div>
+                    @endif
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Time Remaining</div>
+                    <div class="small fw-semibold">
+                        @if ($rawData->assigned_at)
+                            <span x-data="rawDataCountdown('{{ $rawData->assignmentDeadline()->toIso8601String() }}')">
+                                <span class="badge" :class="overdue ? 'bg-danger-subtle text-danger-emphasis' : 'bg-success-subtle text-success-emphasis'" x-text="remainingText"></span>
+                            </span>
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
+                    </div>
+                </div>
                 @if ($rawData->convertedLead)
                     <div class="col-12">
                         <div class="small text-muted">Converted Lead</div>
@@ -69,6 +88,28 @@
             </div>
         </div>
     </div>
+
+    @can('update', $rawData)
+        @if ($rawData->isNew())
+            <div class="card border-0 shadow-sm mt-3">
+                <div class="card-body">
+                    <h6 class="fw-semibold mb-2"><i class="bi bi-person-check"></i> Assign</h6>
+                    <form method="POST" action="{{ route('raw-data.assign', $rawData) }}" class="d-flex flex-wrap gap-2">
+                        @csrf
+                        <select name="assigned_to" class="form-select form-select-sm" style="max-width: 260px;" data-select2>
+                            <option value="">Unassigned</option>
+                            @foreach ($users as $u)
+                                <option value="{{ $u->id }}" @selected($rawData->assigned_to === $u->id)>{{ $u->name }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-check-lg"></i> Assign</button>
+                    </form>
+                    @error('assigned_to')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    <div class="small text-muted mt-2">A {{ \App\Models\RawData::ASSIGNMENT_RESPONSE_HOURS }}-hour countdown starts as soon as this is assigned.</div>
+                </div>
+            </div>
+        @endif
+    @endcan
 
     <div class="card border-0 shadow-sm mt-3">
         <div class="card-header bg-white fw-semibold">

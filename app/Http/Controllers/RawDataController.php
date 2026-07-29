@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RawData\AssignRawDataRequest;
 use App\Http\Requests\RawData\ConvertRawDataRequest;
 use App\Http\Requests\RawData\StoreRawDataRequest;
 use App\Models\RawData;
+use App\Models\User;
 use App\Services\RawDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -46,10 +48,11 @@ class RawDataController extends Controller
     {
         $this->authorize('view', $rawData);
 
-        $rawData->load(['creator', 'convertedLead', 'comments.author']);
+        $rawData->load(['creator', 'convertedLead', 'comments.author', 'assignee', 'assignedBy']);
 
         return view('raw-data.show', [
             'rawData' => $rawData,
+            'users' => User::orderBy('name')->get(),
         ]);
     }
 
@@ -76,5 +79,12 @@ class RawDataController extends Controller
         $lead = $this->rawDataService->convertToLead($rawData, $request->validated(), $request->user());
 
         return redirect()->route('leads.show', $lead)->with('success', 'Raw data entry converted to lead successfully.');
+    }
+
+    public function assign(AssignRawDataRequest $request, RawData $rawData): RedirectResponse
+    {
+        $this->rawDataService->assign($rawData, $request->validated('assigned_to'), $request->user());
+
+        return back()->with('success', 'Raw data entry assignment updated.');
     }
 }
