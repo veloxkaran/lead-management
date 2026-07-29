@@ -55,6 +55,8 @@
                         <th>Due Date</th>
                         <th>Client Acknowledged</th>
                         <th>Assigned To</th>
+                        <th>Adopted By</th>
+                        <th>Adopted At</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -90,6 +92,8 @@
                                 @endif
                             </td>
                             <td class="small">{{ $requirement->assignee?->name ?? '—' }}</td>
+                            <td class="small">{{ $requirement->adopter?->name ?? '—' }}</td>
+                            <td class="small">{{ $requirement->adopted_at?->format('M d, Y g:i A') ?? '—' }}</td>
                             <td class="text-end">
                                 <a href="{{ route('requirements.show', $requirement) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
                                 @can('update', $requirement)
@@ -105,7 +109,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8">
+                            <td colspan="10">
                                 <x-empty-state icon="bi-list-check" title="No requirements found" description="Try adjusting your filters or add a new requirement." />
                             </td>
                         </tr>

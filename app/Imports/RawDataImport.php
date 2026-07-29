@@ -33,43 +33,44 @@ class RawDataImport implements ToCollection, WithHeadingRow, WithValidation, Ski
     {
     }
 
-    public function rules(): array
+    /**
+     * Shared with the paste-grid importer (RawDataBulkUploadController::storePasted())
+     * so both entry points reject/accept rows identically.
+     */
+    public static function rowRules(): array
     {
         return [
             'contact_person' => ['required', 'max:255'],
+            'company_name' => ['nullable', 'max:255'],
             'phone' => ['required', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
             'source' => ['nullable', 'max:20'],
+            'notes' => ['nullable', 'max:2000'],
         ];
+    }
+
+    public function rules(): array
+    {
+        return self::rowRules();
     }
 
     public function collection(Collection $rows): void
     {
         foreach ($rows as $row) {
-            $contactPerson = (string) $row['contact_person'];
-            $phone = (string) $row['phone'];
-            $attributes = [
+            $result = $this->rawDataService->importRow([
+                'contact_person' => (string) $row['contact_person'],
+                'company_name' => $row['company_name'] ?? null,
+                'phone' => (string) $row['phone'],
                 'email' => $row['email'] ?? null,
                 'source' => $row['source'] ?? null,
-            ];
-
-            $existing = $this->rawDataService->findExistingForImportRow($contactPerson, $phone);
-
-            if ($existing) {
-                if ($this->rawDataService->fillMissingDetails($existing, $attributes)) {
-                    $this->updatedCount++;
-                }
-
-                continue;
-            }
-
-            $this->rawDataService->create([
-                'contact_person' => $contactPerson,
-                'phone' => $phone,
-                ...$attributes,
+                'notes' => $row['notes'] ?? null,
             ], $this->creator);
 
-            $this->importedCount++;
+            match ($result) {
+                'created' => $this->importedCount++,
+                'updated' => $this->updatedCount++,
+                default => null,
+            };
         }
     }
 

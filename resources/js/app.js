@@ -20,6 +20,7 @@ import 'datatables.net-bs5';
 import 'select2';
 
 import './activity-feed';
+import './raw-data-paste-grid';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Bootstrap tooltip/popover activation

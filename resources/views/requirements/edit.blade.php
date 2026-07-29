@@ -68,6 +68,21 @@
                         </select>
                         @error('assigned_to')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Adopted By</label>
+                        <select name="adopted_by" class="form-select" data-select2>
+                            <option value="">Not yet adopted</option>
+                            @foreach ($users as $u)
+                                <option value="{{ $u->id }}" @selected(old('adopted_by', $requirement->adopted_by) == $u->id)>{{ $u->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('adopted_by')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Adopted At</label>
+                        <input type="datetime-local" name="adopted_at" class="form-control" value="{{ old('adopted_at', $requirement->adopted_at?->format('Y-m-d\TH:i')) }}">
+                        @error('adopted_at')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
                 </div>
                 <div class="mt-3">
                     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Update Requirement</button>

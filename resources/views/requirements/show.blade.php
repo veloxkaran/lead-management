@@ -54,6 +54,14 @@
                         @endif
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Adopted By</div>
+                    <div class="small fw-semibold">{{ $requirement->adopter?->name ?? '—' }}</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="small text-muted">Adopted At</div>
+                    <div class="small fw-semibold">{{ $requirement->adopted_at?->format('M d, Y g:i A') ?? '—' }}</div>
+                </div>
                 <div class="col-md-6">
                     <div class="small text-muted">Created By</div>
                     <div class="small fw-semibold">{{ $requirement->creator?->name ?? 'Unknown' }} on {{ $requirement->created_at->format('M d, Y g:i A') }}</div>

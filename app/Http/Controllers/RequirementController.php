@@ -100,7 +100,7 @@ class RequirementController extends Controller
     {
         $this->authorize('view', $requirement);
 
-        $requirement->load('lead', 'creator', 'assignee', 'comments.author');
+        $requirement->load('lead', 'creator', 'assignee', 'adopter', 'comments.author');
 
         return view('requirements.show', [
             'requirement' => $requirement,

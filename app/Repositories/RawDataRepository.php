@@ -22,7 +22,9 @@ class RawDataRepository extends BaseRepository
 
         if (! empty($filters['search'])) {
             $term = '%'.$filters['search'].'%';
-            $query->where(fn ($q) => $q->where('contact_person', 'like', $term)->orWhere('phone', 'like', $term));
+            $query->where(fn ($q) => $q->where('contact_person', 'like', $term)
+                ->orWhere('company_name', 'like', $term)
+                ->orWhere('phone', 'like', $term));
         }
 
         return $query->latest()->paginate($perPage)->withQueryString();

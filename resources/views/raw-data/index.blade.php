@@ -43,6 +43,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>Contact Person</th>
+                        <th>Company Name</th>
                         <th>Phone</th>
                         <th>Status</th>
                         <th>Comments</th>
@@ -54,6 +55,7 @@
                     @forelse ($entries as $entry)
                         <tr>
                             <td class="small fw-semibold"><a href="{{ route('raw-data.show', $entry) }}">{{ $entry->contact_person }}</a></td>
+                            <td class="small">{{ $entry->company_name ?? '—' }}</td>
                             <td class="small">{{ $entry->phone }}</td>
                             <td><x-status-badge :status="$entry->status" /></td>
                             <td class="small">{{ $entry->comments_count }}</td>
@@ -70,7 +72,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6">
+                            <td colspan="7">
                                 <x-empty-state icon="bi-inbox" title="No raw data found" description="Try adjusting your filters or add a new entry." />
                             </td>
                         </tr>

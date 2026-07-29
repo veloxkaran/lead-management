@@ -16,7 +16,8 @@ class RawData extends Model
     protected $table = 'raw_data';
 
     protected $fillable = [
-        'company_id', 'contact_person', 'phone', 'email', 'source', 'status', 'converted_lead_id', 'created_by',
+        'company_id', 'contact_person', 'company_name', 'phone', 'email', 'source', 'notes', 'status',
+        'converted_lead_id', 'created_by',
     ];
 
     protected function casts(): array

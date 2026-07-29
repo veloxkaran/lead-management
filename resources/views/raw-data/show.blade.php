@@ -30,6 +30,10 @@
                     <div class="small fw-semibold">{{ $rawData->contact_person }}</div>
                 </div>
                 <div class="col-md-3">
+                    <div class="small text-muted">Company Name</div>
+                    <div class="small fw-semibold">{{ $rawData->company_name ?? '—' }}</div>
+                </div>
+                <div class="col-md-3">
                     <div class="small text-muted">Phone</div>
                     <div class="small fw-semibold">{{ $rawData->phone }}</div>
                 </div>
@@ -55,6 +59,10 @@
                         <a href="{{ route('leads.show', $rawData->convertedLead) }}" class="small fw-semibold">{{ $rawData->convertedLead->company_name }}</a>
                     </div>
                 @endif
+                <div class="col-12">
+                    <div class="small text-muted">Notes</div>
+                    <div class="small fw-semibold">{{ $rawData->notes ?? '—' }}</div>
+                </div>
                 <div class="col-12">
                     <div class="small text-muted">Added on {{ $rawData->created_at->format('M d, Y g:i A') }}</div>
                 </div>
@@ -102,7 +110,7 @@
                             <p class="small text-muted">Contact Person and Phone carry over from this entry — fill in the rest to create the Lead.</p>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Company Name</label>
-                                <input type="text" name="company_name" class="form-control" value="{{ old('company_name') }}" required>
+                                <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $rawData->company_name) }}" required>
                                 @error('company_name')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                             </div>
                             <div class="mb-3">

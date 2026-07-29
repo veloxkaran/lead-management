@@ -49,6 +49,24 @@ class RawDataTest extends TestCase
         ]);
     }
 
+    public function test_company_name_and_notes_are_optional_and_saved_when_provided(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('raw-data.store'), [
+            'contact_person' => 'Jane Doe',
+            'phone' => '9800000000',
+            'company_name' => 'Acme Corp',
+            'notes' => 'Met at trade show, follow up next week.',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('raw_data', [
+            'contact_person' => 'Jane Doe',
+            'company_name' => 'Acme Corp',
+            'notes' => 'Met at trade show, follow up next week.',
+        ]);
+    }
+
     public function test_source_longer_than_20_characters_is_rejected(): void
     {
         $user = User::factory()->create();

@@ -87,7 +87,7 @@ class RawDataService
     {
         $updates = [];
 
-        foreach (['email', 'source'] as $field) {
+        foreach (['company_name', 'email', 'source', 'notes'] as $field) {
             if (blank($rawData->{$field}) && filled($attributes[$field] ?? null)) {
                 $updates[$field] = $attributes[$field];
             }
@@ -100,6 +100,40 @@ class RawDataService
         $rawData->update($updates);
 
         return true;
+    }
+
+    /**
+     * Shared per-row bulk-import path for both the file importer
+     * (RawDataImport) and the paste-grid importer: a row matching an
+     * existing entry fills in its missing details rather than creating a
+     * duplicate, exactly as findExistingForImportRow()/fillMissingDetails()
+     * intend. Returns 'created', 'updated', or 'unchanged' so each caller
+     * can tally its own counts.
+     */
+    public function importRow(array $attributes, User $creator): string
+    {
+        $contactPerson = trim((string) $attributes['contact_person']);
+        $phone = trim((string) $attributes['phone']);
+        $rest = [
+            'company_name' => $attributes['company_name'] ?? null,
+            'email' => $attributes['email'] ?? null,
+            'source' => $attributes['source'] ?? null,
+            'notes' => $attributes['notes'] ?? null,
+        ];
+
+        $existing = $this->findExistingForImportRow($contactPerson, $phone);
+
+        if ($existing) {
+            return $this->fillMissingDetails($existing, $rest) ? 'updated' : 'unchanged';
+        }
+
+        $this->create([
+            'contact_person' => $contactPerson,
+            'phone' => $phone,
+            ...$rest,
+        ], $creator);
+
+        return 'created';
     }
 
     public function addComment(RawData $rawData, array $attributes, User $author): RawDataComment

@@ -23,6 +23,8 @@ class UpdateRequirementRequest extends FormRequest
             'due_date' => ['nullable', 'date'],
             'client_acknowledged_at' => ['nullable', 'date'],
             'assigned_to' => ['nullable', 'exists:users,id'],
+            'adopted_by' => ['nullable', 'exists:users,id'],
+            'adopted_at' => ['nullable', 'date'],
         ];
     }
 }

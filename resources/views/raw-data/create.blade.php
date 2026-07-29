@@ -16,6 +16,11 @@
                         @error('contact_person')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Company Name (optional)</label>
+                        <input type="text" name="company_name" class="form-control" value="{{ old('company_name') }}">
+                        @error('company_name')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-6">
                         <label class="form-label small fw-semibold">Phone</label>
                         <input type="text" name="phone" class="form-control" value="{{ old('phone') }}" required>
                         @error('phone')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
@@ -29,6 +34,11 @@
                         <label class="form-label small fw-semibold">Source (optional)</label>
                         <input type="text" name="source" class="form-control" maxlength="20" value="{{ old('source') }}">
                         @error('source')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-semibold">Notes (optional)</label>
+                        <textarea name="notes" rows="3" class="form-control" maxlength="2000">{{ old('notes') }}</textarea>
+                        @error('notes')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                 </div>
                 <div class="mt-3">

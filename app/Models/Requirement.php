@@ -16,7 +16,7 @@ class Requirement extends Model
 
     protected $fillable = [
         'company_id', 'lead_id', 'requirement', 'priority', 'status', 'due_date',
-        'client_acknowledged_at', 'assigned_to', 'created_by',
+        'client_acknowledged_at', 'assigned_to', 'adopted_by', 'adopted_at', 'created_by',
     ];
 
     protected function casts(): array
@@ -26,12 +26,18 @@ class Requirement extends Model
             'status' => RequirementStatus::class,
             'due_date' => 'date',
             'client_acknowledged_at' => 'datetime',
+            'adopted_at' => 'datetime',
         ];
     }
 
     public function isAcknowledgedByClient(): bool
     {
         return $this->client_acknowledged_at !== null;
+    }
+
+    public function isAdopted(): bool
+    {
+        return $this->adopted_by !== null;
     }
 
     public function lead(): BelongsTo
@@ -42,6 +48,11 @@ class Requirement extends Model
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function adopter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'adopted_by');
     }
 
     public function creator(): BelongsTo
