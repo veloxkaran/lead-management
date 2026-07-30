@@ -59,10 +59,10 @@ class RawDataImport implements ToCollection, WithHeadingRow, WithValidation, Ski
     {
         foreach ($rows as $row) {
             $result = $this->rawDataService->importRow([
-                'contact_person' => (string) $row['contact_person'],
+                'contact_person' => (string) ($row['contact_person'] ?? ''),
                 'company_name' => $row['company_name'] ?? null,
                 'number_of_employees' => $row['number_of_employees'] ?? null,
-                'phone' => (string) $row['phone'],
+                'phone' => (string) ($row['phone'] ?? ''),
                 'email' => $row['email'] ?? null,
                 'source' => $row['source'] ?? null,
                 'notes' => $row['notes'] ?? null,

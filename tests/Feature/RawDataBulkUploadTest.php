@@ -51,6 +51,38 @@ class RawDataBulkUploadTest extends TestCase
         $this->assertSame($user->id, $entry->created_by);
     }
 
+    public function test_a_file_without_a_contact_person_column_still_imports(): void
+    {
+        $user = User::factory()->create();
+
+        $csv = "Phone,Email\n"
+            ."9800000001,jane@example.test\n";
+
+        $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
+
+        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+
+        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 0);
+        $this->assertDatabaseHas('raw_data', ['phone' => '9800000001']);
+        $this->assertSame(1, RawData::count());
+    }
+
+    public function test_a_file_without_a_phone_column_still_imports(): void
+    {
+        $user = User::factory()->create();
+
+        $csv = "Contact Person,Email\n"
+            ."Jane Doe,jane@example.test\n";
+
+        $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
+
+        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+
+        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 0);
+        $this->assertDatabaseHas('raw_data', ['contact_person' => 'Jane Doe']);
+        $this->assertSame(1, RawData::count());
+    }
+
     public function test_rows_with_invalid_data_are_skipped_and_reported(): void
     {
         $user = User::factory()->create();
