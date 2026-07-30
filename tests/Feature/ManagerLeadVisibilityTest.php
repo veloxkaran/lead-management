@@ -26,7 +26,7 @@ class ManagerLeadVisibilityTest extends TestCase
         Lead::factory()->create(['assigned_user_id' => $repA->id, 'created_by' => $repA->id]);
         Lead::factory()->create(['assigned_user_id' => $repB->id, 'created_by' => $repB->id]);
 
-        $response = $this->actingAs($manager)->get(route('leads.index'));
+        $response = $this->actingAs($manager)->get(route('leads.index', ['created_by' => '']));
 
         $response->assertOk();
         $response->assertViewHas('leads', fn ($leads) => $leads->total() === 2);

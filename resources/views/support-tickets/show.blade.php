@@ -39,15 +39,46 @@
                     <div class="small text-muted">Details</div>
                     <p class="mb-0">{{ $supportTicket->details ?: 'No details provided.' }}</p>
                 </div>
-                <div class="col-12">
+                <div class="col-12" x-data="attachmentPreview()">
                     <div class="small text-muted">Documents</div>
                     @forelse ($supportTicket->attachments as $attachment)
-                        <a href="{{ route('support-ticket-attachments.download', $attachment) }}" class="badge bg-light text-dark border text-decoration-none me-1">
-                            <i class="bi bi-paperclip"></i> {{ $attachment->original_name }}
-                        </a>
+                        <span class="badge bg-light text-dark border me-1 mb-1">
+                            <i class="bi bi-paperclip"></i>
+                            <a href="#" class="text-decoration-none text-dark" @click.prevent="open(@js(route('support-ticket-attachments.preview', $attachment)), @js($attachment->original_name), @js($attachment->mime_type))">
+                                {{ $attachment->original_name }}
+                            </a>
+                            <a href="{{ route('support-ticket-attachments.download', $attachment) }}" class="text-muted ms-1" title="Download {{ $attachment->original_name }}">
+                                <i class="bi bi-download"></i>
+                            </a>
+                        </span>
                     @empty
                         <span class="small text-muted">No documents attached.</span>
                     @endforelse
+
+                    <div class="modal fade" x-ref="previewModal" tabindex="-1">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h6 class="modal-title text-truncate" x-text="name"></h6>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <template x-if="isImage">
+                                        <img :src="url" :alt="name" class="img-fluid">
+                                    </template>
+                                    <template x-if="isPdf">
+                                        <iframe :src="url" style="width: 100%; height: 70vh; border: 0;"></iframe>
+                                    </template>
+                                    <template x-if="!isImage && !isPdf">
+                                        <div class="py-4">
+                                            <p class="text-muted small mb-2">Preview isn't available for this file type.</p>
+                                            <a :href="url" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">Open in new tab</a>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-12">
                     <div class="small text-muted">

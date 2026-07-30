@@ -22,6 +22,7 @@ import 'select2';
 import './activity-feed';
 import './raw-data-paste-grid';
 import './raw-data-countdown';
+import './attachment-preview';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Bootstrap tooltip/popover activation

@@ -40,6 +40,10 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
             $query->where('assigned_user_id', $filters['assigned_user_id']);
         }
 
+        if (! empty($filters['created_by'])) {
+            $query->where('created_by', $filters['created_by']);
+        }
+
         if (! empty($filters['source'])) {
             $query->where('source', $filters['source']);
         }

@@ -89,4 +89,46 @@ class LeadManagementTest extends TestCase
 
         $this->assertNotNull($lead->fresh()->archived_at);
     }
+
+    public function test_leads_index_defaults_to_leads_created_by_the_logged_in_user(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $mine = Lead::factory()->create(['created_by' => $user->id, 'company_name' => 'My Own Co']);
+        $theirs = Lead::factory()->create(['created_by' => $other->id, 'company_name' => 'Other Co']);
+
+        $response = $this->actingAs($user)->get(route('leads.index'));
+
+        $response->assertOk();
+        $response->assertSee('My Own Co');
+        $response->assertDontSee('Other Co');
+    }
+
+    public function test_leads_index_created_by_filter_can_be_widened_to_everyone(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        Lead::factory()->create(['created_by' => $user->id, 'company_name' => 'My Own Co']);
+        Lead::factory()->create(['created_by' => $other->id, 'company_name' => 'Other Co']);
+
+        $response = $this->actingAs($user)->get(route('leads.index', ['created_by' => '']));
+
+        $response->assertOk();
+        $response->assertSee('My Own Co');
+        $response->assertSee('Other Co');
+    }
+
+    public function test_leads_index_created_by_filter_can_target_a_specific_user(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        Lead::factory()->create(['created_by' => $user->id, 'company_name' => 'My Own Co']);
+        Lead::factory()->create(['created_by' => $other->id, 'company_name' => 'Other Co']);
+
+        $response = $this->actingAs($user)->get(route('leads.index', ['created_by' => $other->id]));
+
+        $response->assertOk();
+        $response->assertDontSee('My Own Co');
+        $response->assertSee('Other Co');
+    }
 }

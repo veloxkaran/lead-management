@@ -134,6 +134,7 @@ Route::middleware('auth')->group(function () {
     Route::post('support-tickets/{support_ticket}/comments', [SupportTicketCommentController::class, 'store'])->name('support-tickets.comments.store');
     Route::patch('support-tickets/{support_ticket}/comments/{comment}', [SupportTicketCommentController::class, 'update'])->name('support-tickets.comments.update');
     Route::get('support-ticket-attachments/{attachment}/download', [SupportTicketAttachmentController::class, 'download'])->name('support-ticket-attachments.download');
+    Route::get('support-ticket-attachments/{attachment}/preview', [SupportTicketAttachmentController::class, 'preview'])->name('support-ticket-attachments.preview');
 
     Route::resource('daily-summaries', DailySummaryController::class)->only(['index', 'create', 'store', 'edit', 'update']);
 

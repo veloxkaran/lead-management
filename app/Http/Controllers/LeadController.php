@@ -29,7 +29,11 @@ class LeadController extends Controller
     {
         $this->authorize('viewAny', Lead::class);
 
-        $filters = $request->only(['search', 'status_id', 'assigned_user_id', 'source', 'archived']);
+        $filters = $request->only(['search', 'status_id', 'assigned_user_id', 'created_by', 'source', 'archived']);
+
+        if (! $request->has('created_by')) {
+            $filters['created_by'] = $request->user()->id;
+        }
 
         $leads = $this->leadService->list($filters);
 
@@ -37,7 +41,7 @@ class LeadController extends Controller
             'leads' => $leads,
             'statuses' => LeadStatus::ordered()->get(),
             'users' => User::orderBy('name')->get(),
-            'filters' => $request->only(['search', 'status_id', 'assigned_user_id', 'source', 'archived']),
+            'filters' => $filters,
         ]);
     }
 

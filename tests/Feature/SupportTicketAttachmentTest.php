@@ -72,6 +72,45 @@ class SupportTicketAttachmentTest extends TestCase
         $this->actingAs($user)->get(route('support-ticket-attachments.download', $attachment))->assertOk();
     }
 
+    public function test_a_document_can_be_previewed_inline_by_anyone_who_can_view_the_ticket(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $ticket = SupportTicket::factory()->create();
+        $attachment = $ticket->attachments()->create([
+            'disk_path' => 'support-tickets/'.$ticket->id.'/test.pdf',
+            'original_name' => 'test.pdf',
+            'mime_type' => 'application/pdf',
+        ]);
+        Storage::disk('public')->put($attachment->disk_path, 'fake contents');
+
+        $response = $this->actingAs($user)->get(route('support-ticket-attachments.preview', $attachment));
+
+        $response->assertOk();
+        $this->assertStringContainsString('inline', $response->headers->get('content-disposition'));
+    }
+
+    public function test_show_page_links_each_document_to_the_preview_route(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $ticket = SupportTicket::factory()->create();
+        $attachment = $ticket->attachments()->create([
+            'disk_path' => 'support-tickets/'.$ticket->id.'/test.pdf',
+            'original_name' => 'test.pdf',
+            'mime_type' => 'application/pdf',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('support-tickets.show', $ticket));
+
+        $response->assertOk();
+        // Matches the same escaping the @js() Blade directive applies, since a raw
+        // URL comparison would miss the JSON-escaped slashes in the rendered HTML.
+        $response->assertSee(\Illuminate\Support\Js::from(route('support-ticket-attachments.preview', $attachment))->toHtml(), false);
+    }
+
     public function test_documents_can_be_attached_when_raising_a_ticket_from_the_lead_page(): void
     {
         Storage::fake('public');

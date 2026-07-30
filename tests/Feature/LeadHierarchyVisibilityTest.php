@@ -18,7 +18,7 @@ class LeadHierarchyVisibilityTest extends TestCase
         $junior = User::factory()->create(['role' => UserRole::BusinessDevelopment, 'reporting_manager_id' => $senior->id]);
         $lead = Lead::factory()->create(['assigned_user_id' => $junior->id, 'created_by' => $junior->id]);
 
-        $response = $this->actingAs($senior)->get(route('leads.index'));
+        $response = $this->actingAs($senior)->get(route('leads.index', ['created_by' => '']));
 
         $response->assertOk();
         $response->assertViewHas('leads', fn ($leads) => $leads->total() === 1 && $leads->first()->is($lead));
@@ -51,7 +51,7 @@ class LeadHierarchyVisibilityTest extends TestCase
 
         $peer = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
 
-        $response = $this->actingAs($peer)->get(route('leads.index'));
+        $response = $this->actingAs($peer)->get(route('leads.index', ['created_by' => '']));
         $response->assertOk();
         $response->assertViewHas('leads', fn ($leads) => $leads->total() === 1);
 

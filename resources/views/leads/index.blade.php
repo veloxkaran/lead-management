@@ -26,7 +26,7 @@
                     <label class="form-label small">Search</label>
                     <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control form-control-sm" placeholder="Company, contact, email">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small">Status</label>
                     <select name="status_id" class="form-select form-select-sm">
                         <option value="">All statuses</option>
@@ -35,12 +35,21 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small">Assigned To</label>
                     <select name="assigned_user_id" class="form-select form-select-sm">
                         <option value="">Everyone</option>
                         @foreach ($users as $u)
                             <option value="{{ $u->id }}" @selected(($filters['assigned_user_id'] ?? null) == $u->id)>{{ $u->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small">Created By</label>
+                    <select name="created_by" class="form-select form-select-sm">
+                        <option value="">Everyone</option>
+                        @foreach ($users as $u)
+                            <option value="{{ $u->id }}" @selected(($filters['created_by'] ?? '') == $u->id)>{{ $u->id === auth()->id() ? 'Me' : $u->name }}</option>
                         @endforeach
                     </select>
                 </div>
