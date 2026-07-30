@@ -74,6 +74,15 @@ class RawDataController extends Controller
         return back()->with('success', 'Raw data entry marked as not valid.');
     }
 
+    public function markHold(RawData $rawData): RedirectResponse
+    {
+        $this->authorize('update', $rawData);
+
+        $this->rawDataService->markHold($rawData);
+
+        return back()->with('success', 'Raw data entry marked as Hold.');
+    }
+
     public function convert(ConvertRawDataRequest $request, RawData $rawData): RedirectResponse
     {
         $lead = $this->rawDataService->convertToLead($rawData, $request->validated(), $request->user());

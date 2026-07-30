@@ -6,10 +6,16 @@
     <x-page-header title="{{ $rawData->contact_person }}" icon="bi-inbox" :subtitle="$rawData->phone">
         <x-slot:actions>
             @can('update', $rawData)
-                @if ($rawData->isNew())
+                @if ($rawData->isActionable())
                     <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#convertToLeadModal">
                         <i class="bi bi-arrow-right-circle"></i> Convert to Lead
                     </button>
+                    @if ($rawData->status !== \App\Enums\RawDataStatus::Hold)
+                        <form method="POST" action="{{ route('raw-data.mark-hold', $rawData) }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-warning btn-sm"><i class="bi bi-pause-circle"></i> Mark as Hold</button>
+                        </form>
+                    @endif
                     <form method="POST" action="{{ route('raw-data.mark-not-valid', $rawData) }}" class="d-inline" data-confirm-delete data-confirm-title="Mark as not valid?" data-confirm-text="This cannot be undone." data-confirm-button-text="Mark Not Valid">
                         @csrf
                         <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bi bi-x-circle"></i> Mark Not Valid</button>
@@ -94,7 +100,7 @@
     </div>
 
     @can('update', $rawData)
-        @if ($rawData->isNew())
+        @if ($rawData->isActionable())
             <div class="card border-0 shadow-sm mt-3">
                 <div class="card-body">
                     <h6 class="fw-semibold mb-2"><i class="bi bi-person-check"></i> Assign</h6>
@@ -144,7 +150,7 @@
     </div>
 
     @can('update', $rawData)
-        @if ($rawData->isNew())
+        @if ($rawData->isActionable())
             <div class="modal fade" id="convertToLeadModal" tabindex="-1">
                 <div class="modal-dialog">
                     <form method="POST" action="{{ route('raw-data.convert', $rawData) }}" class="modal-content">

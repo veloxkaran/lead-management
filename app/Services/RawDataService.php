@@ -35,9 +35,18 @@ class RawDataService
 
     public function markNotValid(RawData $rawData): RawData
     {
-        $this->guardIsNew($rawData);
+        $this->guardActionable($rawData);
 
         $rawData->update(['status' => RawDataStatus::NotValid]);
+
+        return $rawData;
+    }
+
+    public function markHold(RawData $rawData): RawData
+    {
+        $this->guardActionable($rawData);
+
+        $rawData->update(['status' => RawDataStatus::Hold]);
 
         return $rawData;
     }
@@ -52,7 +61,7 @@ class RawDataService
      */
     public function convertToLead(RawData $rawData, array $leadAttributes, User $actor): Lead
     {
-        $this->guardIsNew($rawData);
+        $this->guardActionable($rawData);
 
         return DB::transaction(function () use ($rawData, $leadAttributes, $actor) {
             $lead = $this->leadService->create($leadAttributes, $actor);
@@ -154,7 +163,7 @@ class RawDataService
      */
     public function assign(RawData $rawData, ?int $assignedTo, User $actor): RawData
     {
-        $this->guardIsNew($rawData);
+        $this->guardActionable($rawData);
 
         $previousAssignedTo = $rawData->assigned_to;
 
@@ -200,9 +209,9 @@ class RawDataService
         $this->rawData->delete($rawData);
     }
 
-    private function guardIsNew(RawData $rawData): void
+    private function guardActionable(RawData $rawData): void
     {
-        if (! $rawData->isNew()) {
+        if (! $rawData->isActionable()) {
             throw ValidationException::withMessages([
                 'status' => "This entry is already {$rawData->status->label()} and can no longer be changed.",
             ]);

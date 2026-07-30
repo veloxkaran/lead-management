@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Enums\RawDataStatus;
 use App\Models\RawData;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -27,6 +28,18 @@ class RawDataRepository extends BaseRepository
                 ->orWhere('phone', 'like', $term));
         }
 
-        return $query->latest()->paginate($perPage)->withQueryString();
+        return $query
+            ->orderByRaw(
+                'CASE status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 ELSE 5 END',
+                [
+                    RawDataStatus::New->value,
+                    RawDataStatus::Hold->value,
+                    RawDataStatus::NotValid->value,
+                    RawDataStatus::ConvertedToLead->value,
+                ]
+            )
+            ->latest()
+            ->paginate($perPage)
+            ->withQueryString();
     }
 }

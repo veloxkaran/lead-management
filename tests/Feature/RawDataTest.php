@@ -188,6 +188,51 @@ class RawDataTest extends TestCase
         $this->assertSame(RawDataStatus::NotValid, $entry->fresh()->status);
     }
 
+    public function test_entry_can_be_marked_hold(): void
+    {
+        $user = User::factory()->create();
+        $entry = RawData::factory()->create();
+
+        $this->actingAs($user)->post(route('raw-data.mark-hold', $entry))->assertRedirect();
+
+        $this->assertSame(RawDataStatus::Hold, $entry->fresh()->status);
+    }
+
+    public function test_a_finalized_entry_cannot_be_marked_hold(): void
+    {
+        $user = User::factory()->create();
+        $entry = RawData::factory()->create(['status' => RawDataStatus::NotValid]);
+
+        $this->actingAs($user)->post(route('raw-data.mark-hold', $entry));
+
+        $this->assertSame(RawDataStatus::NotValid, $entry->fresh()->status);
+    }
+
+    public function test_an_entry_on_hold_can_still_be_marked_not_valid(): void
+    {
+        $user = User::factory()->create();
+        $entry = RawData::factory()->create(['status' => RawDataStatus::Hold]);
+
+        $this->actingAs($user)->post(route('raw-data.mark-not-valid', $entry))->assertRedirect();
+
+        $this->assertSame(RawDataStatus::NotValid, $entry->fresh()->status);
+    }
+
+    public function test_an_entry_on_hold_can_still_be_converted_to_a_lead(): void
+    {
+        $user = User::factory()->create();
+        LeadStatus::factory()->create(['is_default' => true]);
+        $entry = RawData::factory()->create(['contact_person' => 'Jane Doe', 'phone' => '9800000000', 'status' => RawDataStatus::Hold]);
+
+        $this->actingAs($user)->post(route('raw-data.convert', $entry), [
+            'company_name' => 'Acme Corp',
+            'contact_person' => 'Jane Doe',
+            'phone' => '9800000000',
+        ])->assertRedirect();
+
+        $this->assertSame(RawDataStatus::ConvertedToLead, $entry->fresh()->status);
+    }
+
     public function test_entry_can_be_converted_to_a_lead(): void
     {
         $user = User::factory()->create();
