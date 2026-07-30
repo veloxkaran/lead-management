@@ -51,13 +51,13 @@ class RawDataBulkUploadTest extends TestCase
         $this->assertSame($user->id, $entry->created_by);
     }
 
-    public function test_rows_missing_required_fields_are_skipped_and_reported(): void
+    public function test_rows_with_invalid_data_are_skipped_and_reported(): void
     {
         $user = User::factory()->create();
 
-        $csv = "Contact Person,Phone\n"
-            ."Good Contact,9800000001\n"
-            ."Missing Phone Contact,\n";
+        $csv = "Contact Person,Phone,Email\n"
+            ."Good Contact,9800000001,good@example.test\n"
+            ."Bad Email Contact,9800000002,not-an-email\n";
 
         $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
 
@@ -81,6 +81,22 @@ class RawDataBulkUploadTest extends TestCase
 
         $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 0);
         $this->assertDatabaseHas('raw_data', ['phone' => '9800000001']);
+        $this->assertSame(1, RawData::count());
+    }
+
+    public function test_a_row_with_a_blank_phone_is_still_imported(): void
+    {
+        $user = User::factory()->create();
+
+        $csv = "Contact Person,Phone\n"
+            ."Jane Doe,\n";
+
+        $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
+
+        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+
+        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 0);
+        $this->assertDatabaseHas('raw_data', ['contact_person' => 'Jane Doe']);
         $this->assertSame(1, RawData::count());
     }
 
@@ -203,13 +219,13 @@ class RawDataBulkUploadTest extends TestCase
         $this->assertSame(1, RawData::count());
     }
 
-    public function test_pasted_rows_missing_required_fields_are_skipped_and_reported(): void
+    public function test_pasted_rows_with_invalid_data_are_skipped_and_reported(): void
     {
         $user = User::factory()->create();
 
         $rows = json_encode([
-            ['contact_person' => 'Good Contact', 'phone' => '9800000001', 'email' => '', 'source' => ''],
-            ['contact_person' => 'Missing Phone Contact', 'phone' => '', 'email' => '', 'source' => ''],
+            ['contact_person' => 'Good Contact', 'phone' => '9800000001', 'email' => 'good@example.test', 'source' => ''],
+            ['contact_person' => 'Bad Email Contact', 'phone' => '9800000002', 'email' => 'not-an-email', 'source' => ''],
         ]);
 
         $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store-paste'), ['rows' => $rows]);
@@ -231,6 +247,21 @@ class RawDataBulkUploadTest extends TestCase
 
         $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 0);
         $this->assertDatabaseHas('raw_data', ['phone' => '9800000001']);
+        $this->assertSame(1, RawData::count());
+    }
+
+    public function test_a_pasted_row_with_a_blank_phone_is_still_imported(): void
+    {
+        $user = User::factory()->create();
+
+        $rows = json_encode([
+            ['contact_person' => 'Jane Doe', 'phone' => '', 'email' => '', 'source' => ''],
+        ]);
+
+        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store-paste'), ['rows' => $rows]);
+
+        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 0);
+        $this->assertDatabaseHas('raw_data', ['contact_person' => 'Jane Doe']);
         $this->assertSame(1, RawData::count());
     }
 

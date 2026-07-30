@@ -43,7 +43,7 @@ class RawDataImport implements ToCollection, WithHeadingRow, WithValidation, Ski
             'contact_person' => ['nullable', 'max:255'],
             'company_name' => ['nullable', 'max:255'],
             'number_of_employees' => ['nullable', 'integer', 'min:0'],
-            'phone' => ['required', 'max:30'],
+            'phone' => ['nullable', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
             'source' => ['nullable', 'max:20'],
             'notes' => ['nullable', 'max:2000'],

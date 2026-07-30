@@ -58,9 +58,7 @@ window.rawDataPasteGrid = function (initialRowCount) {
 
             const errors = {};
 
-            if (!row.phone || !row.phone.trim()) {
-                errors.phone = 'Required';
-            } else if (this.duplicatePhones().has(row.phone.trim().toLowerCase())) {
+            if (row.phone && row.phone.trim() && this.duplicatePhones().has(row.phone.trim().toLowerCase())) {
                 errors.phone = 'Duplicate phone in this sheet';
             }
 

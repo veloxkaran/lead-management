@@ -25,8 +25,8 @@
                     <p class="small text-muted mb-3">
                         Click a cell below, then paste (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>V</kbd>) a block of cells
                         copied directly from Excel or Google Sheets &mdash; rows and columns fill in automatically
-                        starting from that cell. Required: <strong>Phone</strong>.
-                        Optional: Contact Person, Company Name, Number of Employees, Email, Source, Notes. A row matching an existing entry (by phone or
+                        starting from that cell. All columns are optional: Contact Person, Phone, Company Name,
+                        Number of Employees, Email, Source, Notes. A row matching an existing entry (by phone or
                         contact person) fills in that entry's missing details instead of creating a duplicate.
                     </p>
 
@@ -135,8 +135,8 @@
                         <div class="card-body">
                             <h6 class="fw-semibold mb-2"><i class="bi bi-2-circle"></i> Upload your file</h6>
                             <p class="small text-muted mb-3">
-                                Required columns: <strong>Phone</strong>.
-                                Optional: Contact Person, Company Name, Number of Employees, Email, Source, Notes. Accepted formats: .xlsx, .xls, .csv.
+                                All columns are optional: Contact Person, Phone, Company Name, Number of Employees,
+                                Email, Source, Notes. Accepted formats: .xlsx, .xls, .csv.
                                 A row matching an existing entry (by phone or contact person) won't create a
                                 duplicate — it fills in that entry's missing Email/Source instead, without
                                 overwriting anything already set.
