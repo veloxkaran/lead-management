@@ -29,7 +29,7 @@ class RequirementController extends Controller
     {
         $this->authorize('viewAny', Requirement::class);
 
-        $filters = $request->only(['status', 'priority']);
+        $filters = $request->only(['search', 'status', 'priority']);
 
         $requirements = $this->requirementService->list($filters, 20);
 
@@ -42,15 +42,15 @@ class RequirementController extends Controller
     }
 
     /**
-     * Exports whatever the index's current status/priority filters match —
-     * every matching row (not just the current page), so the PDF reflects
-     * the exact same filtered set the user is looking at.
+     * Exports whatever the index's current search/status/priority filters
+     * match — every matching row (not just the current page), so the PDF
+     * reflects the exact same filtered set the user is looking at.
      */
     public function exportPdf(Request $request): Response
     {
         $this->authorize('viewAny', Requirement::class);
 
-        $filters = $request->only(['status', 'priority']);
+        $filters = $request->only(['search', 'status', 'priority']);
 
         $requirements = $this->requirementService->listAllForExport($filters);
 

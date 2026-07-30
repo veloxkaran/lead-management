@@ -16,7 +16,11 @@
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
             <form method="GET" class="row g-2 align-items-end">
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <label class="form-label small">Company</label>
+                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search by company" value="{{ $filters['search'] ?? '' }}">
+                </div>
+                <div class="col-md-3">
                     <label class="form-label small">Status</label>
                     <select name="status" class="form-select form-select-sm" data-select2>
                         <option value="">All statuses</option>
@@ -25,7 +29,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label small">Priority</label>
                     <select name="priority" class="form-select form-select-sm" data-select2>
                         <option value="">All priorities</option>
@@ -34,7 +38,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4 d-flex gap-2">
+                <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-sm btn-primary flex-fill"><i class="bi bi-funnel"></i> Filter</button>
                     <a href="{{ route('requirements.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
                     <a href="{{ route('requirements.export-pdf', $filters) }}" class="btn btn-sm btn-outline-secondary text-nowrap"><i class="bi bi-file-earmark-pdf"></i> PDF</a>

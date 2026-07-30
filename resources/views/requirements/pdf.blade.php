@@ -18,7 +18,8 @@
     <h1>Requirements</h1>
     <p>Generated {{ now()->format('M d, Y g:i A') }}</p>
     <p class="filters">
-        Status: {{ collect($statuses)->first(fn ($s) => $s->value === ($filters['status'] ?? null))?->label() ?? 'All' }}
+        Company: {{ $filters['search'] ?? 'All' }}
+        &middot; Status: {{ collect($statuses)->first(fn ($s) => $s->value === ($filters['status'] ?? null))?->label() ?? 'All' }}
         &middot; Priority: {{ collect($priorities)->first(fn ($p) => $p->value === ($filters['priority'] ?? null))?->label() ?? 'All' }}
         &middot; {{ $requirements->count() }} {{ Str::plural('result', $requirements->count()) }}
     </p>
