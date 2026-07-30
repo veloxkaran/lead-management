@@ -34,7 +34,7 @@ class RequirementRepository extends BaseRepository
 
     private function filteredQuery(array $filters): Builder
     {
-        $query = $this->query()->with(['lead', 'assignee', 'adopter', 'creator'])->withCount('comments');
+        $query = $this->query()->with(['lead', 'assignee', 'creator'])->withCount('comments');
 
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);

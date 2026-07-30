@@ -4,7 +4,9 @@ namespace App\Http\Requests\Requirement;
 
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
+use App\Models\Requirement;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
 class UpdateRequirementRequest extends FormRequest
@@ -23,7 +25,7 @@ class UpdateRequirementRequest extends FormRequest
             'due_date' => ['nullable', 'date'],
             'client_acknowledged_at' => ['nullable', 'date'],
             'assigned_to' => ['nullable', 'exists:users,id'],
-            'adopted_by' => ['nullable', 'exists:users,id'],
+            'sprint' => ['nullable', Rule::in(Requirement::sprintOptions())],
         ];
     }
 }

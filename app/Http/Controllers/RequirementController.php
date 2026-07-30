@@ -69,6 +69,7 @@ class RequirementController extends Controller
         return view('requirements.create', [
             'leads' => Lead::orderBy('company_name')->get(),
             'priorities' => RequirementPriority::cases(),
+            'sprints' => Requirement::sprintOptions(),
             'users' => User::orderBy('name')->get(),
         ]);
     }
@@ -100,7 +101,7 @@ class RequirementController extends Controller
     {
         $this->authorize('view', $requirement);
 
-        $requirement->load('lead', 'creator', 'assignee', 'adopter', 'comments.author');
+        $requirement->load('lead', 'creator', 'assignee', 'comments.author');
 
         return view('requirements.show', [
             'requirement' => $requirement,
@@ -118,6 +119,7 @@ class RequirementController extends Controller
             'requirement' => $requirement,
             'priorities' => RequirementPriority::cases(),
             'statuses' => RequirementStatus::cases(),
+            'sprints' => Requirement::sprintOptions(),
             'users' => User::orderBy('name')->get(),
             'changeLog' => $this->changeLogFor($requirement),
         ]);

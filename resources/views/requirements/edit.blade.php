@@ -69,21 +69,14 @@
                         @error('assigned_to')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Adopted By</label>
-                        <select name="adopted_by" class="form-select" data-select2>
-                            <option value="">Not yet adopted</option>
-                            @foreach ($users as $u)
-                                <option value="{{ $u->id }}" @selected(old('adopted_by', $requirement->adopted_by) == $u->id)>{{ $u->name }}</option>
+                        <label class="form-label small fw-semibold">Sprint</label>
+                        <select name="sprint" class="form-select" data-select2>
+                            <option value="">Unscheduled</option>
+                            @foreach ($sprints as $sprint)
+                                <option value="{{ $sprint }}" @selected(old('sprint', $requirement->sprint) === $sprint)>{{ $sprint }}</option>
                             @endforeach
                         </select>
-                        @error('adopted_by')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                        <div class="form-text">
-                            Adopted At is set automatically
-                            @if ($requirement->adopted_at)
-                                (currently {{ $requirement->adopted_at->format('M d, Y g:i A') }})
-                            @endif
-                            when this changes.
-                        </div>
+                        @error('sprint')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                 </div>
                 <div class="mt-3">
