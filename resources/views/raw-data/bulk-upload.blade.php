@@ -25,8 +25,8 @@
                     <p class="small text-muted mb-3">
                         Click a cell below, then paste (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>V</kbd>) a block of cells
                         copied directly from Excel or Google Sheets &mdash; rows and columns fill in automatically
-                        starting from that cell. Required: <strong>Contact Person</strong>, <strong>Phone</strong>.
-                        Optional: Company Name, Number of Employees, Email, Source, Notes. A row matching an existing entry (by phone or
+                        starting from that cell. Required: <strong>Phone</strong>.
+                        Optional: Contact Person, Company Name, Number of Employees, Email, Source, Notes. A row matching an existing entry (by phone or
                         contact person) fills in that entry's missing details instead of creating a duplicate.
                     </p>
 
@@ -65,9 +65,7 @@
                                             <td class="text-muted small text-center" x-text="index + 1"></td>
                                             <td>
                                                 <input type="text" class="form-control form-control-sm" x-model="row.contact_person"
-                                                       @paste="handlePaste($event, index, 0)"
-                                                       :class="rowErrors(row).contact_person ? 'is-invalid' : ''">
-                                                <div class="invalid-feedback" x-show="rowErrors(row).contact_person" x-text="rowErrors(row).contact_person"></div>
+                                                       @paste="handlePaste($event, index, 0)">
                                             </td>
                                             <td>
                                                 <input type="text" class="form-control form-control-sm" x-model="row.company_name"
@@ -137,8 +135,8 @@
                         <div class="card-body">
                             <h6 class="fw-semibold mb-2"><i class="bi bi-2-circle"></i> Upload your file</h6>
                             <p class="small text-muted mb-3">
-                                Required columns: <strong>Contact Person</strong>, <strong>Phone</strong>.
-                                Optional: Company Name, Number of Employees, Email, Source, Notes. Accepted formats: .xlsx, .xls, .csv.
+                                Required columns: <strong>Phone</strong>.
+                                Optional: Contact Person, Company Name, Number of Employees, Email, Source, Notes. Accepted formats: .xlsx, .xls, .csv.
                                 A row matching an existing entry (by phone or contact person) won't create a
                                 duplicate — it fills in that entry's missing Email/Source instead, without
                                 overwriting anything already set.

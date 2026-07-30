@@ -58,10 +58,6 @@ window.rawDataPasteGrid = function (initialRowCount) {
 
             const errors = {};
 
-            if (!row.contact_person || !row.contact_person.trim()) {
-                errors.contact_person = 'Required';
-            }
-
             if (!row.phone || !row.phone.trim()) {
                 errors.phone = 'Required';
             } else if (this.duplicatePhones().has(row.phone.trim().toLowerCase())) {

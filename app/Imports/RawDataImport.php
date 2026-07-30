@@ -40,7 +40,7 @@ class RawDataImport implements ToCollection, WithHeadingRow, WithValidation, Ski
     public static function rowRules(): array
     {
         return [
-            'contact_person' => ['required', 'max:255'],
+            'contact_person' => ['nullable', 'max:255'],
             'company_name' => ['nullable', 'max:255'],
             'number_of_employees' => ['nullable', 'integer', 'min:0'],
             'phone' => ['required', 'max:30'],
