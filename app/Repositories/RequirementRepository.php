@@ -2,7 +2,7 @@
 
 namespace App\Repositories;
 
-use App\Enums\RequirementStatus;
+use App\Enums\RequirementPriority;
 use App\Models\Requirement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -50,12 +50,12 @@ class RequirementRepository extends BaseRepository
 
         return $query
             ->orderByRaw(
-                'CASE status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 ELSE 5 END',
+                'CASE priority WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 ELSE 5 END',
                 [
-                    RequirementStatus::Pending->value,
-                    RequirementStatus::InProgress->value,
-                    RequirementStatus::OnHold->value,
-                    RequirementStatus::Completed->value,
+                    RequirementPriority::Urgent->value,
+                    RequirementPriority::High->value,
+                    RequirementPriority::Medium->value,
+                    RequirementPriority::Low->value,
                 ]
             )
             ->oldest();
