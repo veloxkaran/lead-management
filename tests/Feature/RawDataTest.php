@@ -31,6 +31,38 @@ class RawDataTest extends TestCase
         ]);
     }
 
+    public function test_contact_person_and_phone_are_optional_when_creating_manually(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('raw-data.store'), [
+            'company_name' => 'Acme Corp',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('raw_data', [
+            'company_name' => 'Acme Corp',
+            'contact_person' => null,
+            'phone' => null,
+            'created_by' => $user->id,
+        ]);
+    }
+
+    public function test_number_of_employees_is_optional_and_saved_when_provided(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('raw-data.store'), [
+            'contact_person' => 'Jane Doe',
+            'phone' => '9800000000',
+            'number_of_employees' => 250,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('raw_data', [
+            'contact_person' => 'Jane Doe',
+            'number_of_employees' => 250,
+        ]);
+    }
+
     public function test_email_and_source_are_optional_and_saved_when_provided(): void
     {
         $user = User::factory()->create();
@@ -181,6 +213,25 @@ class RawDataTest extends TestCase
         $entry->refresh();
         $this->assertSame(RawDataStatus::ConvertedToLead, $entry->status);
         $this->assertSame($lead->id, $entry->converted_lead_id);
+    }
+
+    public function test_number_of_employees_carries_over_when_converting_to_a_lead(): void
+    {
+        $user = User::factory()->create();
+        LeadStatus::factory()->create(['is_default' => true]);
+        $entry = RawData::factory()->create(['contact_person' => 'Jane Doe', 'phone' => '9800000000', 'number_of_employees' => 120]);
+
+        $this->actingAs($user)->post(route('raw-data.convert', $entry), [
+            'company_name' => 'Acme Corp',
+            'contact_person' => 'Jane Doe',
+            'phone' => '9800000000',
+            'number_of_employees' => 120,
+        ]);
+
+        $lead = Lead::firstWhere('company_name', 'Acme Corp');
+
+        $this->assertNotNull($lead);
+        $this->assertSame(120, $lead->number_of_employees);
     }
 
     public function test_an_already_converted_entry_cannot_be_converted_again(): void

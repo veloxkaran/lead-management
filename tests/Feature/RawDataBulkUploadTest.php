@@ -138,6 +138,22 @@ class RawDataBulkUploadTest extends TestCase
         $this->assertSame('Met at trade show', $existing->notes);
     }
 
+    public function test_number_of_employees_column_is_imported_and_fills_in_missing_details(): void
+    {
+        $user = User::factory()->create();
+        $existing = RawData::factory()->create(['phone' => '9800000000', 'number_of_employees' => null]);
+
+        $csv = "Contact Person,Phone,Number of Employees\n"
+            .'Jane Doe,9800000000,120'."\n";
+
+        $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
+
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+
+        $existing->refresh();
+        $this->assertSame(120, $existing->number_of_employees);
+    }
+
     public function test_pasted_valid_rows_are_imported(): void
     {
         $user = User::factory()->create();

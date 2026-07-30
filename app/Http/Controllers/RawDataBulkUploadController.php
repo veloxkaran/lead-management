@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RawDataBulkUploadController extends Controller
 {
-    private const COLUMNS = ['Contact Person', 'Company Name', 'Phone', 'Email', 'Source', 'Notes'];
+    private const COLUMNS = ['Contact Person', 'Company Name', 'Number of Employees', 'Phone', 'Email', 'Source', 'Notes'];
 
     // Safety cap on the paste-grid endpoint: unlike the file upload (bounded by what
     // Excel can hold in a sheet), this accepts a raw JSON array in the request body.
@@ -39,7 +39,7 @@ class RawDataBulkUploadController extends Controller
 
         return Excel::download(
             new GenericTableExport(self::COLUMNS, [
-                ['Jane Doe', 'Acme Corp', '9800000000', 'jane@example.test', 'Referral', 'Met at trade show'],
+                ['Jane Doe', 'Acme Corp', '50', '9800000000', 'jane@example.test', 'Referral', 'Met at trade show'],
             ]),
             'raw-data-bulk-upload-template.xlsx'
         );
@@ -100,6 +100,7 @@ class RawDataBulkUploadController extends Controller
             $attributes = [
                 'contact_person' => trim((string) ($row['contact_person'] ?? '')),
                 'company_name' => trim((string) ($row['company_name'] ?? '')) ?: null,
+                'number_of_employees' => trim((string) ($row['number_of_employees'] ?? '')) ?: null,
                 'phone' => trim((string) ($row['phone'] ?? '')),
                 'email' => trim((string) ($row['email'] ?? '')) ?: null,
                 'source' => trim((string) ($row['source'] ?? '')) ?: null,
@@ -107,8 +108,8 @@ class RawDataBulkUploadController extends Controller
             ];
 
             if ($attributes['contact_person'] === '' && $attributes['phone'] === ''
-                && blank($attributes['company_name']) && blank($attributes['email'])
-                && blank($attributes['source']) && blank($attributes['notes'])) {
+                && blank($attributes['company_name']) && blank($attributes['number_of_employees'])
+                && blank($attributes['email']) && blank($attributes['source']) && blank($attributes['notes'])) {
                 continue;
             }
 

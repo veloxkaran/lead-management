@@ -27,6 +27,7 @@ class ConvertRawDataRequest extends FormRequest
         return [
             'company_name' => ['required', 'string', 'max:255', new NotDuplicateLeadName],
             'contact_person' => ['required', 'string', 'max:255'],
+            'number_of_employees' => ['nullable', 'integer', 'min:0'],
             'phone' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
             'source' => ['nullable', 'string', 'max:20'],

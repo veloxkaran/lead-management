@@ -23,7 +23,7 @@ class RawData extends Model
     public const ASSIGNMENT_RESPONSE_HOURS = 48;
 
     protected $fillable = [
-        'company_id', 'contact_person', 'company_name', 'phone', 'email', 'source', 'notes', 'status',
+        'company_id', 'contact_person', 'company_name', 'number_of_employees', 'phone', 'email', 'source', 'notes', 'status',
         'converted_lead_id', 'created_by', 'assigned_to', 'assigned_by', 'assigned_at',
     ];
 
@@ -32,6 +32,7 @@ class RawData extends Model
         return [
             'status' => RawDataStatus::class,
             'assigned_at' => 'datetime',
+            'number_of_employees' => 'integer',
         ];
     }
 

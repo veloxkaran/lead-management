@@ -16,9 +16,10 @@ class StoreRawDataRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'contact_person' => ['required', 'string', 'max:255', new NotDuplicateRawContact('contact_person')],
+            'contact_person' => ['nullable', 'string', 'max:255', new NotDuplicateRawContact('contact_person')],
             'company_name' => ['nullable', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:30', new NotDuplicateRawContact('phone')],
+            'number_of_employees' => ['nullable', 'integer', 'min:0'],
+            'phone' => ['nullable', 'string', 'max:30', new NotDuplicateRawContact('phone')],
             'email' => ['nullable', 'email', 'max:255'],
             'source' => ['nullable', 'string', 'max:20'],
             'notes' => ['nullable', 'string', 'max:2000'],

@@ -34,6 +34,10 @@
                     <div class="small fw-semibold">{{ $rawData->company_name ?? '—' }}</div>
                 </div>
                 <div class="col-md-3">
+                    <div class="small text-muted">Number of Employees</div>
+                    <div class="small fw-semibold">{{ $rawData->number_of_employees ?? '—' }}</div>
+                </div>
+                <div class="col-md-3">
                     <div class="small text-muted">Phone</div>
                     <div class="small fw-semibold">{{ $rawData->phone }}</div>
                 </div>
@@ -155,6 +159,11 @@
                                 <label class="form-label small fw-semibold">Company Name</label>
                                 <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $rawData->company_name) }}" required>
                                 @error('company_name')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Number of Employees (optional)</label>
+                                <input type="number" min="0" name="number_of_employees" class="form-control" value="{{ old('number_of_employees', $rawData->number_of_employees) }}">
+                                @error('number_of_employees')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Contact Person</label>

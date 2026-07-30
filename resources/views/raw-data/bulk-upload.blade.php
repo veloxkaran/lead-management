@@ -26,7 +26,7 @@
                         Click a cell below, then paste (<kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>V</kbd>) a block of cells
                         copied directly from Excel or Google Sheets &mdash; rows and columns fill in automatically
                         starting from that cell. Required: <strong>Contact Person</strong>, <strong>Phone</strong>.
-                        Optional: Company Name, Email, Source, Notes. A row matching an existing entry (by phone or
+                        Optional: Company Name, Number of Employees, Email, Source, Notes. A row matching an existing entry (by phone or
                         contact person) fills in that entry's missing details instead of creating a duplicate.
                     </p>
 
@@ -51,6 +51,7 @@
                                         <th style="width: 2.5rem;">#</th>
                                         <th>Contact Person</th>
                                         <th>Company Name</th>
+                                        <th>Employees</th>
                                         <th>Phone</th>
                                         <th>Email</th>
                                         <th>Source</th>
@@ -73,24 +74,30 @@
                                                        @paste="handlePaste($event, index, 1)">
                                             </td>
                                             <td>
-                                                <input type="text" class="form-control form-control-sm" x-model="row.phone"
+                                                <input type="text" class="form-control form-control-sm" x-model="row.number_of_employees"
                                                        @paste="handlePaste($event, index, 2)"
+                                                       :class="rowErrors(row).number_of_employees ? 'is-invalid' : ''">
+                                                <div class="invalid-feedback" x-show="rowErrors(row).number_of_employees" x-text="rowErrors(row).number_of_employees"></div>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" x-model="row.phone"
+                                                       @paste="handlePaste($event, index, 3)"
                                                        :class="rowErrors(row).phone ? 'is-invalid' : ''">
                                                 <div class="invalid-feedback" x-show="rowErrors(row).phone" x-text="rowErrors(row).phone"></div>
                                             </td>
                                             <td>
                                                 <input type="text" class="form-control form-control-sm" x-model="row.email"
-                                                       @paste="handlePaste($event, index, 3)"
+                                                       @paste="handlePaste($event, index, 4)"
                                                        :class="rowErrors(row).email ? 'is-invalid' : ''">
                                                 <div class="invalid-feedback" x-show="rowErrors(row).email" x-text="rowErrors(row).email"></div>
                                             </td>
                                             <td>
                                                 <input type="text" class="form-control form-control-sm" x-model="row.source"
-                                                       @paste="handlePaste($event, index, 4)">
+                                                       @paste="handlePaste($event, index, 5)">
                                             </td>
                                             <td>
                                                 <input type="text" class="form-control form-control-sm" x-model="row.notes"
-                                                       @paste="handlePaste($event, index, 5)">
+                                                       @paste="handlePaste($event, index, 6)">
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-link text-danger p-0" @click="removeRow(index)" title="Remove row">
@@ -131,7 +138,7 @@
                             <h6 class="fw-semibold mb-2"><i class="bi bi-2-circle"></i> Upload your file</h6>
                             <p class="small text-muted mb-3">
                                 Required columns: <strong>Contact Person</strong>, <strong>Phone</strong>.
-                                Optional: Company Name, Email, Source, Notes. Accepted formats: .xlsx, .xls, .csv.
+                                Optional: Company Name, Number of Employees, Email, Source, Notes. Accepted formats: .xlsx, .xls, .csv.
                                 A row matching an existing entry (by phone or contact person) won't create a
                                 duplicate — it fills in that entry's missing Email/Source instead, without
                                 overwriting anything already set.

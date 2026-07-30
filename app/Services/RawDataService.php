@@ -88,7 +88,7 @@ class RawDataService
     {
         $updates = [];
 
-        foreach (['company_name', 'email', 'source', 'notes'] as $field) {
+        foreach (['company_name', 'number_of_employees', 'email', 'source', 'notes'] as $field) {
             if (blank($rawData->{$field}) && filled($attributes[$field] ?? null)) {
                 $updates[$field] = $attributes[$field];
             }
@@ -117,6 +117,7 @@ class RawDataService
         $phone = trim((string) $attributes['phone']);
         $rest = [
             'company_name' => $attributes['company_name'] ?? null,
+            'number_of_employees' => $attributes['number_of_employees'] ?? null,
             'email' => $attributes['email'] ?? null,
             'source' => $attributes['source'] ?? null,
             'notes' => $attributes['notes'] ?? null,

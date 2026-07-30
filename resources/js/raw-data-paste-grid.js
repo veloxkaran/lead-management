@@ -4,11 +4,11 @@
 // a grid, see per-row validation live, then submit as JSON — the server
 // (RawDataBulkUploadController::storePasted()) re-validates with the same
 // rules regardless, this is purely for in-browser visualization before submit.
-const RAW_DATA_PASTE_COLUMNS = ['contact_person', 'company_name', 'phone', 'email', 'source', 'notes'];
+const RAW_DATA_PASTE_COLUMNS = ['contact_person', 'company_name', 'number_of_employees', 'phone', 'email', 'source', 'notes'];
 const RAW_DATA_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function emptyRawDataRow() {
-    return { contact_person: '', company_name: '', phone: '', email: '', source: '', notes: '' };
+    return { contact_person: '', company_name: '', number_of_employees: '', phone: '', email: '', source: '', notes: '' };
 }
 
 window.rawDataPasteGrid = function (initialRowCount) {
@@ -70,6 +70,10 @@ window.rawDataPasteGrid = function (initialRowCount) {
 
             if (row.email && row.email.trim() && !RAW_DATA_EMAIL_RE.test(row.email.trim())) {
                 errors.email = 'Invalid email';
+            }
+
+            if (row.number_of_employees && row.number_of_employees.trim() && !/^\d+$/.test(row.number_of_employees.trim())) {
+                errors.number_of_employees = 'Must be a whole number';
             }
 
             return errors;

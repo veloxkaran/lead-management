@@ -11,8 +11,8 @@
                 @csrf
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Contact Person</label>
-                        <input type="text" name="contact_person" class="form-control" value="{{ old('contact_person') }}" required>
+                        <label class="form-label small fw-semibold">Contact Person (optional)</label>
+                        <input type="text" name="contact_person" class="form-control" value="{{ old('contact_person') }}">
                         @error('contact_person')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
@@ -21,8 +21,13 @@
                         @error('company_name')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Phone</label>
-                        <input type="text" name="phone" class="form-control" value="{{ old('phone') }}" required>
+                        <label class="form-label small fw-semibold">Number of Employees (optional)</label>
+                        <input type="number" min="0" name="number_of_employees" class="form-control" value="{{ old('number_of_employees') }}">
+                        @error('number_of_employees')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Phone (optional)</label>
+                        <input type="text" name="phone" class="form-control" value="{{ old('phone') }}">
                         @error('phone')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
