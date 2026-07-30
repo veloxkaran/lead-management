@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Enums\RequirementStatus;
 use App\Models\Requirement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -33,7 +34,7 @@ class RequirementRepository extends BaseRepository
 
     private function filteredQuery(array $filters): Builder
     {
-        $query = $this->query()->with(['lead', 'assignee', 'adopter', 'creator'])->withCount('comments')->latest();
+        $query = $this->query()->with(['lead', 'assignee', 'adopter', 'creator'])->withCount('comments');
 
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
@@ -47,6 +48,16 @@ class RequirementRepository extends BaseRepository
             $query->whereIn('lead_id', $filters['lead_ids']);
         }
 
-        return $query;
+        return $query
+            ->orderByRaw(
+                'CASE status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 ELSE 5 END',
+                [
+                    RequirementStatus::Pending->value,
+                    RequirementStatus::InProgress->value,
+                    RequirementStatus::OnHold->value,
+                    RequirementStatus::Completed->value,
+                ]
+            )
+            ->oldest();
     }
 }
