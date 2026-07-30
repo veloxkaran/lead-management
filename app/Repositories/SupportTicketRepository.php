@@ -18,6 +18,11 @@ class SupportTicketRepository extends BaseRepository
     {
         $query = $this->query()->with(['lead', 'raiser', 'assignee']);
 
+        if (! empty($filters['search'])) {
+            $term = '%'.$filters['search'].'%';
+            $query->whereHas('lead', fn ($q) => $q->where('company_name', 'like', $term));
+        }
+
         if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
