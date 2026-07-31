@@ -27,6 +27,10 @@
                     <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control form-control-sm" placeholder="Company, contact, email">
                 </div>
                 <div class="col-md-2">
+                    <label class="form-label small">Company Name</label>
+                    <input type="text" name="company_name" value="{{ $filters['company_name'] ?? '' }}" class="form-control form-control-sm" placeholder="Company name">
+                </div>
+                <div class="col-md-2">
                     <label class="form-label small">Status</label>
                     <select name="status_id" class="form-select form-select-sm">
                         <option value="">All statuses</option>

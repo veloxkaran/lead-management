@@ -32,6 +32,10 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
             });
         }
 
+        if (! empty($filters['company_name'])) {
+            $query->where('company_name', 'like', "%{$filters['company_name']}%");
+        }
+
         if (! empty($filters['status_id'])) {
             $query->where('lead_status_id', $filters['status_id']);
         }

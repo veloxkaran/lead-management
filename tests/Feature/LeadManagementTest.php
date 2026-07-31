@@ -131,4 +131,17 @@ class LeadManagementTest extends TestCase
         $response->assertDontSee('My Own Co');
         $response->assertSee('Other Co');
     }
+
+    public function test_leads_index_can_be_filtered_by_company_name(): void
+    {
+        $user = User::factory()->create();
+        Lead::factory()->create(['created_by' => $user->id, 'company_name' => 'Acme Corp']);
+        Lead::factory()->create(['created_by' => $user->id, 'company_name' => 'Globex Inc']);
+
+        $response = $this->actingAs($user)->get(route('leads.index', ['company_name' => 'Acme']));
+
+        $response->assertOk();
+        $response->assertSee('Acme Corp');
+        $response->assertDontSee('Globex Inc');
+    }
 }
