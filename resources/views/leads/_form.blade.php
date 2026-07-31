@@ -2,7 +2,24 @@
 <div class="row g-3">
     <div class="col-md-6">
         <label class="form-label small fw-semibold">Company Name *</label>
-        <input type="text" name="company_name" value="{{ old('company_name', $lead->company_name ?? '') }}" class="form-control" required>
+        @if (!$lead)
+            <div x-data="leadDuplicateCheck()" class="position-relative">
+                <input type="text" name="company_name" value="{{ old('company_name', '') }}" x-model="companyName" @input="check()" autocomplete="off" class="form-control" required>
+                <div x-show="matches.length > 0" x-cloak class="list-group position-absolute w-100 shadow-sm" style="z-index: 1050;">
+                    <div class="list-group-item list-group-item-warning small py-1 px-2">
+                        <i class="bi bi-exclamation-triangle"></i> Similar lead(s) already exist:
+                    </div>
+                    <template x-for="match in matches" :key="match.id">
+                        <a :href="match.url" target="_blank" class="list-group-item list-group-item-action small py-1 px-2">
+                            <span x-text="match.company_name" class="fw-semibold"></span>
+                            <span class="text-muted"> — <span x-text="match.contact_person"></span> · added <span x-text="match.created_at"></span></span>
+                        </a>
+                    </template>
+                </div>
+            </div>
+        @else
+            <input type="text" name="company_name" value="{{ old('company_name', $lead->company_name ?? '') }}" class="form-control" required>
+        @endif
     </div>
     <div class="col-md-6">
         <label class="form-label small fw-semibold">Contact Person *</label>

@@ -75,6 +75,7 @@ Route::middleware('auth')->group(function () {
     Route::get('leads/bulk-upload', [LeadBulkUploadController::class, 'create'])->name('leads.bulk-upload.create');
     Route::get('leads/bulk-upload/template', [LeadBulkUploadController::class, 'template'])->name('leads.bulk-upload.template');
     Route::post('leads/bulk-upload', [LeadBulkUploadController::class, 'store'])->name('leads.bulk-upload.store');
+    Route::get('leads/check-duplicate', [LeadController::class, 'checkDuplicate'])->name('leads.check-duplicate');
     Route::resource('leads', LeadController::class);
     Route::post('leads/{lead}/archive', [LeadController::class, 'archive'])->name('leads.archive');
     Route::post('leads/{lead}/restore', [LeadController::class, 'restore'])->name('leads.restore');

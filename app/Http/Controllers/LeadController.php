@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\LeadService;
 use App\Support\LeadWalkthrough;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -60,6 +61,39 @@ class LeadController extends Controller
         $lead = $this->leadService->create($request->validated(), $request->user());
 
         return redirect()->route('leads.show', $lead)->with('success', 'Lead created successfully.');
+    }
+
+    /**
+     * Live lookup backing the "similar lead already exists" suggestion box
+     * on the create form. A separate, looser (substring) check from
+     * NotDuplicateLeadName's fuzzy match — this surfaces candidates while
+     * the user is still mid-word, well before the name is complete enough
+     * to trip the 97% similarity threshold that blocks submission.
+     */
+    public function checkDuplicate(Request $request): JsonResponse
+    {
+        $this->authorize('create', Lead::class);
+
+        $name = trim((string) $request->query('company_name', ''));
+
+        if (mb_strlen($name) < 2) {
+            return response()->json(['matches' => []]);
+        }
+
+        $matches = Lead::query()
+            ->where('company_name', 'like', '%'.$name.'%')
+            ->orderBy('company_name')
+            ->limit(5)
+            ->get(['id', 'company_name', 'contact_person', 'created_at'])
+            ->map(fn (Lead $lead) => [
+                'id' => $lead->id,
+                'company_name' => $lead->company_name,
+                'contact_person' => $lead->contact_person,
+                'created_at' => $lead->created_at->format('M d, Y'),
+                'url' => route('leads.show', $lead),
+            ]);
+
+        return response()->json(['matches' => $matches]);
     }
 
     public function show(Lead $lead): View

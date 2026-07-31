@@ -60,6 +60,30 @@ class LeadValidationAndAgeTest extends TestCase
         $response->assertSessionDoesntHaveErrors('company_name');
     }
 
+    public function test_check_duplicate_endpoint_returns_leads_with_a_matching_company_name(): void
+    {
+        $user = User::factory()->create();
+        Lead::factory()->create(['company_name' => 'Acme Corporation']);
+        Lead::factory()->create(['company_name' => 'Globex Industries']);
+
+        $response = $this->actingAs($user)->getJson(route('leads.check-duplicate', ['company_name' => 'Acme']));
+
+        $response->assertOk();
+        $response->assertJsonCount(1, 'matches');
+        $response->assertJsonFragment(['company_name' => 'Acme Corporation']);
+    }
+
+    public function test_check_duplicate_endpoint_returns_no_matches_for_a_too_short_query(): void
+    {
+        $user = User::factory()->create();
+        Lead::factory()->create(['company_name' => 'Acme Corporation']);
+
+        $response = $this->actingAs($user)->getJson(route('leads.check-duplicate', ['company_name' => 'A']));
+
+        $response->assertOk();
+        $response->assertJson(['matches' => []]);
+    }
+
     public function test_lead_reports_time_spent_in_its_current_status(): void
     {
         $user = User::factory()->create();

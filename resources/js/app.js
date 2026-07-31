@@ -23,6 +23,7 @@ import './activity-feed';
 import './raw-data-paste-grid';
 import './raw-data-countdown';
 import './attachment-preview';
+import './lead-duplicate-check';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Bootstrap tooltip/popover activation
