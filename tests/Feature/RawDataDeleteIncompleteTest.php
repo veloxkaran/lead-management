@@ -11,12 +11,12 @@ class RawDataDeleteIncompleteTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_super_admin_can_delete_entries_with_no_contact_person_email_or_phone(): void
+    public function test_super_admin_can_delete_entries_with_no_phone_and_no_email(): void
     {
         $superAdmin = User::factory()->superAdmin()->create();
 
         $incomplete = RawData::factory()->create(['contact_person' => null, 'phone' => null, 'email' => null]);
-        $hasContactPerson = RawData::factory()->create(['contact_person' => 'Jane Doe', 'phone' => null, 'email' => null]);
+        $onlyContactPerson = RawData::factory()->create(['contact_person' => 'Jane Doe', 'phone' => null, 'email' => null]);
         $hasPhone = RawData::factory()->create(['contact_person' => null, 'phone' => '9800000000', 'email' => null]);
         $hasEmail = RawData::factory()->create(['contact_person' => null, 'phone' => null, 'email' => 'jane@example.test']);
 
@@ -25,16 +25,16 @@ class RawDataDeleteIncompleteTest extends TestCase
         $response->assertRedirect(route('raw-data.index'));
 
         $this->assertModelMissing($incomplete);
-        $this->assertModelExists($hasContactPerson);
+        $this->assertModelMissing($onlyContactPerson);
         $this->assertModelExists($hasPhone);
         $this->assertModelExists($hasEmail);
     }
 
-    public function test_entries_with_blank_string_fields_are_also_treated_as_incomplete(): void
+    public function test_entries_with_blank_string_phone_and_email_are_also_treated_as_incomplete(): void
     {
         $superAdmin = User::factory()->superAdmin()->create();
 
-        $incomplete = RawData::factory()->create(['contact_person' => '', 'phone' => '', 'email' => '']);
+        $incomplete = RawData::factory()->create(['contact_person' => 'Jane Doe', 'phone' => '', 'email' => '']);
 
         $this->actingAs($superAdmin)->post(route('raw-data.delete-incomplete'));
 
@@ -46,7 +46,7 @@ class RawDataDeleteIncompleteTest extends TestCase
         $superAdmin = User::factory()->superAdmin()->create();
 
         RawData::factory()->count(2)->create(['contact_person' => null, 'phone' => null, 'email' => null]);
-        RawData::factory()->create(['contact_person' => 'Jane Doe']);
+        RawData::factory()->create(['contact_person' => 'Jane Doe', 'phone' => '9800000000']);
 
         $response = $this->actingAs($superAdmin)->post(route('raw-data.delete-incomplete'));
 

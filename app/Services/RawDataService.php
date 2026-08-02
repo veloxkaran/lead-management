@@ -280,18 +280,17 @@ class RawDataService
     }
 
     /**
-     * Bulk-removes raw data entries with no identifying information at all
-     * (no contact person, no email, and no phone) — junk that can never be
-     * followed up on or converted. A row is kept as soon as any one of the
-     * three is present. Blank is treated as either NULL or an empty string,
-     * since import rows can persist either depending on how the sheet was
-     * populated. A single bulk DELETE (no SoftDeletes on this model), so it
-     * stays fast regardless of table size.
+     * Bulk-removes raw data entries with no way to reach the contact at all
+     * — neither a phone nor an email — junk that can never be followed up
+     * on or converted. A row is kept as soon as either one is present, even
+     * without a contact person. Blank is treated as either NULL or an empty
+     * string, since import rows can persist either depending on how the
+     * sheet was populated. A single bulk DELETE (no SoftDeletes on this
+     * model), so it stays fast regardless of table size.
      */
     public function deleteIncomplete(): int
     {
         return $this->rawData->query()
-            ->where(fn ($q) => $q->whereNull('contact_person')->orWhere('contact_person', ''))
             ->where(fn ($q) => $q->whereNull('email')->orWhere('email', ''))
             ->where(fn ($q) => $q->whereNull('phone')->orWhere('phone', ''))
             ->delete();

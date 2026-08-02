@@ -71,7 +71,7 @@ class RawDataController extends Controller
 
         $deleted = $this->rawDataService->deleteIncomplete();
 
-        return redirect()->route('raw-data.index')->with('success', "{$deleted} incomplete raw data entry/entries deleted (no contact person, email, or phone).");
+        return redirect()->route('raw-data.index')->with('success', "{$deleted} incomplete raw data entry/entries deleted (no phone and no email).");
     }
 
     public function markNotValid(RawData $rawData): RedirectResponse
