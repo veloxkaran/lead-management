@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\RawData;
+use App\Models\RawDataImportBatch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -41,14 +42,19 @@ class RawDataBulkUploadTest extends TestCase
 
         $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
 
-        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file])
-            ->assertRedirect(route('raw-data.bulk-upload.create'));
+        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
 
         $entry = RawData::firstWhere('contact_person', 'Jane Doe');
 
         $this->assertNotNull($entry);
         $this->assertSame('9800000000', $entry->phone);
         $this->assertSame($user->id, $entry->created_by);
+
+        $batch = RawDataImportBatch::sole();
+        $response->assertRedirect(route('raw-data.bulk-upload.batches.show', $batch));
+        $this->assertSame(1, $batch->total_rows);
+        $this->assertSame(1, $batch->imported_count);
+        $this->assertSame(0, $batch->rejected_count);
     }
 
     public function test_a_file_without_a_contact_person_column_still_imports(): void
@@ -60,9 +66,11 @@ class RawDataBulkUploadTest extends TestCase
 
         $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
 
-        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
 
-        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 0);
+        $batch = RawDataImportBatch::sole();
+
+        $this->assertSame(0, $batch->rejected_count);
         $this->assertDatabaseHas('raw_data', ['phone' => '9800000001']);
         $this->assertSame(1, RawData::count());
     }
@@ -76,9 +84,11 @@ class RawDataBulkUploadTest extends TestCase
 
         $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
 
-        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
 
-        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 0);
+        $batch = RawDataImportBatch::sole();
+
+        $this->assertSame(0, $batch->rejected_count);
         $this->assertDatabaseHas('raw_data', ['contact_person' => 'Jane Doe']);
         $this->assertSame(1, RawData::count());
     }
@@ -93,11 +103,19 @@ class RawDataBulkUploadTest extends TestCase
 
         $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
 
-        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
 
-        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 1);
+        $batch = RawDataImportBatch::sole();
+
+        $this->assertSame(2, $batch->total_rows);
+        $this->assertSame(1, $batch->imported_count);
+        $this->assertSame(1, $batch->rejected_count);
         $this->assertDatabaseHas('raw_data', ['contact_person' => 'Good Contact']);
         $this->assertSame(1, RawData::count());
+
+        $rejection = $batch->rejections()->sole();
+        $this->assertArrayHasKey('email', $rejection->errors);
+        $this->assertSame('Bad Email Contact', $rejection->raw_data['contact_person']);
     }
 
     public function test_a_row_with_a_blank_contact_person_is_still_imported(): void
@@ -109,9 +127,11 @@ class RawDataBulkUploadTest extends TestCase
 
         $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
 
-        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
 
-        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 0);
+        $batch = RawDataImportBatch::sole();
+
+        $this->assertSame(0, $batch->rejected_count);
         $this->assertDatabaseHas('raw_data', ['phone' => '9800000001']);
         $this->assertSame(1, RawData::count());
     }
@@ -125,9 +145,11 @@ class RawDataBulkUploadTest extends TestCase
 
         $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
 
-        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
 
-        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 0);
+        $batch = RawDataImportBatch::sole();
+
+        $this->assertSame(0, $batch->rejected_count);
         $this->assertDatabaseHas('raw_data', ['contact_person' => 'Jane Doe']);
         $this->assertSame(1, RawData::count());
     }
@@ -150,6 +172,10 @@ class RawDataBulkUploadTest extends TestCase
         $existing->refresh();
         $this->assertSame('jane@example.test', $existing->email);
         $this->assertSame('Referral', $existing->source);
+
+        $batch = RawDataImportBatch::sole();
+        $this->assertSame(1, $batch->updated_count);
+        $this->assertSame(0, $batch->rejected_count);
     }
 
     public function test_a_matching_phone_row_never_overwrites_an_already_set_field(): void
@@ -218,6 +244,92 @@ class RawDataBulkUploadTest extends TestCase
         $this->assertSame(120, $existing->number_of_employees);
     }
 
+    public function test_a_row_matching_an_existing_up_to_date_entry_counts_as_imported_not_rejected(): void
+    {
+        $user = User::factory()->create();
+        RawData::factory()->create([
+            'phone' => '9800000000',
+            'contact_person' => 'Jane Doe',
+            'email' => 'jane@example.test',
+            'source' => 'Referral',
+        ]);
+
+        $csv = "Contact Person,Phone,Email,Source\n"
+            .'Jane Doe,9800000000,jane@example.test,Referral'."\n";
+
+        $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
+
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+
+        $batch = RawDataImportBatch::sole();
+
+        $this->assertSame(0, $batch->rejected_count);
+        $this->assertSame(1, $batch->unchanged_count);
+        $this->assertSame(1, $batch->successfulCount());
+    }
+
+    public function test_import_summary_counts_are_correct_on_a_mixed_file(): void
+    {
+        $user = User::factory()->create();
+
+        $csv = "Contact Person,Phone,Email\n"
+            ."Good One,9800000001,good1@example.test\n"
+            ."Good Two,9800000002,good2@example.test\n"
+            ."Bad One,9800000003,not-an-email\n";
+
+        $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
+
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+
+        $batch = RawDataImportBatch::sole();
+
+        $this->assertSame(3, $batch->total_rows);
+        $this->assertSame(2, $batch->imported_count);
+        $this->assertSame(1, $batch->rejected_count);
+        $this->assertSame(2, $batch->successfulCount());
+    }
+
+    public function test_batch_results_page_lists_rejected_rows(): void
+    {
+        $user = User::factory()->create();
+
+        $csv = "Contact Person,Phone,Email\n"
+            ."Bad One,9800000003,not-an-email\n";
+
+        $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
+
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+
+        $batch = RawDataImportBatch::sole();
+
+        $response = $this->actingAs($user)->get(route('raw-data.bulk-upload.batches.show', $batch));
+
+        $response->assertOk();
+        $response->assertSee('Bad One');
+    }
+
+    public function test_rejected_rows_can_be_downloaded(): void
+    {
+        $user = User::factory()->create();
+
+        $csv = "Contact Person,Phone,Email\n"
+            ."Bad One,9800000003,not-an-email\n";
+
+        $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
+
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+
+        $batch = RawDataImportBatch::sole();
+
+        $response = $this->actingAs($user)->get(route('raw-data.bulk-upload.batches.download', $batch));
+
+        $response->assertOk();
+        $response->assertHeader(
+            'content-type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
+    }
+
     public function test_pasted_valid_rows_are_imported(): void
     {
         $user = User::factory()->create();
@@ -228,13 +340,15 @@ class RawDataBulkUploadTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store-paste'), ['rows' => $rows]);
 
-        $response->assertRedirect(route('raw-data.bulk-upload.create'));
-
         $entry = RawData::firstWhere('contact_person', 'Jane Doe');
 
         $this->assertNotNull($entry);
         $this->assertSame('9800000000', $entry->phone);
         $this->assertSame($user->id, $entry->created_by);
+
+        $batch = RawDataImportBatch::sole();
+        $response->assertRedirect(route('raw-data.bulk-upload.batches.show', $batch));
+        $this->assertSame('paste', $batch->source);
     }
 
     public function test_pasted_blank_rows_are_ignored(): void
@@ -249,6 +363,9 @@ class RawDataBulkUploadTest extends TestCase
         $this->actingAs($user)->post(route('raw-data.bulk-upload.store-paste'), ['rows' => $rows]);
 
         $this->assertSame(1, RawData::count());
+
+        $batch = RawDataImportBatch::sole();
+        $this->assertSame(1, $batch->total_rows);
     }
 
     public function test_pasted_rows_with_invalid_data_are_skipped_and_reported(): void
@@ -260,9 +377,11 @@ class RawDataBulkUploadTest extends TestCase
             ['contact_person' => 'Bad Email Contact', 'phone' => '9800000002', 'email' => 'not-an-email', 'source' => ''],
         ]);
 
-        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store-paste'), ['rows' => $rows]);
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store-paste'), ['rows' => $rows]);
 
-        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 1);
+        $batch = RawDataImportBatch::sole();
+
+        $this->assertSame(1, $batch->rejected_count);
         $this->assertDatabaseHas('raw_data', ['contact_person' => 'Good Contact']);
         $this->assertSame(1, RawData::count());
     }
@@ -275,9 +394,11 @@ class RawDataBulkUploadTest extends TestCase
             ['contact_person' => '', 'phone' => '9800000001', 'email' => '', 'source' => ''],
         ]);
 
-        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store-paste'), ['rows' => $rows]);
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store-paste'), ['rows' => $rows]);
 
-        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 0);
+        $batch = RawDataImportBatch::sole();
+
+        $this->assertSame(0, $batch->rejected_count);
         $this->assertDatabaseHas('raw_data', ['phone' => '9800000001']);
         $this->assertSame(1, RawData::count());
     }
@@ -290,9 +411,11 @@ class RawDataBulkUploadTest extends TestCase
             ['contact_person' => 'Jane Doe', 'phone' => '', 'email' => '', 'source' => ''],
         ]);
 
-        $response = $this->actingAs($user)->post(route('raw-data.bulk-upload.store-paste'), ['rows' => $rows]);
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store-paste'), ['rows' => $rows]);
 
-        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 0);
+        $batch = RawDataImportBatch::sole();
+
+        $this->assertSame(0, $batch->rejected_count);
         $this->assertDatabaseHas('raw_data', ['contact_person' => 'Jane Doe']);
         $this->assertSame(1, RawData::count());
     }
@@ -339,5 +462,6 @@ class RawDataBulkUploadTest extends TestCase
 
         $response->assertSessionHas('error');
         $this->assertSame(0, RawData::count());
+        $this->assertSame(0, RawDataImportBatch::count());
     }
 }

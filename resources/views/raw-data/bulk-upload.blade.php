@@ -153,25 +153,4 @@
             </div>
         </div>
     </div>
-
-    @if (session('importFailures') && count(session('importFailures')))
-        <div class="card border-0 shadow-sm mt-3">
-            <div class="card-header bg-white fw-semibold text-danger">
-                <i class="bi bi-exclamation-triangle"></i> {{ count(session('importFailures')) }} row(s) skipped
-            </div>
-            <div class="card-body" style="max-height: 420px; overflow-y: auto;">
-                @foreach (session('importFailures') as $failure)
-                    <div class="border-bottom pb-2 mb-2 small">
-                        <span class="fw-semibold">Row {{ $failure->row() }}</span>
-                        <span class="text-muted">({{ $failure->attribute() }})</span>
-                        <ul class="mb-0 mt-1">
-                            @foreach ($failure->errors() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    @endif
 @endsection

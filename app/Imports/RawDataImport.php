@@ -29,6 +29,8 @@ class RawDataImport implements ToCollection, WithHeadingRow, WithValidation, Ski
 
     private int $updatedCount = 0;
 
+    private int $unchangedCount = 0;
+
     public function __construct(private RawDataService $rawDataService, private User $creator)
     {
     }
@@ -71,6 +73,7 @@ class RawDataImport implements ToCollection, WithHeadingRow, WithValidation, Ski
             match ($result) {
                 'created' => $this->importedCount++,
                 'updated' => $this->updatedCount++,
+                'unchanged' => $this->unchangedCount++,
                 default => null,
             };
         }
@@ -84,5 +87,10 @@ class RawDataImport implements ToCollection, WithHeadingRow, WithValidation, Ski
     public function updatedCount(): int
     {
         return $this->updatedCount;
+    }
+
+    public function unchangedCount(): int
+    {
+        return $this->unchangedCount;
     }
 }

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Exports\GenericTableExport;
 use App\Imports\RawDataImport;
 use App\Models\RawData;
+use App\Models\RawDataImportBatch;
+use App\Models\RawDataImportRejection;
 use App\Services\RawDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -57,9 +59,18 @@ class RawDataBulkUploadController extends Controller
 
         Excel::import($import, $request->file('file'));
 
-        return redirect()->route('raw-data.bulk-upload.create')
-            ->with('success', "{$import->importedCount()} raw data entries imported, {$import->updatedCount()} existing entries filled in with new details.")
-            ->with('importFailures', $import->failures());
+        $batch = $this->rawDataService->recordImportBatch(
+            $import->failures(),
+            $import->importedCount(),
+            $import->updatedCount(),
+            $import->unchangedCount(),
+            $request->user(),
+            'file',
+            $request->file('file')->getClientOriginalName(),
+        );
+
+        return redirect()->route('raw-data.bulk-upload.batches.show', $batch)
+            ->with('success', "{$batch->imported_count} raw data entries imported, {$batch->updated_count} existing entries filled in with new details, {$batch->rejected_count} row(s) rejected.");
     }
 
     /**
@@ -67,8 +78,9 @@ class RawDataBulkUploadController extends Controller
      * (RawDataImport::rowRules()) and the same dedup/fill-in behavior
      * (RawDataService::importRow()), just sourced from a JSON blob the
      * browser built from pasted spreadsheet cells instead of an uploaded
-     * file. Failures are reported as Maatwebsite\Excel Failure objects so
-     * the view's existing "skipped rows" panel renders both the same way.
+     * file. Failures are built as the same Maatwebsite\Excel Failure objects
+     * the file importer collects, so recordImportBatch() consolidates and
+     * persists both entry points identically.
      */
     public function storePasted(Request $request): RedirectResponse
     {
@@ -92,6 +104,7 @@ class RawDataBulkUploadController extends Controller
 
         $imported = 0;
         $updated = 0;
+        $unchanged = 0;
         $failures = [];
 
         foreach (array_values($rows) as $index => $row) {
@@ -128,12 +141,57 @@ class RawDataBulkUploadController extends Controller
             match ($result) {
                 'created' => $imported++,
                 'updated' => $updated++,
+                'unchanged' => $unchanged++,
                 default => null,
             };
         }
 
-        return redirect()->route('raw-data.bulk-upload.create')
-            ->with('success', "{$imported} raw data entries imported, {$updated} existing entries filled in with new details.")
-            ->with('importFailures', $failures);
+        $batch = $this->rawDataService->recordImportBatch(
+            $failures,
+            $imported,
+            $updated,
+            $unchanged,
+            $request->user(),
+            'paste',
+        );
+
+        return redirect()->route('raw-data.bulk-upload.batches.show', $batch)
+            ->with('success', "{$batch->imported_count} raw data entries imported, {$batch->updated_count} existing entries filled in with new details, {$batch->rejected_count} row(s) rejected.");
+    }
+
+    public function showBatch(RawDataImportBatch $batch): View
+    {
+        $this->authorize('create', RawData::class);
+
+        $rejections = $batch->rejections()->orderBy('row_number')->paginate(25);
+
+        return view('raw-data.bulk-upload-results', compact('batch', 'rejections'));
+    }
+
+    public function downloadBatchRejections(RawDataImportBatch $batch): BinaryFileResponse
+    {
+        $this->authorize('create', RawData::class);
+
+        $rows = $batch->rejections()->orderBy('row_number')->get()
+            ->map(function (RawDataImportRejection $rejection) {
+                $raw = $rejection->raw_data;
+
+                return [
+                    $raw['contact_person'] ?? '',
+                    $raw['company_name'] ?? '',
+                    $raw['number_of_employees'] ?? '',
+                    $raw['phone'] ?? '',
+                    $raw['email'] ?? '',
+                    $raw['source'] ?? '',
+                    $raw['notes'] ?? '',
+                    collect($rejection->errors)->flatten()->implode('; '),
+                ];
+            })
+            ->all();
+
+        return Excel::download(
+            new GenericTableExport([...self::COLUMNS, 'Import Error'], $rows),
+            "raw-data-import-{$batch->id}-rejections.xlsx"
+        );
     }
 }

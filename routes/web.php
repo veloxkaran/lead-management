@@ -93,6 +93,8 @@ Route::middleware('auth')->group(function () {
     Route::get('raw-data/bulk-upload/template', [RawDataBulkUploadController::class, 'template'])->name('raw-data.bulk-upload.template');
     Route::post('raw-data/bulk-upload', [RawDataBulkUploadController::class, 'store'])->name('raw-data.bulk-upload.store');
     Route::post('raw-data/bulk-upload/paste', [RawDataBulkUploadController::class, 'storePasted'])->name('raw-data.bulk-upload.store-paste');
+    Route::get('raw-data/bulk-upload/batches/{batch}', [RawDataBulkUploadController::class, 'showBatch'])->name('raw-data.bulk-upload.batches.show');
+    Route::get('raw-data/bulk-upload/batches/{batch}/download', [RawDataBulkUploadController::class, 'downloadBatchRejections'])->name('raw-data.bulk-upload.batches.download');
     Route::resource('raw-data', RawDataController::class)->parameters(['raw-data' => 'raw_data'])->except('edit', 'update');
     Route::post('raw-data/{raw_data}/mark-not-valid', [RawDataController::class, 'markNotValid'])->name('raw-data.mark-not-valid');
     Route::post('raw-data/{raw_data}/mark-hold', [RawDataController::class, 'markHold'])->name('raw-data.mark-hold');

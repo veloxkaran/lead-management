@@ -7,11 +7,13 @@ use App\Enums\RawDataStatus;
 use App\Models\Lead;
 use App\Models\RawData;
 use App\Models\RawDataComment;
+use App\Models\RawDataImportBatch;
 use App\Models\User;
 use App\Repositories\RawDataRepository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Maatwebsite\Excel\Validators\Failure;
 
 class RawDataService
 {
@@ -145,6 +147,54 @@ class RawDataService
         ], $creator);
 
         return 'created';
+    }
+
+    /**
+     * Consolidates the per-attribute Maatwebsite\Excel\Validators\Failure
+     * objects for an import run (a row with two invalid fields produces two
+     * Failure objects) into one rejection log entry per row, and persists
+     * the whole run as a durable batch — shared by both the file importer
+     * (RawDataImport) and the paste-grid endpoint so their summary/rejection
+     * behavior is identical.
+     *
+     * @param  iterable<Failure>  $failures
+     */
+    public function recordImportBatch(
+        iterable $failures,
+        int $importedCount,
+        int $updatedCount,
+        int $unchangedCount,
+        User $user,
+        string $source,
+        ?string $originalFilename = null,
+    ): RawDataImportBatch {
+        $rejectedRows = [];
+
+        foreach ($failures as $failure) {
+            $row = $failure->row();
+            $rejectedRows[$row]['row_number'] = $row;
+            $rejectedRows[$row]['raw_data'] = $failure->values();
+            $rejectedRows[$row]['errors'][$failure->attribute()] = $failure->errors();
+        }
+
+        return DB::transaction(function () use ($rejectedRows, $importedCount, $updatedCount, $unchangedCount, $user, $source, $originalFilename) {
+            $batch = RawDataImportBatch::create([
+                'user_id' => $user->id,
+                'source' => $source,
+                'original_filename' => $originalFilename,
+                'total_rows' => $importedCount + $updatedCount + $unchangedCount + count($rejectedRows),
+                'imported_count' => $importedCount,
+                'updated_count' => $updatedCount,
+                'unchanged_count' => $unchangedCount,
+                'rejected_count' => count($rejectedRows),
+            ]);
+
+            foreach ($rejectedRows as $row) {
+                $batch->rejections()->create($row);
+            }
+
+            return $batch;
+        });
     }
 
     /**
