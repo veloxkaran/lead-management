@@ -65,6 +65,15 @@ class RawDataController extends Controller
         return redirect()->route('raw-data.index')->with('success', 'Raw data entry deleted successfully.');
     }
 
+    public function deleteIncomplete(): RedirectResponse
+    {
+        $this->authorize('deleteIncomplete', RawData::class);
+
+        $deleted = $this->rawDataService->deleteIncomplete();
+
+        return redirect()->route('raw-data.index')->with('success', "{$deleted} incomplete raw data entry/entries deleted (no contact person, email, or phone).");
+    }
+
     public function markNotValid(RawData $rawData): RedirectResponse
     {
         $this->authorize('update', $rawData);

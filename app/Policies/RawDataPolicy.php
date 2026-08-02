@@ -36,4 +36,14 @@ class RawDataPolicy
     {
         return $user->isSuperAdmin() || $rawData->created_by === $user->id;
     }
+
+    /**
+     * Bulk-cleanup action that removes entries across every creator, not
+     * just the acting user's own — restricted to Super Admin, unlike the
+     * per-row delete() above which any owner can do to their own entry.
+     */
+    public function deleteIncomplete(User $user): bool
+    {
+        return $user->isSuperAdmin();
+    }
 }

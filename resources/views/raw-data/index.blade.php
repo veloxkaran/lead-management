@@ -5,6 +5,18 @@
 @section('content')
     <x-page-header title="Raw Data" icon="bi-inbox" subtitle="Minimal contact records — convert to a Lead once qualified.">
         <x-slot:actions>
+            @can('deleteIncomplete', App\Models\RawData::class)
+                <form method="POST" action="{{ route('raw-data.delete-incomplete') }}" class="d-inline"
+                      data-confirm-delete
+                      data-confirm-title="Delete incomplete raw data?"
+                      data-confirm-text="This permanently deletes every entry with no contact person, email, or phone. This cannot be undone."
+                      data-confirm-button-text="Delete Incomplete Entries">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash"></i> Delete Incomplete Entries
+                    </button>
+                </form>
+            @endcan
             @can('create', App\Models\RawData::class)
                 <a href="{{ route('raw-data.create') }}" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-lg"></i> Add Raw Data
