@@ -454,6 +454,83 @@ class RawDataBulkUploadTest extends TestCase
         $this->assertSame('Met at trade show', $existing->notes);
     }
 
+    public function test_multiple_rows_with_blank_phone_all_create_distinct_entries(): void
+    {
+        $user = User::factory()->create();
+
+        $csv = "Contact Person,Phone\n"
+            ."Alice,\n"
+            ."Bob,\n"
+            ."Carol,\n";
+
+        $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
+
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+
+        $this->assertSame(3, RawData::count());
+        $this->assertDatabaseHas('raw_data', ['contact_person' => 'Alice']);
+        $this->assertDatabaseHas('raw_data', ['contact_person' => 'Bob']);
+        $this->assertDatabaseHas('raw_data', ['contact_person' => 'Carol']);
+
+        $batch = RawDataImportBatch::sole();
+        $this->assertSame(3, $batch->imported_count);
+    }
+
+    public function test_multiple_rows_with_blank_phone_and_blank_contact_person_all_create_distinct_entries(): void
+    {
+        $user = User::factory()->create();
+
+        $csv = "Contact Person,Phone,Company Name\n"
+            .",,Acme Corp\n"
+            .",,Beta LLC\n";
+
+        $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
+
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+
+        $this->assertSame(2, RawData::count());
+        $this->assertDatabaseHas('raw_data', ['company_name' => 'Acme Corp']);
+        $this->assertDatabaseHas('raw_data', ['company_name' => 'Beta LLC']);
+    }
+
+    public function test_multiple_pasted_rows_with_blank_phone_all_create_distinct_entries(): void
+    {
+        $user = User::factory()->create();
+
+        $rows = json_encode([
+            ['contact_person' => 'Alice', 'phone' => ''],
+            ['contact_person' => 'Bob', 'phone' => ''],
+        ]);
+
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store-paste'), ['rows' => $rows]);
+
+        $this->assertSame(2, RawData::count());
+        $this->assertDatabaseHas('raw_data', ['contact_person' => 'Alice']);
+        $this->assertDatabaseHas('raw_data', ['contact_person' => 'Bob']);
+    }
+
+    public function test_recently_imported_records_are_immediately_visible_in_the_list(): void
+    {
+        $user = User::factory()->create();
+
+        $csv = "Contact Person,Phone\n"
+            ."Alice,\n"
+            ."Bob,\n"
+            ."Carol,9800000009\n";
+
+        $file = UploadedFile::fake()->createWithContent('raw-data.csv', $csv);
+
+        $this->actingAs($user)->post(route('raw-data.bulk-upload.store'), ['file' => $file]);
+
+        $response = $this->actingAs($user)->get(route('raw-data.index'));
+
+        $response->assertOk();
+        $response->assertSee('Alice');
+        $response->assertSee('Bob');
+        $response->assertSee('Carol');
+        $this->assertSame(3, $response->viewData('entries')->total());
+    }
+
     public function test_pasted_rows_are_rejected_when_malformed(): void
     {
         $user = User::factory()->create();

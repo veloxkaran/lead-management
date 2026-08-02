@@ -82,11 +82,31 @@ class RawDataService
      * identifier), falling back to contact person, so a re-uploaded row for
      * someone already on file gets reconciled with fillMissingDetails()
      * instead of being rejected as a duplicate.
+     *
+     * A blank value is never used as a match key: 'lower(phone) = ""' would
+     * otherwise match *any* existing row that also has a blank phone,
+     * silently collapsing every subsequent blank-phone import row into the
+     * first one ever created (and discarding its data) instead of treating
+     * each as a distinct new contact.
      */
     public function findExistingForImportRow(string $contactPerson, string $phone): ?RawData
     {
-        return $this->rawData->query()->whereRaw('lower(phone) = ?', [mb_strtolower(trim($phone))])->first()
-            ?? $this->rawData->query()->whereRaw('lower(contact_person) = ?', [mb_strtolower(trim($contactPerson))])->first();
+        $phone = trim($phone);
+        $contactPerson = trim($contactPerson);
+
+        if ($phone !== '') {
+            $existing = $this->rawData->query()->whereRaw('lower(phone) = ?', [mb_strtolower($phone)])->first();
+
+            if ($existing) {
+                return $existing;
+            }
+        }
+
+        if ($contactPerson !== '') {
+            return $this->rawData->query()->whereRaw('lower(contact_person) = ?', [mb_strtolower($contactPerson)])->first();
+        }
+
+        return null;
     }
 
     /**
