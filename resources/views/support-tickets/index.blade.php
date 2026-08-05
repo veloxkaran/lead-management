@@ -57,7 +57,7 @@
                         <th>Assigned To</th>
                         <th>Priority</th>
                         <th>Status</th>
-                        <th>Generated Time <span class="text-muted small">(d:h:m)</span></th>
+                        <th>Generated Time</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>

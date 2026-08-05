@@ -74,8 +74,8 @@ class SupportTicket extends Model
     }
 
     /**
-     * elapsedMinutes() broken into "day:hour:minute", e.g. "2:03:07" for
-     * 2 days, 3 hours, 7 minutes.
+     * elapsedMinutes() broken into "N days, N hour and N min", e.g.
+     * "1 days, 10 hour and 5 min".
      */
     public function elapsedFormatted(): string
     {
@@ -85,6 +85,6 @@ class SupportTicket extends Model
         $hours = intdiv($totalMinutes % 1440, 60);
         $minutes = $totalMinutes % 60;
 
-        return sprintf('%d:%02d:%02d', $days, $hours, $minutes);
+        return sprintf('%d days, %d hour and %d min', $days, $hours, $minutes);
     }
 }
