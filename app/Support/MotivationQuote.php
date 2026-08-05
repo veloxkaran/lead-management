@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Models\Setting;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class MotivationQuote
@@ -11,10 +10,9 @@ class MotivationQuote
     /**
      * Local fallback pool — used whenever no external API URL is
      * configured (Settings > Motivation Quote API URL) or that call fails.
-     * Keeps the "changes every hour" guarantee independent of any network
-     * dependency: rotating through this list by the current hour never
-     * silently gets stuck on one quote the way a failed external fetch
-     * would.
+     * A random entry is picked on every call, so the dashboard's
+     * motivation panel shows a different quote on every page load/refresh
+     * rather than being stuck on one for a whole hour.
      */
     private const QUOTES = [
         ['text' => 'Success is the sum of small efforts, repeated day in and day out.', 'author' => 'Robert Collier'],
@@ -43,27 +41,24 @@ class MotivationQuote
         ['text' => "Hard work beats talent when talent doesn't work hard.", 'author' => 'Tim Notke'],
     ];
 
+    /**
+     * Picked fresh on every call — deliberately not cached — so the
+     * dashboard's motivation panel shows a new quote on every browser
+     * refresh instead of holding the same one for a whole hour.
+     */
     public static function current(): array
     {
-        // Cache key encodes the hour bucket itself, so the quote is
-        // guaranteed to change at the top of every clock hour — unlike a
-        // rolling now()->addHour() TTL (which only refreshes an hour after
-        // whoever happened to load the dashboard first).
-        $hourKey = now()->format('Y-m-d-H');
+        $apiUrl = Setting::get('motivation_quote_api_url');
 
-        return Cache::remember("motivation_quote:{$hourKey}", now()->endOfHour(), function () {
-            $apiUrl = Setting::get('motivation_quote_api_url');
+        if ($apiUrl) {
+            $fetched = self::fetchFromApi($apiUrl);
 
-            if ($apiUrl) {
-                $fetched = self::fetchFromApi($apiUrl);
-
-                if ($fetched) {
-                    return $fetched;
-                }
+            if ($fetched) {
+                return $fetched;
             }
+        }
 
-            return self::QUOTES[now()->hour % count(self::QUOTES)];
-        });
+        return self::QUOTES[array_rand(self::QUOTES)];
     }
 
     private static function fetchFromApi(string $apiUrl): ?array

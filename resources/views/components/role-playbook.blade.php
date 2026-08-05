@@ -14,17 +14,13 @@
             </div>
         </div>
 
-        @if ($playbook)
+        @if ($quote)
             <div class="row g-3">
                 <div class="col-12">
                     <div class="rounded p-3 text-white" style="background: linear-gradient(135deg,#2456a6,#1b2430);">
                         <div class="small fw-semibold text-uppercase mb-2 opacity-75"><i class="bi bi-stars me-1"></i> Motivation</div>
-                        <p class="small mb-2">{{ $playbook->motivation }}</p>
-                        @if ($quote)
-                            <hr class="opacity-25">
-                            <p class="small mb-1 fst-italic opacity-75">{{ $quote['text'] }}</p>
-                            <p class="small mb-0 opacity-50">— {{ $quote['author'] }}</p>
-                        @endif
+                        <p class="small mb-1 fst-italic">{{ $quote['text'] }}</p>
+                        <p class="small mb-0 opacity-50">— {{ $quote['author'] }}</p>
                     </div>
                 </div>
             </div>

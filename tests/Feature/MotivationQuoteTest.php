@@ -4,8 +4,6 @@ namespace Tests\Feature;
 
 use App\Support\MotivationQuote;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -15,8 +13,6 @@ class MotivationQuoteTest extends TestCase
 
     public function test_it_returns_a_local_quote_when_no_api_url_is_configured(): void
     {
-        $this->travelTo(Carbon::create(2026, 7, 28, 9, 15));
-
         $quote = MotivationQuote::current();
 
         $this->assertArrayHasKey('text', $quote);
@@ -24,34 +20,25 @@ class MotivationQuoteTest extends TestCase
         $this->assertNotSame('', trim($quote['text']));
     }
 
-    public function test_the_quote_changes_when_the_hour_changes(): void
+    public function test_the_quote_varies_across_repeated_calls_instead_of_being_cached(): void
     {
-        $this->travelTo(Carbon::create(2026, 7, 28, 9, 15));
-        $first = MotivationQuote::current();
+        $seen = [];
 
-        $this->travelTo(Carbon::create(2026, 7, 28, 10, 15));
-        $second = MotivationQuote::current();
+        for ($i = 0; $i < 20; $i++) {
+            $seen[MotivationQuote::current()['text']] = true;
+        }
 
-        $this->assertNotSame($first['text'], $second['text']);
-    }
-
-    public function test_the_quote_stays_the_same_within_the_same_hour(): void
-    {
-        $this->travelTo(Carbon::create(2026, 7, 28, 9, 5));
-        $first = MotivationQuote::current();
-
-        $this->travelTo(Carbon::create(2026, 7, 28, 9, 55));
-        $second = MotivationQuote::current();
-
-        $this->assertSame($first, $second);
+        // With 24 quotes in the pool, 20 random draws landing on the exact
+        // same one every time is astronomically unlikely — this would only
+        // fail if current() were cached/pinned again (the old hourly-cache
+        // behavior this replaces).
+        $this->assertGreaterThan(1, count($seen));
     }
 
     public function test_it_falls_back_to_a_local_quote_when_the_configured_api_fails(): void
     {
         \App\Models\Setting::set('motivation_quote_api_url', 'https://example.test/random-quote');
         Http::fake(['example.test/*' => Http::response(null, 500)]);
-
-        $this->travelTo(Carbon::create(2026, 7, 28, 11, 0));
 
         $quote = MotivationQuote::current();
 
@@ -63,9 +50,6 @@ class MotivationQuoteTest extends TestCase
     {
         \App\Models\Setting::set('motivation_quote_api_url', 'https://example.test/random-quote');
         Http::fake(['example.test/*' => Http::response(['content' => 'Custom quote', 'author' => 'Someone'])]);
-
-        $this->travelTo(Carbon::create(2026, 7, 28, 12, 0));
-        Cache::flush();
 
         $quote = MotivationQuote::current();
 
