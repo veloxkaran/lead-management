@@ -79,8 +79,46 @@ class SupportTicket extends Model
      */
     public function elapsedFormatted(): string
     {
-        $totalMinutes = $this->elapsedMinutes();
+        return static::formatMinutesAsDaysHoursMinutes($this->elapsedMinutes());
+    }
 
+    /**
+     * Average resolution time across every resolved ticket, in minutes.
+     * Null when no ticket has been resolved yet, so callers can tell "no
+     * data" apart from a genuine zero.
+     */
+    public static function averageResolutionMinutes(): ?float
+    {
+        $resolved = static::query()->whereNotNull('resolved_at')->get(['created_at', 'resolved_at']);
+
+        if ($resolved->isEmpty()) {
+            return null;
+        }
+
+        return $resolved->avg(fn (self $ticket) => $ticket->created_at->diffInMinutes($ticket->resolved_at));
+    }
+
+    /**
+     * averageResolutionMinutes() broken into "N days, N hour and N min",
+     * for display on the dashboard's average-solving-time stat.
+     */
+    public static function averageResolutionFormatted(): string
+    {
+        $avgMinutes = static::averageResolutionMinutes();
+
+        if ($avgMinutes === null) {
+            return 'No resolved tickets yet';
+        }
+
+        return static::formatMinutesAsDaysHoursMinutes((int) round($avgMinutes));
+    }
+
+    /**
+     * Shared by elapsedFormatted() and averageResolutionFormatted() so both
+     * render the same "N days, N hour and N min" shape.
+     */
+    protected static function formatMinutesAsDaysHoursMinutes(int $totalMinutes): string
+    {
         $days = intdiv($totalMinutes, 1440);
         $hours = intdiv($totalMinutes % 1440, 60);
         $minutes = $totalMinutes % 60;

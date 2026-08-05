@@ -7,6 +7,8 @@
 
     <x-role-playbook :user="$user" :playbook="$playbook" :quote="$quote" />
 
+    <x-support-ticket-avg-time :time="$avgSupportTicketResolutionTime" />
+
     <div class="row g-3 mb-3">
         <div class="col-md-4">
             <div class="stat-card d-flex align-items-center gap-3">
