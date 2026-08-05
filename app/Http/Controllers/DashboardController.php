@@ -42,9 +42,10 @@ class DashboardController extends Controller
     /**
      * Shared greeting data every role dashboard renders above its own
      * content: role playbook (motivation), the rotating motivational quote,
-     * and the org-wide average support ticket solving time — highlighted on
-     * every dashboard rather than just the support-facing ones, so it's one
-     * query here instead of being repeated in each role's method below.
+     * and the org-wide average solving time for support tickets and
+     * requirements — highlighted on every dashboard rather than just the
+     * role-specific ones, so it's one query per metric here instead of
+     * being repeated in each role's method below.
      */
     protected function greeting(User $user): array
     {
@@ -53,6 +54,7 @@ class DashboardController extends Controller
             'playbook' => RolePlaybook::forRole($user->role),
             'quote' => MotivationQuote::current(),
             'avgSupportTicketResolutionTime' => SupportTicket::averageResolutionFormatted(),
+            'avgRequirementResolutionTime' => Requirement::averageResolutionFormatted(),
         ];
     }
 

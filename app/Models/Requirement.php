@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\TracksResolutionTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Requirement extends Model
 {
-    use BelongsToCompany, HasFactory;
+    use BelongsToCompany, HasFactory, TracksResolutionTime;
 
     public const MIN_SPRINT = 35;
 
@@ -20,7 +21,7 @@ class Requirement extends Model
 
     protected $fillable = [
         'company_id', 'lead_id', 'requirement', 'priority', 'status', 'due_date',
-        'client_acknowledged_at', 'assigned_to', 'sprint', 'created_by',
+        'client_acknowledged_at', 'assigned_to', 'sprint', 'created_by', 'completed_at',
     ];
 
     protected function casts(): array
@@ -30,6 +31,7 @@ class Requirement extends Model
             'status' => RequirementStatus::class,
             'due_date' => 'date',
             'client_acknowledged_at' => 'datetime',
+            'completed_at' => 'datetime',
         ];
     }
 
@@ -64,5 +66,15 @@ class Requirement extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(RequirementComment::class)->oldest();
+    }
+
+    protected function resolvedAtColumn(): string
+    {
+        return 'completed_at';
+    }
+
+    protected static function noResolvedRecordsMessage(): string
+    {
+        return 'No completed requirements yet';
     }
 }

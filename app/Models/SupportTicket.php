@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\TracksResolutionTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SupportTicket extends Model
 {
-    use BelongsToCompany, HasFactory;
+    use BelongsToCompany, HasFactory, TracksResolutionTime;
 
     protected $fillable = [
         'company_id', 'lead_id', 'subject', 'details', 'priority', 'status', 'raised_by', 'assigned_to', 'resolved_at',
@@ -63,66 +64,13 @@ class SupportTicket extends Model
         return $this->created_at->addHours(12)->isFuture();
     }
 
-    /**
-     * Minutes since the ticket was raised — up to now while it's still
-     * open, or up to resolved_at once it's been solved (so the value
-     * freezes at resolution instead of continuing to climb).
-     */
-    public function elapsedMinutes(): int
+    protected function resolvedAtColumn(): string
     {
-        return $this->created_at->diffInMinutes($this->resolved_at ?? now());
+        return 'resolved_at';
     }
 
-    /**
-     * elapsedMinutes() broken into "N days, N hour and N min", e.g.
-     * "1 days, 10 hour and 5 min".
-     */
-    public function elapsedFormatted(): string
+    protected static function noResolvedRecordsMessage(): string
     {
-        return static::formatMinutesAsDaysHoursMinutes($this->elapsedMinutes());
-    }
-
-    /**
-     * Average resolution time across every resolved ticket, in minutes.
-     * Null when no ticket has been resolved yet, so callers can tell "no
-     * data" apart from a genuine zero.
-     */
-    public static function averageResolutionMinutes(): ?float
-    {
-        $resolved = static::query()->whereNotNull('resolved_at')->get(['created_at', 'resolved_at']);
-
-        if ($resolved->isEmpty()) {
-            return null;
-        }
-
-        return $resolved->avg(fn (self $ticket) => $ticket->created_at->diffInMinutes($ticket->resolved_at));
-    }
-
-    /**
-     * averageResolutionMinutes() broken into "N days, N hour and N min",
-     * for display on the dashboard's average-solving-time stat.
-     */
-    public static function averageResolutionFormatted(): string
-    {
-        $avgMinutes = static::averageResolutionMinutes();
-
-        if ($avgMinutes === null) {
-            return 'No resolved tickets yet';
-        }
-
-        return static::formatMinutesAsDaysHoursMinutes((int) round($avgMinutes));
-    }
-
-    /**
-     * Shared by elapsedFormatted() and averageResolutionFormatted() so both
-     * render the same "N days, N hour and N min" shape.
-     */
-    protected static function formatMinutesAsDaysHoursMinutes(int $totalMinutes): string
-    {
-        $days = intdiv($totalMinutes, 1440);
-        $hours = intdiv($totalMinutes % 1440, 60);
-        $minutes = $totalMinutes % 60;
-
-        return sprintf('%d days, %d hour and %d min', $days, $hours, $minutes);
+        return 'No resolved tickets yet';
     }
 }

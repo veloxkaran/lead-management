@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\ActivityModule;
+use App\Enums\RequirementStatus;
 use App\Events\RequirementSaved;
 use App\Models\ActivityLogEntry;
 use App\Models\Lead;
@@ -73,6 +74,10 @@ class RequirementService
      */
     public function update(Requirement $requirement, array $attributes, User $actor, ?string $ip, ?string $userAgent): Requirement
     {
+        if (($attributes['status'] ?? null) === RequirementStatus::Completed->value && ! $requirement->completed_at) {
+            $attributes['completed_at'] = now();
+        }
+
         $originalRaw = collect(array_keys($attributes))
             ->mapWithKeys(fn ($key) => [$key => $requirement->getRawOriginal($key)])
             ->all();
