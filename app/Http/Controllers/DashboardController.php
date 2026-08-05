@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\FollowUpStatus;
+use App\Enums\RawDataStatus;
 use App\Enums\RequirementStatus;
 use App\Enums\TaskStatus;
 use App\Enums\UserStatus;
@@ -14,6 +15,7 @@ use App\Models\Lead;
 use App\Models\LeadNote;
 use App\Models\LeadStatus;
 use App\Models\Meeting;
+use App\Models\RawData;
 use App\Models\ReleaseNote;
 use App\Models\Requirement;
 use App\Models\RolePlaybook;
@@ -21,6 +23,7 @@ use App\Models\SupportTicket;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\MotivationQuote;
+use App\Support\PeriodRange;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -29,13 +32,14 @@ class DashboardController extends Controller
     public function __invoke(Request $request): View
     {
         $user = $request->user();
+        $filters = $request->only(['period', 'date_from', 'date_to']);
 
         return match (true) {
-            $user->isSuperAdmin() => $this->superAdminDashboard($user),
-            $user->isManager() => $this->managerDashboard($user),
-            $user->isCustomerSuccess() => $this->customerSuccessDashboard($user),
-            $user->isFinance() => $this->financeDashboard($user),
-            default => $this->businessDevelopmentDashboard($user),
+            $user->isSuperAdmin() => $this->superAdminDashboard($user, $filters),
+            $user->isManager() => $this->managerDashboard($user, $filters),
+            $user->isCustomerSuccess() => $this->customerSuccessDashboard($user, $filters),
+            $user->isFinance() => $this->financeDashboard($user, $filters),
+            default => $this->businessDevelopmentDashboard($user, $filters),
         };
     }
 
@@ -58,7 +62,45 @@ class DashboardController extends Controller
         ];
     }
 
-    protected function businessDevelopmentDashboard(User $user): View
+    /**
+     * "What's New Today?" — also shared across every role dashboard, same
+     * reasoning as greeting(). Defaults to today but accepts the same
+     * period/date_from/date_to vocabulary as the Raw Data filter
+     * (see PeriodRange), so switching to "This Week" or a custom range
+     * re-scopes all four counts at once.
+     */
+    protected function whatsNewToday(array $filters): array
+    {
+        [$from, $to] = PeriodRange::resolve($filters, 'today');
+
+        // A "custom" period with no bounds filled in yet has nothing to
+        // scope these counts to — fall back to today rather than silently
+        // running them unbounded, since that would defeat the point of a
+        // "today" widget.
+        if (! $from || ! $to) {
+            [$from, $to] = [now()->startOfDay(), now()->endOfDay()];
+        }
+
+        $newLeadsByStatus = LeadStatus::withCount(['leads' => fn ($q) => $q->whereBetween('created_at', [$from, $to])])
+            ->ordered()->get()->filter(fn (LeadStatus $status) => $status->leads_count > 0)->values();
+
+        $newRawData = RawData::whereBetween('created_at', [$from, $to]);
+
+        return [
+            'whatsNewFilters' => [
+                'period' => $filters['period'] ?? 'today',
+                'date_from' => $filters['date_from'] ?? null,
+                'date_to' => $filters['date_to'] ?? null,
+            ],
+            'newLeadsByStatus' => $newLeadsByStatus,
+            'newRawDataCount' => (clone $newRawData)->count(),
+            'convertedRawDataCount' => (clone $newRawData)->where('status', RawDataStatus::ConvertedToLead)->count(),
+            'ticketsRaisedCount' => SupportTicket::whereBetween('created_at', [$from, $to])->count(),
+            'ticketsSolvedCount' => SupportTicket::whereBetween('resolved_at', [$from, $to])->count(),
+        ];
+    }
+
+    protected function businessDevelopmentDashboard(User $user, array $filters): View
     {
         $leads = Lead::where('assigned_user_id', $user->id)->active();
 
@@ -67,7 +109,7 @@ class DashboardController extends Controller
             ->with('status')
             ->get();
 
-        return view('dashboard.business-development', $this->greeting($user) + [
+        return view('dashboard.business-development', $this->greeting($user) + $this->whatsNewToday($filters) + [
             'personalLeads' => (clone $leads)->latest()->take(6)->get(),
             'statusSummary' => $statusSummary,
             'todaysReminders' => FollowUp::whereHas('lead', fn ($q) => $q->where('assigned_user_id', $user->id))
@@ -88,14 +130,14 @@ class DashboardController extends Controller
         ]);
     }
 
-    protected function managerDashboard(User $user): View
+    protected function managerDashboard(User $user, array $filters): View
     {
         $statusDistribution = LeadStatus::withCount(['leads' => fn ($q) => $q->active()])->ordered()->get();
 
         $monthlyConversion = DealClosure::selectRaw("strftime('%Y-%m', closed_date) as month, count(*) as total, sum(deal_value) as value")
             ->groupBy('month')->orderBy('month')->get()->slice(-6)->values();
 
-        return view('dashboard.manager', $this->greeting($user) + [
+        return view('dashboard.manager', $this->greeting($user) + $this->whatsNewToday($filters) + [
             'totalLeads' => Lead::active()->count(),
             'dealStats' => [
                 'count' => DealClosure::count(),
@@ -111,9 +153,9 @@ class DashboardController extends Controller
         ]);
     }
 
-    protected function customerSuccessDashboard(User $user): View
+    protected function customerSuccessDashboard(User $user, array $filters): View
     {
-        return view('dashboard.customer-success', $this->greeting($user) + [
+        return view('dashboard.customer-success', $this->greeting($user) + $this->whatsNewToday($filters) + [
             'organizationGoals' => Goal::latest()->get(),
             'pendingTickets' => SupportTicket::where('status', RequirementStatus::Pending)->count(),
             'ticketQueue' => SupportTicket::whereNotIn('status', [RequirementStatus::Completed])
@@ -121,21 +163,21 @@ class DashboardController extends Controller
         ]);
     }
 
-    protected function financeDashboard(User $user): View
+    protected function financeDashboard(User $user, array $filters): View
     {
-        return view('dashboard.finance', $this->greeting($user) + [
+        return view('dashboard.finance', $this->greeting($user) + $this->whatsNewToday($filters) + [
             'organizationGoals' => Goal::latest()->get(),
         ]);
     }
 
-    protected function superAdminDashboard(User $user): View
+    protected function superAdminDashboard(User $user, array $filters): View
     {
         $statusDistribution = LeadStatus::withCount(['leads' => fn ($q) => $q->active()])->ordered()->get();
 
         $monthlyConversion = DealClosure::selectRaw("strftime('%Y-%m', closed_date) as month, count(*) as total, sum(deal_value) as value")
             ->groupBy('month')->orderBy('month')->get()->slice(-6)->values();
 
-        return view('dashboard.super-admin', $this->greeting($user) + [
+        return view('dashboard.super-admin', $this->greeting($user) + $this->whatsNewToday($filters) + [
             'totalLeads' => Lead::active()->count(),
             'totalUsers' => User::count(),
             'openTasks' => Task::whereNotIn('status', [TaskStatus::Completed, TaskStatus::Cancelled])->count(),

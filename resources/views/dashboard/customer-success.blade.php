@@ -12,6 +12,15 @@
         ['icon' => 'bi-clipboard-check', 'label' => 'Avg. Requirement Solving Time', 'value' => $avgRequirementResolutionTime],
     ]" />
 
+    <x-whats-new-today
+        :filters="$whatsNewFilters"
+        :new-leads-by-status="$newLeadsByStatus"
+        :new-raw-data-count="$newRawDataCount"
+        :converted-raw-data-count="$convertedRawDataCount"
+        :tickets-raised-count="$ticketsRaisedCount"
+        :tickets-solved-count="$ticketsSolvedCount"
+    />
+
     <div class="row g-3 mb-3">
         <div class="col-md-4">
             <div class="stat-card d-flex align-items-center gap-3">
