@@ -57,6 +57,7 @@
                         <th>Assigned To</th>
                         <th>Priority</th>
                         <th>Status</th>
+                        <th>Generated Time</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -69,6 +70,13 @@
                             <td class="small">{{ $ticket->assignee?->name ?? '—' }}</td>
                             <td><x-status-badge :status="$ticket->priority" /></td>
                             <td><x-status-badge :status="$ticket->status" /></td>
+                            <td class="small">
+                                @if ($ticket->resolved_at)
+                                    <span class="text-success">Solved in {{ $ticket->elapsedMinutes() }} min</span>
+                                @else
+                                    <span x-data="ticketElapsed('{{ $ticket->created_at->toIso8601String() }}')" x-text="text">{{ $ticket->elapsedMinutes() }} min</span>
+                                @endif
+                            </td>
                             <td class="text-end">
                                 <a href="{{ route('support-tickets.show', $ticket) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
                                 @can('update', $ticket)
@@ -84,7 +92,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 <x-empty-state icon="bi-life-preserver" title="No support tickets found" description="Try adjusting your filters or raise a new ticket." />
                             </td>
                         </tr>

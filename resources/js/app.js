@@ -22,6 +22,7 @@ import 'select2';
 import './activity-feed';
 import './raw-data-paste-grid';
 import './raw-data-countdown';
+import './ticket-elapsed';
 import './attachment-preview';
 import './lead-duplicate-check';
 

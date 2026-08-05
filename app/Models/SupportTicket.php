@@ -62,4 +62,14 @@ class SupportTicket extends Model
     {
         return $this->created_at->addHours(12)->isFuture();
     }
+
+    /**
+     * Minutes since the ticket was raised — up to now while it's still
+     * open, or up to resolved_at once it's been solved (so the value
+     * freezes at resolution instead of continuing to climb).
+     */
+    public function elapsedMinutes(): int
+    {
+        return $this->created_at->diffInMinutes($this->resolved_at ?? now());
+    }
 }
