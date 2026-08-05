@@ -22,7 +22,7 @@ class RawDataController extends Controller
     {
         $this->authorize('viewAny', RawData::class);
 
-        $filters = $request->only(['search', 'status']);
+        $filters = $request->only(['search', 'status', 'period', 'date_from', 'date_to']);
 
         return view('raw-data.index', [
             'entries' => $this->rawDataService->list($filters),

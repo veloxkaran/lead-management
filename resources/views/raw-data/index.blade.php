@@ -27,12 +27,12 @@
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <form method="GET" class="row g-2 align-items-end">
-                <div class="col-md-4">
+            <form method="GET" class="row g-2 align-items-end" x-data="{ period: '{{ $filters['period'] ?? '' }}' }">
+                <div class="col-md-3">
                     <label class="form-label small">Search</label>
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Contact person or phone" value="{{ $filters['search'] ?? '' }}">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label small">Status</label>
                     <select name="status" class="form-select form-select-sm" data-select2>
                         <option value="">All statuses</option>
@@ -41,8 +41,26 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-4 d-flex gap-2">
-                    <button type="submit" class="btn btn-sm btn-primary flex-fill"><i class="bi bi-funnel"></i> Filter</button>
+                <div class="col-md-2">
+                    <label class="form-label small">Created</label>
+                    <select name="period" class="form-select form-select-sm" x-model="period">
+                        <option value="">Any time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                <div class="col-md-2" x-show="period === 'custom'" x-cloak>
+                    <label class="form-label small">From</label>
+                    <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2" x-show="period === 'custom'" x-cloak>
+                    <label class="form-label small">To</label>
+                    <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-funnel"></i> Filter</button>
                     <a href="{{ route('raw-data.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
                 </div>
             </form>
@@ -62,6 +80,7 @@
                         <th>Added By</th>
                         <th>Assigned To</th>
                         <th>Time Remaining</th>
+                        <th>Created</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -84,6 +103,7 @@
                                     <span class="text-muted">—</span>
                                 @endif
                             </td>
+                            <td class="small text-muted">{{ $entry->created_at->format('M d, Y') }}</td>
                             <td class="text-end">
                                 <a href="{{ route('raw-data.show', $entry) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
                                 @can('delete', $entry)
@@ -96,7 +116,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9">
+                            <td colspan="10">
                                 <x-empty-state icon="bi-inbox" title="No raw data found" description="Try adjusting your filters or add a new entry." />
                             </td>
                         </tr>
