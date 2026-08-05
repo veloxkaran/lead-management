@@ -23,8 +23,8 @@ class RequirementCompanySearchTest extends TestCase
         $response = $this->actingAs($user)->get(route('requirements.index', ['search' => 'Acme']));
 
         $response->assertOk();
-        $response->assertSee('Acme requirement');
-        $response->assertDontSee('Globex requirement');
+        $response->assertSee('Acme Corp');
+        $response->assertDontSee('Globex Inc');
     }
 
     public function test_company_search_is_case_insensitive_and_partial(): void
@@ -36,7 +36,7 @@ class RequirementCompanySearchTest extends TestCase
         $response = $this->actingAs($user)->get(route('requirements.index', ['search' => 'acme']));
 
         $response->assertOk();
-        $response->assertSee('Findable requirement');
+        $response->assertSee('Acme Corp');
     }
 
     public function test_pdf_export_respects_the_company_search_filter(): void

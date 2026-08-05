@@ -29,28 +29,39 @@ class RequirementController extends Controller
     {
         $this->authorize('viewAny', Requirement::class);
 
-        $filters = $request->only(['search', 'status', 'priority']);
+        $filters = $request->only(['search', 'status', 'priority', 'sprint']);
 
-        $requirements = $this->requirementService->list($filters, 20);
+        $companies = $this->requirementService->listGroupedByCompany($filters, 15);
 
         return view('requirements.index', [
-            'requirements' => $requirements,
+            'companies' => $companies,
             'statuses' => RequirementStatus::cases(),
             'priorities' => RequirementPriority::cases(),
+            'sprints' => Requirement::sprintOptions(),
             'filters' => $filters,
         ]);
     }
 
+    public function company(Lead $lead): View
+    {
+        $this->authorize('viewAny', Requirement::class);
+
+        return view('requirements.company', [
+            'lead' => $lead,
+            'requirements' => $this->requirementService->listForCompany($lead),
+        ]);
+    }
+
     /**
-     * Exports whatever the index's current search/status/priority filters
-     * match — every matching row (not just the current page), so the PDF
-     * reflects the exact same filtered set the user is looking at.
+     * Exports whatever the index's current search/status/priority/sprint
+     * filters match — every matching row (not just the current page), so the
+     * PDF reflects the exact same filtered set the user is looking at.
      */
     public function exportPdf(Request $request): Response
     {
         $this->authorize('viewAny', Requirement::class);
 
-        $filters = $request->only(['search', 'status', 'priority']);
+        $filters = $request->only(['search', 'status', 'priority', 'sprint']);
 
         $requirements = $this->requirementService->listAllForExport($filters);
 

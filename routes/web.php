@@ -110,8 +110,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('follow-ups', FollowUpController::class)->except('show');
     Route::post('leads/{lead}/follow-ups', [FollowUpController::class, 'storeForLead'])->name('leads.follow-ups.store');
 
-    // Registered before the resource so /requirements/export-pdf isn't swallowed by the {requirement} wildcard.
+    // Registered before the resource so /requirements/export-pdf and /requirements/company/{lead} aren't swallowed by the {requirement} wildcard.
     Route::get('requirements/export-pdf', [RequirementController::class, 'exportPdf'])->name('requirements.export-pdf');
+    Route::get('requirements/company/{lead}', [RequirementController::class, 'company'])->name('requirements.company');
     Route::resource('requirements', RequirementController::class);
     Route::post('leads/{lead}/requirements', [RequirementController::class, 'storeForLead'])->name('leads.requirements.store');
     Route::post('requirements/{requirement}/comments', [RequirementCommentController::class, 'store'])->name('requirements.comments.store');

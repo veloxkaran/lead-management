@@ -24,6 +24,19 @@ class RequirementService
         return $this->requirements->filter($filters, $perPage);
     }
 
+    public function listGroupedByCompany(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->requirements->groupedByCompany($filters, $perPage);
+    }
+
+    /**
+     * @return Collection<int, Requirement>
+     */
+    public function listForCompany(Lead $lead): Collection
+    {
+        return $this->requirements->forLead($lead);
+    }
+
     /**
      * @return Collection<int, Requirement>
      */

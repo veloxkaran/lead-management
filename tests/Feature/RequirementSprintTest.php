@@ -89,12 +89,13 @@ class RequirementSprintTest extends TestCase
         $this->assertSame('Sprint 42', $entry->new_values['sprint']);
     }
 
-    public function test_requirements_index_shows_sprint_column(): void
+    public function test_company_requirements_page_shows_sprint_column(): void
     {
         $user = User::factory()->create();
-        Requirement::factory()->create(['sprint' => 'Sprint 44']);
+        $lead = Lead::factory()->create();
+        Requirement::factory()->create(['lead_id' => $lead->id, 'sprint' => 'Sprint 44']);
 
-        $response = $this->actingAs($user)->get(route('requirements.index'));
+        $response = $this->actingAs($user)->get(route('requirements.company', $lead));
 
         $response->assertOk();
         $response->assertSee('Sprint');
@@ -123,5 +124,29 @@ class RequirementSprintTest extends TestCase
         $response->assertSee('Sprint 50');
         $response->assertDontSee('Sprint 34');
         $response->assertDontSee('Sprint 51');
+    }
+
+    public function test_index_can_be_filtered_by_sprint(): void
+    {
+        $user = User::factory()->create();
+        $sprint40Co = Lead::factory()->create(['company_name' => 'Sprint 40 Co']);
+        $sprint41Co = Lead::factory()->create(['company_name' => 'Sprint 41 Co']);
+        Requirement::factory()->create(['lead_id' => $sprint40Co->id, 'sprint' => 'Sprint 40']);
+        Requirement::factory()->create(['lead_id' => $sprint41Co->id, 'sprint' => 'Sprint 41']);
+
+        $response = $this->actingAs($user)->get(route('requirements.index', ['sprint' => 'Sprint 40']));
+
+        $response->assertOk();
+        $response->assertSee('Sprint 40 Co');
+        $response->assertDontSee('Sprint 41 Co');
+    }
+
+    public function test_pdf_export_respects_the_sprint_filter(): void
+    {
+        $user = User::factory()->create();
+        Requirement::factory()->create(['sprint' => 'Sprint 40']);
+        Requirement::factory()->create(['sprint' => 'Sprint 41']);
+
+        $this->actingAs($user)->get(route('requirements.export-pdf', ['sprint' => 'Sprint 40']))->assertOk();
     }
 }

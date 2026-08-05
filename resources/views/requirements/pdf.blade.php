@@ -21,6 +21,7 @@
         Company: {{ $filters['search'] ?? 'All' }}
         &middot; Status: {{ collect($statuses)->first(fn ($s) => $s->value === ($filters['status'] ?? null))?->label() ?? 'All' }}
         &middot; Priority: {{ collect($priorities)->first(fn ($p) => $p->value === ($filters['priority'] ?? null))?->label() ?? 'All' }}
+        &middot; Sprint: {{ $filters['sprint'] ?? 'All' }}
         &middot; {{ $requirements->count() }} {{ Str::plural('result', $requirements->count()) }}
     </p>
     <table>

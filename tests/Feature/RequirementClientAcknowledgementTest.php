@@ -58,12 +58,13 @@ class RequirementClientAcknowledgementTest extends TestCase
         $response->assertSee('Aug 10, 2026');
     }
 
-    public function test_requirements_index_shows_acknowledgement_status(): void
+    public function test_company_requirements_page_shows_acknowledgement_status(): void
     {
         $user = User::factory()->create();
-        Requirement::factory()->create(['client_acknowledged_at' => null]);
+        $lead = Lead::factory()->create();
+        Requirement::factory()->create(['lead_id' => $lead->id, 'client_acknowledged_at' => null]);
 
-        $response = $this->actingAs($user)->get(route('requirements.index'));
+        $response = $this->actingAs($user)->get(route('requirements.company', $lead));
 
         $response->assertOk();
         $response->assertSee('Client Acknowledged');

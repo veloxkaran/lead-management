@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Enums\RequirementPriority;
+use App\Models\Lead;
 use App\Models\Requirement;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,6 +19,69 @@ class RequirementRepository extends BaseRepository
     public function filter(array $filters, int $perPage = 20): LengthAwarePaginator
     {
         return $this->filteredQuery($filters)->paginate($perPage)->withQueryString();
+    }
+
+    /**
+     * One page entry per company (Lead) — search/status/priority/sprint only
+     * decide which companies qualify (any company with at least one matching
+     * requirement), since the company-wide status badge is computed from
+     * that company's complete requirement set, not a filtered subset.
+     */
+    public function groupedByCompany(array $filters, int $perPage = 15): LengthAwarePaginator
+    {
+        $query = Lead::query()->whereHas('requirements');
+
+        if (! empty($filters['search'])) {
+            $query->where('company_name', 'like', '%'.$filters['search'].'%');
+        }
+
+        if (! empty($filters['status']) || ! empty($filters['priority']) || ! empty($filters['sprint'])) {
+            $query->whereHas('requirements', function (Builder $q) use ($filters) {
+                if (! empty($filters['status'])) {
+                    $q->where('status', $filters['status']);
+                }
+
+                if (! empty($filters['priority'])) {
+                    $q->where('priority', $filters['priority']);
+                }
+
+                if (! empty($filters['sprint'])) {
+                    $q->where('sprint', $filters['sprint']);
+                }
+            });
+        }
+
+        return $query
+            ->with(['requirements' => fn ($q) => $this->orderedForDisplay($q)])
+            ->orderBy('company_name')
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
+    /**
+     * Every requirement belonging to one company, for that company's
+     * dedicated requirement-list page.
+     */
+    public function forLead(Lead $lead): Collection
+    {
+        return $this->orderedForDisplay($lead->requirements())->get();
+    }
+
+    private function orderedForDisplay($query)
+    {
+        return $query
+            ->with(['assignee', 'creator'])
+            ->withCount('comments')
+            ->orderByRaw(
+                'CASE priority WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 ELSE 5 END',
+                [
+                    RequirementPriority::Urgent->value,
+                    RequirementPriority::High->value,
+                    RequirementPriority::Medium->value,
+                    RequirementPriority::Low->value,
+                ]
+            )
+            ->oldest();
     }
 
     /**
@@ -47,6 +111,10 @@ class RequirementRepository extends BaseRepository
 
         if (! empty($filters['priority'])) {
             $query->where('priority', $filters['priority']);
+        }
+
+        if (! empty($filters['sprint'])) {
+            $query->where('sprint', $filters['sprint']);
         }
 
         if (! empty($filters['lead_ids'])) {
