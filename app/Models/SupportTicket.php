@@ -72,4 +72,19 @@ class SupportTicket extends Model
     {
         return $this->created_at->diffInMinutes($this->resolved_at ?? now());
     }
+
+    /**
+     * elapsedMinutes() broken into "day:hour:minute", e.g. "2:03:07" for
+     * 2 days, 3 hours, 7 minutes.
+     */
+    public function elapsedFormatted(): string
+    {
+        $totalMinutes = $this->elapsedMinutes();
+
+        $days = intdiv($totalMinutes, 1440);
+        $hours = intdiv($totalMinutes % 1440, 60);
+        $minutes = $totalMinutes % 60;
+
+        return sprintf('%d:%02d:%02d', $days, $hours, $minutes);
+    }
 }

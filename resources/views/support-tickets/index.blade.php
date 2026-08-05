@@ -57,7 +57,7 @@
                         <th>Assigned To</th>
                         <th>Priority</th>
                         <th>Status</th>
-                        <th>Generated Time</th>
+                        <th>Generated Time <span class="text-muted small">(d:h:m)</span></th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -72,9 +72,9 @@
                             <td><x-status-badge :status="$ticket->status" /></td>
                             <td class="small">
                                 @if ($ticket->resolved_at)
-                                    <span class="text-success">Solved in {{ $ticket->elapsedMinutes() }} min</span>
+                                    <span class="text-success">Solved in {{ $ticket->elapsedFormatted() }}</span>
                                 @else
-                                    <span x-data="ticketElapsed('{{ $ticket->created_at->toIso8601String() }}')" x-text="text">{{ $ticket->elapsedMinutes() }} min</span>
+                                    <span x-data="ticketElapsed('{{ $ticket->created_at->toIso8601String() }}')" x-text="text">{{ $ticket->elapsedFormatted() }}</span>
                                 @endif
                             </td>
                             <td class="text-end">

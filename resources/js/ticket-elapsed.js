@@ -4,7 +4,8 @@
 // rather than a precomputed duration, so it stays correct regardless of how
 // long the page has been open — same approach as rawDataCountdown. Only
 // used for tickets that haven't been resolved yet; resolved tickets render
-// a static "Solved in N min" value server-side instead.
+// a static "Solved in D:HH:MM" value server-side instead (mirroring
+// SupportTicket::elapsedFormatted()).
 window.ticketElapsed = function (createdAtIso) {
     return {
         text: '',
@@ -15,8 +16,13 @@ window.ticketElapsed = function (createdAtIso) {
         },
 
         tick() {
-            const minutes = Math.floor((Date.now() - new Date(createdAtIso).getTime()) / 60000);
-            this.text = `${Math.max(minutes, 0)} min`;
+            const totalMinutes = Math.max(Math.floor((Date.now() - new Date(createdAtIso).getTime()) / 60000), 0);
+            const days = Math.floor(totalMinutes / 1440);
+            const hours = Math.floor((totalMinutes % 1440) / 60);
+            const minutes = totalMinutes % 60;
+            const pad = (n) => String(n).padStart(2, '0');
+
+            this.text = `${days}:${pad(hours)}:${pad(minutes)}`;
         },
     };
 };
