@@ -24,7 +24,7 @@ class RawData extends Model
 
     protected $fillable = [
         'company_id', 'contact_person', 'company_name', 'number_of_employees', 'phone', 'email', 'source', 'notes', 'status',
-        'converted_lead_id', 'created_by', 'assigned_to', 'assigned_by', 'assigned_at',
+        'converted_lead_id', 'converted_at', 'created_by', 'assigned_to', 'assigned_by', 'assigned_at',
     ];
 
     protected function casts(): array
@@ -32,6 +32,7 @@ class RawData extends Model
         return [
             'status' => RawDataStatus::class,
             'assigned_at' => 'datetime',
+            'converted_at' => 'datetime',
             'number_of_employees' => 'integer',
         ];
     }

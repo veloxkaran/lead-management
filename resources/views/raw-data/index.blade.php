@@ -76,6 +76,7 @@
                         <th>Phone</th>
                         <th>Email</th>
                         <th>Status</th>
+                        <th>Matched Lead</th>
                         <th>Added By</th>
                         <th>Assigned To</th>
                         <th>Created</th>
@@ -93,6 +94,15 @@
                             <td class="small">{{ $entry->phone }}</td>
                             <td class="small">{{ $entry->email ?? '—' }}</td>
                             <td><x-status-badge :status="$entry->status" /></td>
+                            <td class="small">
+                                @if ($entry->matched_lead)
+                                    <a href="{{ route('leads.show', $entry->matched_lead) }}" class="badge text-decoration-none" style="background-color: {{ $entry->matched_lead->status->color ?? '#6c757d' }};" title="Phone/email also matches this Lead">
+                                        {{ $entry->matched_lead->status->name ?? 'No Status' }}
+                                    </a>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
                             <td class="small text-muted">{{ $entry->creator?->name ?? '—' }}</td>
                             <td class="small">{{ $entry->assignee?->name ?? '—' }}</td>
                             <td class="small text-muted">{{ $entry->created_at->format('M d, Y') }}</td>
@@ -108,7 +118,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8">
+                            <td colspan="9">
                                 <x-empty-state icon="bi-inbox" title="No raw data found" description="Try adjusting your filters or add a new entry." />
                             </td>
                         </tr>

@@ -29,6 +29,7 @@ class DashboardWhatsNewTodayTest extends TestCase
             'created_at' => now(),
             'status' => RawDataStatus::ConvertedToLead->value,
             'converted_lead_id' => $convertedLead->id,
+            'converted_at' => now(),
         ]);
         RawData::factory()->create(['created_at' => now()->subDays(3)]);
 
@@ -83,5 +84,43 @@ class DashboardWhatsNewTodayTest extends TestCase
 
         $response->assertOk();
         $response->assertViewHas('ticketsRaisedCount', 1);
+    }
+
+    /**
+     * Regression test: converted_to_lead count must follow when the entry
+     * was actually converted, not when it was created. Before converted_at
+     * existed, this count was cloned from the "created in this period"
+     * query, so an entry created weeks ago and converted today was
+     * invisible to today's widget, and an entry created today but
+     * converted later would never be reflected on the day it actually
+     * converted either.
+     */
+    public function test_converted_count_follows_conversion_time_not_creation_time(): void
+    {
+        $user = User::factory()->create();
+        $status = LeadStatus::factory()->create();
+
+        $oldLead = Lead::factory()->create(['lead_status_id' => $status->id]);
+        RawData::factory()->create([
+            'created_at' => now()->subDays(30),
+            'status' => RawDataStatus::ConvertedToLead->value,
+            'converted_lead_id' => $oldLead->id,
+            'converted_at' => now(),
+        ]);
+
+        $recentLead = Lead::factory()->create(['lead_status_id' => $status->id]);
+        RawData::factory()->create([
+            'created_at' => now(),
+            'status' => RawDataStatus::ConvertedToLead->value,
+            'converted_lead_id' => $recentLead->id,
+            'converted_at' => now()->subDays(30),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        // Created 30 days ago but converted today -> counts today.
+        // Created today but converted 30 days ago -> does not count today.
+        $response->assertViewHas('convertedRawDataCount', 1);
     }
 }

@@ -25,7 +25,84 @@ class RawDataService
 
     public function list(array $filters, int $perPage = 20): LengthAwarePaginator
     {
-        return $this->rawData->filter($filters, $perPage);
+        $entries = $this->rawData->filter($filters, $perPage);
+
+        $this->attachMatchedLeads($entries);
+
+        return $entries;
+    }
+
+    /**
+     * Surfaces, per raw-data entry, the existing Lead (if any) that shares
+     * its phone or email — so staff can see at a glance that a contact
+     * already has a Lead record elsewhere before spending time working the
+     * raw-data entry. Phone is compared digits-only (so formatting
+     * differences like dashes/parens don't hide a real match); email is
+     * compared case-insensitively. When several leads match, the most
+     * recently created one wins. Entries already linked to their own
+     * converted lead are skipped — that's already covered by the status
+     * column.
+     *
+     * Matching happens entirely in PHP against every Lead (no SQL-side
+     * normalization) so the exact same code decides a match on both sides —
+     * a partial SQL-side normalization could silently miss a match the PHP
+     * side would have found. Only safe because the leads table is small; if
+     * it grows large, pre-filter with a SQL pass first.
+     */
+    private function attachMatchedLeads(LengthAwarePaginator $entries): void
+    {
+        $items = $entries->getCollection();
+
+        if ($items->isEmpty()) {
+            return;
+        }
+
+        $leads = Lead::query()->with('status')->latest()->get();
+
+        if ($leads->isEmpty()) {
+            return;
+        }
+
+        $byPhone = [];
+        $byEmail = [];
+
+        foreach ($leads as $lead) {
+            $phone = self::normalizePhone($lead->phone);
+            if ($phone !== null && ! isset($byPhone[$phone])) {
+                $byPhone[$phone] = $lead;
+            }
+
+            $email = self::normalizeEmail($lead->email);
+            if ($email !== null && ! isset($byEmail[$email])) {
+                $byEmail[$email] = $lead;
+            }
+        }
+
+        foreach ($items as $entry) {
+            if ($entry->converted_lead_id !== null) {
+                continue;
+            }
+
+            $phone = self::normalizePhone($entry->phone);
+            $email = self::normalizeEmail($entry->email);
+
+            $entry->matched_lead = ($phone !== null ? ($byPhone[$phone] ?? null) : null)
+                ?? ($email !== null ? ($byEmail[$email] ?? null) : null);
+        }
+    }
+
+    private static function normalizePhone(?string $phone): ?string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $phone);
+
+        return $digits === '' ? null : $digits;
+    }
+
+    private static function normalizeEmail(?string $email): ?string
+    {
+        $trimmed = mb_strtolower(trim((string) $email));
+
+        return $trimmed === '' ? null : $trimmed;
     }
 
     public function create(array $attributes, User $creator): RawData
@@ -71,6 +148,7 @@ class RawDataService
             $rawData->update([
                 'status' => RawDataStatus::ConvertedToLead,
                 'converted_lead_id' => $lead->id,
+                'converted_at' => now(),
             ]);
 
             return $lead;

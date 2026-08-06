@@ -84,8 +84,6 @@ class DashboardController extends Controller
         $newLeadsByStatus = LeadStatus::withCount(['leads' => fn ($q) => $q->whereBetween('created_at', [$from, $to])])
             ->ordered()->get()->filter(fn (LeadStatus $status) => $status->leads_count > 0)->values();
 
-        $newRawData = RawData::whereBetween('created_at', [$from, $to]);
-
         return [
             'whatsNewFilters' => [
                 'period' => $filters['period'] ?? 'today',
@@ -93,8 +91,12 @@ class DashboardController extends Controller
                 'date_to' => $filters['date_to'] ?? null,
             ],
             'newLeadsByStatus' => $newLeadsByStatus,
-            'newRawDataCount' => (clone $newRawData)->count(),
-            'convertedRawDataCount' => (clone $newRawData)->where('status', RawDataStatus::ConvertedToLead)->count(),
+            'newRawDataCount' => RawData::whereBetween('created_at', [$from, $to])->count(),
+            // Scoped by converted_at (when the conversion happened), not
+            // created_at — a raw-data entry created weeks ago and converted
+            // today belongs in *today's* count, not the day it was created.
+            'convertedRawDataCount' => RawData::where('status', RawDataStatus::ConvertedToLead)
+                ->whereBetween('converted_at', [$from, $to])->count(),
             'ticketsRaisedCount' => SupportTicket::whereBetween('created_at', [$from, $to])->count(),
             'ticketsSolvedCount' => SupportTicket::whereBetween('resolved_at', [$from, $to])->count(),
         ];
