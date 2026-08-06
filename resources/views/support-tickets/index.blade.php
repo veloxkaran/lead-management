@@ -65,7 +65,13 @@
                     @forelse ($tickets as $ticket)
                         <tr>
                             <td class="small fw-semibold"><a href="{{ route('support-tickets.show', $ticket) }}">{{ $ticket->subject }}</a></td>
-                            <td class="small">{{ $ticket->lead?->company_name ?? '—' }}</td>
+                            <td class="small">
+                                @if ($ticket->lead)
+                                    <a href="{{ route('leads.show', $ticket->lead) }}" class="text-decoration-none">{{ $ticket->lead->company_name }}</a>
+                                @else
+                                    &mdash;
+                                @endif
+                            </td>
                             <td class="small text-muted">{{ $ticket->raiser?->name }}</td>
                             <td class="small">{{ $ticket->assignee?->name ?? '—' }}</td>
                             <td><x-status-badge :status="$ticket->priority" /></td>
