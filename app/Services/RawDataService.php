@@ -426,6 +426,73 @@ class RawDataService
         return $this->rawData->query()->whereIn('id', $duplicateIds)->delete();
     }
 
+    /**
+     * Bulk-removes raw_data entries that duplicate another raw_data entry —
+     * two separate passes, phone takes priority over email:
+     *
+     *   1. Every entry that HAS a phone is grouped with others sharing the
+     *      same phone (digits-only). Entries with no phone never enter this
+     *      pass at all, so a phone group is never contaminated by a
+     *      coincidental email collision from a phone-less row.
+     *   2. Only entries with NO phone at all are then grouped by email
+     *      (case-insensitive) among themselves. An entry with a phone is
+     *      never re-checked against email, even if it would otherwise
+     *      collide — once phone decides an entry's fate, that's final.
+     *
+     * Within any duplicate group, an entry already converted to its own
+     * Lead (converted_lead_id set) is always kept — deleting it would
+     * orphan that conversion's history. If the group has no converted
+     * entry, the earliest one (lowest id) is kept and the rest deleted.
+     */
+    public function deleteDuplicateRawDataEntries(): int
+    {
+        $toDelete = collect();
+
+        $withPhone = $this->rawData->query()
+            ->whereNotNull('phone')->where('phone', '!=', '')
+            ->orderBy('id')
+            ->get(['id', 'phone', 'converted_lead_id']);
+
+        foreach ($withPhone->groupBy(fn (RawData $row) => self::normalizePhone($row->phone)) as $group) {
+            if ($group->count() > 1) {
+                $toDelete = $toDelete->merge(self::idsToDeleteFromGroup($group));
+            }
+        }
+
+        $withoutPhone = $this->rawData->query()
+            ->where(fn ($q) => $q->whereNull('phone')->orWhere('phone', ''))
+            ->whereNotNull('email')->where('email', '!=', '')
+            ->orderBy('id')
+            ->get(['id', 'email', 'converted_lead_id']);
+
+        foreach ($withoutPhone->groupBy(fn (RawData $row) => self::normalizeEmail($row->email)) as $group) {
+            if ($group->count() > 1) {
+                $toDelete = $toDelete->merge(self::idsToDeleteFromGroup($group));
+            }
+        }
+
+        if ($toDelete->isEmpty()) {
+            return 0;
+        }
+
+        return $this->rawData->query()->whereIn('id', $toDelete->unique())->delete();
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, RawData>  $group
+     * @return \Illuminate\Support\Collection<int, int>
+     */
+    private static function idsToDeleteFromGroup($group)
+    {
+        $converted = $group->filter(fn (RawData $row) => $row->converted_lead_id !== null);
+
+        if ($converted->isNotEmpty()) {
+            return $group->reject(fn (RawData $row) => $row->converted_lead_id !== null)->pluck('id');
+        }
+
+        return $group->sortBy('id')->skip(1)->pluck('id');
+    }
+
     private function guardActionable(RawData $rawData): void
     {
         if (! $rawData->isActionable()) {

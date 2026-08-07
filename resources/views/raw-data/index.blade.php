@@ -9,7 +9,7 @@
                 <form method="POST" action="{{ route('raw-data.delete-incomplete') }}" class="d-inline"
                       data-confirm-delete
                       data-confirm-title="Delete incomplete raw data?"
-                      data-confirm-text="This permanently deletes every entry with no phone and no email, plus every remaining entry whose phone or email matches an existing lead. This cannot be undone."
+                      data-confirm-text="This permanently deletes every entry with no phone and no email, every remaining entry whose phone or email matches an existing lead, and every remaining entry that duplicates another raw data entry's phone (or email, when phone is blank). This cannot be undone."
                       data-confirm-button-text="Delete Incomplete Entries">
                     @csrf
                     <button type="submit" class="btn btn-outline-danger btn-sm">
