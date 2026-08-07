@@ -65,13 +65,21 @@ class RawDataController extends Controller
         return redirect()->route('raw-data.index')->with('success', 'Raw data entry deleted successfully.');
     }
 
+    /**
+     * One combined cleanup action: first removes entries with no phone and
+     * no email (unreachable junk), then removes whatever's left that
+     * duplicates an existing Lead by phone or email — see
+     * RawDataService::deleteIncomplete() and ::deleteDuplicatesOfLeads().
+     */
     public function deleteIncomplete(): RedirectResponse
     {
         $this->authorize('deleteIncomplete', RawData::class);
 
-        $deleted = $this->rawDataService->deleteIncomplete();
+        $incompleteDeleted = $this->rawDataService->deleteIncomplete();
+        $duplicatesDeleted = $this->rawDataService->deleteDuplicatesOfLeads();
 
-        return redirect()->route('raw-data.index')->with('success', "{$deleted} incomplete raw data entry/entries deleted (no phone and no email).");
+        return redirect()->route('raw-data.index')->with('success', "{$incompleteDeleted} incomplete raw data entry/entries deleted (no phone and no email). "
+            ."{$duplicatesDeleted} entry/entries deleted as duplicate(s) of an existing lead (matched by phone or email).");
     }
 
     public function markNotValid(RawData $rawData): RedirectResponse

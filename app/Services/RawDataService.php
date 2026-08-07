@@ -374,6 +374,58 @@ class RawDataService
             ->delete();
     }
 
+    /**
+     * Bulk-removes raw_data entries that duplicate a Lead already on file —
+     * same phone (digits-only) or email (case-insensitive) match used to
+     * surface the "matched lead" badge in attachMatchedLeads(), so a row
+     * flagged with that badge is exactly the set this deletes. An entry
+     * already converted to its own Lead (converted_lead_id set) is left
+     * alone regardless of a match, since deleting it would orphan that
+     * conversion's history. Intended to run right after deleteIncomplete()
+     * as part of the same cleanup action — see RawDataController::deleteIncomplete().
+     */
+    public function deleteDuplicatesOfLeads(): int
+    {
+        $leads = Lead::query()->get(['id', 'phone', 'email']);
+
+        if ($leads->isEmpty()) {
+            return 0;
+        }
+
+        $byPhone = [];
+        $byEmail = [];
+
+        foreach ($leads as $lead) {
+            $phone = self::normalizePhone($lead->phone);
+            if ($phone !== null) {
+                $byPhone[$phone] = true;
+            }
+
+            $email = self::normalizeEmail($lead->email);
+            if ($email !== null) {
+                $byEmail[$email] = true;
+            }
+        }
+
+        $duplicateIds = $this->rawData->query()
+            ->whereNull('converted_lead_id')
+            ->get(['id', 'phone', 'email'])
+            ->filter(function (RawData $entry) use ($byPhone, $byEmail) {
+                $phone = self::normalizePhone($entry->phone);
+                $email = self::normalizeEmail($entry->email);
+
+                return ($phone !== null && isset($byPhone[$phone]))
+                    || ($email !== null && isset($byEmail[$email]));
+            })
+            ->pluck('id');
+
+        if ($duplicateIds->isEmpty()) {
+            return 0;
+        }
+
+        return $this->rawData->query()->whereIn('id', $duplicateIds)->delete();
+    }
+
     private function guardActionable(RawData $rawData): void
     {
         if (! $rawData->isActionable()) {
