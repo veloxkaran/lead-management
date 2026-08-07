@@ -19,6 +19,7 @@
         :converted-raw-data-count="$convertedRawDataCount"
         :tickets-raised-count="$ticketsRaisedCount"
         :tickets-solved-count="$ticketsSolvedCount"
+        :new-requirements-count="$newRequirementsCount"
     />
 
     <div class="row g-3 mb-0">

@@ -67,7 +67,7 @@ class DashboardController extends Controller
      * reasoning as greeting(). Defaults to today but accepts the same
      * period/date_from/date_to vocabulary as the Raw Data filter
      * (see PeriodRange), so switching to "This Week" or a custom range
-     * re-scopes all four counts at once.
+     * re-scopes all five counts at once.
      */
     protected function whatsNewToday(array $filters): array
     {
@@ -99,6 +99,7 @@ class DashboardController extends Controller
                 ->whereBetween('converted_at', [$from, $to])->count(),
             'ticketsRaisedCount' => SupportTicket::whereBetween('created_at', [$from, $to])->count(),
             'ticketsSolvedCount' => SupportTicket::whereBetween('resolved_at', [$from, $to])->count(),
+            'newRequirementsCount' => Requirement::whereBetween('created_at', [$from, $to])->count(),
         ];
     }
 

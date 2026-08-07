@@ -1,4 +1,4 @@
-@props(['filters', 'newLeadsByStatus', 'newRawDataCount', 'convertedRawDataCount', 'ticketsRaisedCount', 'ticketsSolvedCount'])
+@props(['filters', 'newLeadsByStatus', 'newRawDataCount', 'convertedRawDataCount', 'ticketsRaisedCount', 'ticketsSolvedCount', 'newRequirementsCount'])
 
 {{-- "What's New Today?" — rendered identically on every role dashboard
      (see resources/views/dashboard/*.blade.php). Defaults to today; the
@@ -30,7 +30,7 @@
     </div>
     <div class="card-body">
         <div class="row g-3">
-            <div class="col-md-3">
+            <div class="col-lg-2 col-md-4 col-6">
                 <div class="small text-muted mb-2">New Leads by Status</div>
                 @forelse ($newLeadsByStatus as $status)
                     <div class="d-flex justify-content-between small mb-1">
@@ -41,18 +41,22 @@
                     <div class="small text-muted fst-italic">No new leads</div>
                 @endforelse
             </div>
-            <div class="col-md-3">
+            <div class="col-lg-2 col-md-4 col-6">
                 <div class="small text-muted mb-2">Raw Data Added</div>
                 <div class="fs-4 fw-semibold">{{ $newRawDataCount }}</div>
                 <div class="small text-muted">{{ $convertedRawDataCount }} converted to lead</div>
             </div>
-            <div class="col-md-3">
+            <div class="col-lg-2 col-md-4 col-6">
                 <div class="small text-muted mb-2">Tickets Raised</div>
                 <div class="fs-4 fw-semibold">{{ $ticketsRaisedCount }}</div>
             </div>
-            <div class="col-md-3">
+            <div class="col-lg-2 col-md-4 col-6">
                 <div class="small text-muted mb-2">Tickets Solved</div>
                 <div class="fs-4 fw-semibold">{{ $ticketsSolvedCount }}</div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="small text-muted mb-2">Requirements Added</div>
+                <div class="fs-4 fw-semibold">{{ $newRequirementsCount }}</div>
             </div>
         </div>
     </div>

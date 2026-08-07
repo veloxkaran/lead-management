@@ -6,6 +6,7 @@ use App\Enums\RawDataStatus;
 use App\Models\Lead;
 use App\Models\LeadStatus;
 use App\Models\RawData;
+use App\Models\Requirement;
 use App\Models\SupportTicket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -37,6 +38,10 @@ class DashboardWhatsNewTodayTest extends TestCase
         SupportTicket::factory()->create(['created_at' => now()->subDays(3)]);
         SupportTicket::factory()->create(['created_at' => now()->subDays(3), 'resolved_at' => now()]);
 
+        Requirement::factory()->create(['created_at' => now()]);
+        Requirement::factory()->create(['created_at' => now()]);
+        Requirement::factory()->create(['created_at' => now()->subDays(3)]);
+
         $response = $this->actingAs($user)->get(route('dashboard'));
 
         $response->assertOk();
@@ -44,6 +49,7 @@ class DashboardWhatsNewTodayTest extends TestCase
         $response->assertViewHas('convertedRawDataCount', 1);
         $response->assertViewHas('ticketsRaisedCount', 1);
         $response->assertViewHas('ticketsSolvedCount', 1);
+        $response->assertViewHas('newRequirementsCount', 2);
         $response->assertViewHas('whatsNewFilters', ['period' => 'today', 'date_from' => null, 'date_to' => null]);
         $response->assertViewHas(
             'newLeadsByStatus',
@@ -59,6 +65,9 @@ class DashboardWhatsNewTodayTest extends TestCase
         SupportTicket::factory()->create(['created_at' => now()->subDays(5)]); // inside range
         SupportTicket::factory()->create(['created_at' => now()]); // outside range (too recent)
 
+        Requirement::factory()->create(['created_at' => now()->subDays(10)]); // outside range
+        Requirement::factory()->create(['created_at' => now()->subDays(5)]); // inside range
+
         $response = $this->actingAs($user)->get(route('dashboard', [
             'period' => 'custom',
             'date_from' => now()->subDays(7)->toDateString(),
@@ -67,6 +76,7 @@ class DashboardWhatsNewTodayTest extends TestCase
 
         $response->assertOk();
         $response->assertViewHas('ticketsRaisedCount', 1);
+        $response->assertViewHas('newRequirementsCount', 1);
         $response->assertViewHas(
             'whatsNewFilters',
             fn ($filters) => $filters['period'] === 'custom' && $filters['date_from'] === now()->subDays(7)->toDateString()
