@@ -72,7 +72,7 @@ class SupportTicketController extends Controller
     {
         $this->authorize('view', $supportTicket);
 
-        $supportTicket->load('lead', 'raiser', 'assignee', 'comments.author', 'attachments');
+        $supportTicket->load('lead', 'raiser', 'assignee', 'comments.author', 'attachments', 'assignmentLogs.user', 'assignmentLogs.performedBy');
 
         return view('support-tickets.show', [
             'supportTicket' => $supportTicket,
@@ -98,6 +98,7 @@ class SupportTicketController extends Controller
         $this->supportTickets->update(
             $supportTicket,
             $request->safe()->except('attachments'),
+            $request->user(),
             $request->file('attachments', [])
         );
 

@@ -16,7 +16,8 @@ class SupportTicket extends Model
     use BelongsToCompany, HasFactory, TracksResolutionTime;
 
     protected $fillable = [
-        'company_id', 'lead_id', 'subject', 'details', 'priority', 'status', 'raised_by', 'assigned_to', 'resolved_at',
+        'company_id', 'lead_id', 'subject', 'details', 'priority', 'status', 'raised_by',
+        'assigned_to', 'assigned_by', 'assigned_at', 'resolved_at',
     ];
 
     protected function casts(): array
@@ -24,6 +25,7 @@ class SupportTicket extends Model
         return [
             'priority' => RequirementPriority::class,
             'status' => RequirementStatus::class,
+            'assigned_at' => 'datetime',
             'resolved_at' => 'datetime',
         ];
     }
@@ -43,9 +45,19 @@ class SupportTicket extends Model
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
+    public function assignedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_by');
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(SupportTicketComment::class)->oldest();
+    }
+
+    public function assignmentLogs(): HasMany
+    {
+        return $this->hasMany(SupportTicketAssignmentLog::class)->latest();
     }
 
     public function attachments(): HasMany
