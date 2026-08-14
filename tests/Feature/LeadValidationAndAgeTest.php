@@ -18,13 +18,29 @@ class LeadValidationAndAgeTest extends TestCase
         Lead::factory()->create(['company_name' => 'Acme Corporation Group']);
 
         $response = $this->actingAs($user)->post(route('leads.store'), [
-            // one char added to a long-enough name to clear the 97% match threshold (~97.8%)
+            // one char added to a long-enough name to clear the 90% match threshold (~97.8%)
             'company_name' => 'Acme Corporation Groups',
             'contact_person' => 'Jane Doe',
         ]);
 
         $response->assertSessionHasErrors('company_name');
         $this->assertDatabaseMissing('leads', ['company_name' => 'Acme Corporation Groups']);
+    }
+
+    public function test_a_name_in_the_90_to_97_percent_band_is_rejected(): void
+    {
+        $user = User::factory()->create();
+        Lead::factory()->create(['company_name' => 'Acme Corporation']);
+
+        $response = $this->actingAs($user)->post(route('leads.store'), [
+            // a transposed-letter typo — ~93.75% similar: below the old 97% threshold
+            // (would have been accepted before) but above the new 90% one.
+            'company_name' => 'Acme Corporatoin',
+            'contact_person' => 'Jane Doe',
+        ]);
+
+        $response->assertSessionHasErrors('company_name');
+        $this->assertDatabaseMissing('leads', ['company_name' => 'Acme Corporatoin']);
     }
 
     public function test_a_sufficiently_different_company_name_is_accepted(): void

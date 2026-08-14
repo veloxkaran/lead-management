@@ -24,7 +24,7 @@
                 @endif
                 <div class="col-md-3">
                     <label class="form-label small">Search</label>
-                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control form-control-sm" placeholder="Company, contact, email">
+                    <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control form-control-sm" placeholder="Company, contact, email" x-data x-on:input.debounce.500ms="$el.form.requestSubmit()">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label small">Company Name</label>

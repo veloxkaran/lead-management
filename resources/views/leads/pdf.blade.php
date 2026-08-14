@@ -178,7 +178,7 @@
                     <td>{{ $ticket->subject }}</td>
                     <td>{{ $ticket->priority->label() }}</td>
                     <td>{{ $ticket->status->label() }}</td>
-                    <td>{{ $ticket->raiser?->name ?? '—' }}</td>
+                    <td>{{ $ticket->raiserDisplayName() }}</td>
                     <td>{{ $ticket->assignee?->name ?? '—' }}</td>
                 </tr>
                 @if ($ticket->details)

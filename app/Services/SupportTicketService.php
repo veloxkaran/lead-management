@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
 use App\Enums\SupportTicketAssignmentAction;
 use App\Models\Lead;
@@ -55,6 +56,35 @@ class SupportTicketService
         $attributes['lead_id'] = $lead->id;
 
         return $this->create($attributes, $raiser, $files);
+    }
+
+    /**
+     * Raised anonymously through the public client self-service portal
+     * (ClientSupportController), not by an authenticated staff member — so
+     * there's no real User to attribute it to. support_tickets.raised_by is
+     * NOT NULL and this app has no system/bot-user account, so it's set to
+     * the lead's assigned rep (falling back to whoever created the lead,
+     * always present) purely for FK integrity; `is_client_submitted` is
+     * what views actually key off to label these "Client (self-service
+     * portal)" instead of that staff member's name. Reuses createForLead()
+     * as-is (same transaction/attachment handling), just with a synthetic
+     * raiser and no attachments.
+     *
+     * `company_id` is set explicitly from the lead rather than left to
+     * BelongsToCompany's auto-fill-on-create, which only fires when
+     * Auth::check() is true — there's no authenticated user on this public
+     * route at all.
+     */
+    public function createFromClientPortal(Lead $lead, array $attributes): SupportTicket
+    {
+        $raiser = $lead->assignedUser ?? $lead->creator;
+
+        return $this->createForLead($lead, [
+            ...$attributes,
+            'company_id' => $lead->company_id,
+            'priority' => RequirementPriority::Medium->value,
+            'is_client_submitted' => true,
+        ], $raiser);
     }
 
     /**

@@ -248,4 +248,24 @@ class LeadController extends Controller
 
         return back()->with('success', 'Deal closed and lead marked as converted.');
     }
+
+    public function generateSupportAccess(Request $request, Lead $lead): RedirectResponse
+    {
+        $this->authorize('manageSupportAccess', $lead);
+
+        $pin = $this->leadService->generateSupportAccess($lead, $request->user());
+
+        return back()
+            ->with('success', 'Support access generated.')
+            ->with('new_support_pin', $pin);
+    }
+
+    public function revokeSupportAccess(Lead $lead): RedirectResponse
+    {
+        $this->authorize('manageSupportAccess', $lead);
+
+        $this->leadService->revokeSupportAccess($lead);
+
+        return back()->with('success', 'Client support access revoked.');
+    }
 }

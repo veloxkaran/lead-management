@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Hash;
 
 class Lead extends Model
 {
@@ -24,6 +25,16 @@ class Lead extends Model
         'assigned_user_id', 'lead_status_id', 'created_by', 'archived_at',
     ];
 
+    /**
+     * support_id / support_pin_hash / support_pin_generated_at / _by are
+     * deliberately NOT fillable. They must only be written by
+     * LeadService::generateSupportAccess()/revokeSupportAccess(), which
+     * save() the model directly — never through the generic update() path
+     * (LeadController::update() -> LeadService::update()), which diffs
+     * whatever's in its $attributes into an ActivityLogEntry that every
+     * viewer can see (LeadPolicy::view() is open to everyone). Letting the
+     * PIN hash through there would leak it into that change log.
+     */
     protected function casts(): array
     {
         return [
@@ -32,12 +43,18 @@ class Lead extends Model
             'number_of_employees' => 'integer',
             'opportunity_cost' => 'decimal:2',
             'achieved_cost' => 'decimal:2',
+            'support_pin_generated_at' => 'datetime',
         ];
     }
 
     public function assignedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_user_id');
+    }
+
+    public function supportPinGeneratedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'support_pin_generated_by');
     }
 
     public function creator(): BelongsTo
@@ -169,6 +186,16 @@ class Lead extends Model
     public function isAchieved(): bool
     {
         return $this->achieved_at !== null;
+    }
+
+    public function hasSupportAccess(): bool
+    {
+        return $this->support_id !== null && $this->support_pin_hash !== null;
+    }
+
+    public function verifySupportPin(string $pin): bool
+    {
+        return $this->support_pin_hash !== null && Hash::check($pin, $this->support_pin_hash);
     }
 
     /**

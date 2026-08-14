@@ -72,7 +72,7 @@
                                     &mdash;
                                 @endif
                             </td>
-                            <td class="small text-muted">{{ $ticket->raiser?->name }}</td>
+                            <td class="small text-muted">{{ $ticket->raiserDisplayName() }}</td>
                             <td class="small">{{ $ticket->assignee?->name ?? '—' }}</td>
                             <td><x-status-badge :status="$ticket->priority" /></td>
                             <td><x-status-badge :status="$ticket->status" /></td>

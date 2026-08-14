@@ -133,4 +133,15 @@ class LeadPolicy
     {
         return $user->isSuperAdmin();
     }
+
+    /**
+     * Gates issuing/rotating/revoking the Support ID + PIN that let this
+     * lead's client contact self-serve support tickets without a staff
+     * login — Super Admin only, same as the other config-style abilities
+     * above (manageWhatsappUsers, exportPdf).
+     */
+    public function manageSupportAccess(User $user, Lead $lead): bool
+    {
+        return $user->isSuperAdmin();
+    }
 }

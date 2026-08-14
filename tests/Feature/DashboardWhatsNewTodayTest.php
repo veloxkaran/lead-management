@@ -38,9 +38,9 @@ class DashboardWhatsNewTodayTest extends TestCase
         SupportTicket::factory()->create(['created_at' => now()->subDays(3)]);
         SupportTicket::factory()->create(['created_at' => now()->subDays(3), 'resolved_at' => now()]);
 
-        Requirement::factory()->create(['created_at' => now()]);
-        Requirement::factory()->create(['created_at' => now()]);
-        Requirement::factory()->create(['created_at' => now()->subDays(3)]);
+        Requirement::factory()->create(['lead_id' => $convertedLead->id, 'created_at' => now()]);
+        Requirement::factory()->create(['lead_id' => $convertedLead->id, 'created_at' => now()]);
+        Requirement::factory()->create(['lead_id' => $convertedLead->id, 'created_at' => now()->subDays(3)]);
 
         $response = $this->actingAs($user)->get(route('dashboard'));
 
@@ -65,8 +65,9 @@ class DashboardWhatsNewTodayTest extends TestCase
         SupportTicket::factory()->create(['created_at' => now()->subDays(5)]); // inside range
         SupportTicket::factory()->create(['created_at' => now()]); // outside range (too recent)
 
-        Requirement::factory()->create(['created_at' => now()->subDays(10)]); // outside range
-        Requirement::factory()->create(['created_at' => now()->subDays(5)]); // inside range
+        $lead = Lead::factory()->create();
+        Requirement::factory()->create(['lead_id' => $lead->id, 'created_at' => now()->subDays(10)]); // outside range
+        Requirement::factory()->create(['lead_id' => $lead->id, 'created_at' => now()->subDays(5)]); // inside range
 
         $response = $this->actingAs($user)->get(route('dashboard', [
             'period' => 'custom',

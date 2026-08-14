@@ -35,7 +35,12 @@
         <tbody>
             @forelse ($lead->supportTickets as $ticket)
                 <tr>
-                    <td class="small"><a href="{{ route('support-tickets.show', $ticket) }}">{{ $ticket->subject }}</a></td>
+                    <td class="small">
+                        <a href="{{ route('support-tickets.show', $ticket) }}">{{ $ticket->subject }}</a>
+                        @if ($ticket->is_client_submitted)
+                            <span class="badge bg-info-subtle text-info-emphasis ms-1">Client</span>
+                        @endif
+                    </td>
                     <td><x-status-badge :status="$ticket->priority" /></td>
                     <td><x-status-badge :status="$ticket->status" /></td>
                     <td class="small">

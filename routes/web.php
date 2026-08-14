@@ -4,6 +4,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ActivityFeedController;
 use App\Http\Controllers\ActivityFeedSettingsController;
 use App\Http\Controllers\BulkUploadController;
+use App\Http\Controllers\ClientSupportController;
 use App\Http\Controllers\CommonReportController;
 use App\Http\Controllers\DailySummaryController;
 use App\Http\Controllers\DashboardController;
@@ -55,6 +56,18 @@ require __DIR__.'/auth.php';
 Route::get('whatsapp/webhook', [WhatsappWebhookController::class, 'verify'])->name('whatsapp.webhook.verify');
 Route::post('whatsapp/webhook', [WhatsappWebhookController::class, 'handle'])->name('whatsapp.webhook.handle');
 
+// Public — client self-service support ticket portal. No login; gated by a
+// Support ID + PIN a Super Admin issues from the lead's details page (see
+// LeadController::generateSupportAccess()).
+Route::prefix('support-access')->name('client-support.')->group(function () {
+    Route::get('/', [ClientSupportController::class, 'showVerify'])->name('show');
+    Route::post('/', [ClientSupportController::class, 'verify'])->name('verify');
+    Route::get('/ticket', [ClientSupportController::class, 'showTicketForm'])->name('ticket.create');
+    Route::post('/ticket', [ClientSupportController::class, 'storeTicket'])->name('ticket.store');
+    Route::get('/ticket/submitted', [ClientSupportController::class, 'submitted'])->name('ticket.submitted');
+    Route::post('/logout', [ClientSupportController::class, 'logout'])->name('logout');
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
@@ -83,6 +96,8 @@ Route::middleware('auth')->group(function () {
     Route::post('leads/{lead}/close', [LeadController::class, 'close'])->name('leads.close');
     Route::get('leads/{lead}/walkthrough', [LeadController::class, 'walkthrough'])->name('leads.walkthrough');
     Route::get('leads/{lead}/export-pdf', [LeadController::class, 'exportPdf'])->name('leads.export-pdf');
+    Route::post('leads/{lead}/support-access', [LeadController::class, 'generateSupportAccess'])->name('leads.support-access.generate');
+    Route::delete('leads/{lead}/support-access', [LeadController::class, 'revokeSupportAccess'])->name('leads.support-access.revoke');
 
     Route::post('leads/{lead}/activities', [ActivityController::class, 'store'])->name('leads.activities.store');
     Route::get('activities', [ActivityController::class, 'index'])->name('activities.index');

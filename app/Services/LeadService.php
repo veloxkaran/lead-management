@@ -9,7 +9,9 @@ use App\Models\LeadStatus;
 use App\Models\User;
 use App\Repositories\Contracts\LeadRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class LeadService
 {
@@ -143,5 +145,63 @@ class LeadService
 
             return $lead->refresh();
         });
+    }
+
+    /**
+     * Issues (or rotates) the Support ID + PIN a client contact uses on the
+     * public self-service portal (ClientSupportController) to raise support
+     * tickets for this lead without a staff login. Support ID stays stable
+     * once assigned — only the PIN rotates on subsequent calls. Returns the
+     * plaintext PIN so the caller can flash it exactly once; only its hash
+     * is persisted.
+     *
+     * Deliberately sets attributes directly and save()s rather than going
+     * through update()/the repository's update() — both would either sweep
+     * the hash into the everyone-can-view change log (see update()'s
+     * docblock) or silently drop it, since these columns aren't in
+     * Lead::$fillable on purpose.
+     */
+    public function generateSupportAccess(Lead $lead, User $actor): string
+    {
+        $pin = str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+
+        if (! $lead->support_id) {
+            $lead->support_id = $this->generateUniqueSupportId();
+        }
+
+        $lead->support_pin_hash = Hash::make($pin);
+        $lead->support_pin_generated_at = now();
+        $lead->support_pin_generated_by = $actor->id;
+        $lead->save();
+
+        return $pin;
+    }
+
+    /**
+     * Revokes a lead's client-portal access entirely (e.g. the PIN was
+     * shared with the wrong person) — clears the Support ID too, so
+     * generateSupportAccess() issues a brand new one next time rather than
+     * reusing a potentially-compromised one.
+     */
+    public function revokeSupportAccess(Lead $lead): void
+    {
+        $lead->support_id = null;
+        $lead->support_pin_hash = null;
+        $lead->support_pin_generated_at = null;
+        $lead->support_pin_generated_by = null;
+        $lead->save();
+    }
+
+    private function generateUniqueSupportId(): string
+    {
+        // Unambiguous charset (no 0/O/1/I) — this code gets read aloud/typed
+        // by a client, not just copy-pasted.
+        $alphabet = str_split('ABCDEFGHJKLMNPQRSTUVWXYZ23456789');
+
+        do {
+            $candidate = 'SPT-'.implode('', Arr::random($alphabet, 6));
+        } while (Lead::where('support_id', $candidate)->exists());
+
+        return $candidate;
     }
 }

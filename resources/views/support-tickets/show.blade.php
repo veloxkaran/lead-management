@@ -29,7 +29,7 @@
                 </div>
                 <div class="col-md-3">
                     <div class="small text-muted">Raised By</div>
-                    <div class="small fw-semibold">{{ $supportTicket->raiser?->name ?? 'Unknown' }}</div>
+                    <div class="small fw-semibold">{{ $supportTicket->raiserDisplayName() }}</div>
                 </div>
                 <div class="col-md-3">
                     <div class="small text-muted">Assigned To</div>

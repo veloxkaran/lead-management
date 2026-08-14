@@ -17,7 +17,7 @@ class SupportTicket extends Model
 
     protected $fillable = [
         'company_id', 'lead_id', 'subject', 'details', 'priority', 'status', 'raised_by',
-        'assigned_to', 'assigned_by', 'assigned_at', 'resolved_at',
+        'assigned_to', 'assigned_by', 'assigned_at', 'resolved_at', 'is_client_submitted',
     ];
 
     protected function casts(): array
@@ -27,6 +27,7 @@ class SupportTicket extends Model
             'status' => RequirementStatus::class,
             'assigned_at' => 'datetime',
             'resolved_at' => 'datetime',
+            'is_client_submitted' => 'boolean',
         ];
     }
 
@@ -79,6 +80,22 @@ class SupportTicket extends Model
     protected function resolvedAtColumn(): string
     {
         return 'resolved_at';
+    }
+
+    /**
+     * `raised_by` always points at a real staff member even for
+     * client-submitted tickets — it has to, for FK integrity, since this
+     * app has no system/bot-user account and the column is NOT NULL (see
+     * SupportTicketService::createFromClientPortal()) — so every view
+     * renders through this instead of `$ticket->raiser?->name` directly, to
+     * avoid crediting that staff member with something the client actually
+     * submitted.
+     */
+    public function raiserDisplayName(): string
+    {
+        return $this->is_client_submitted
+            ? 'Client (self-service portal)'
+            : ($this->raiser?->name ?? 'Unknown');
     }
 
     protected static function noResolvedRecordsMessage(): string

@@ -45,7 +45,7 @@
                                 <a href="{{ route('support-tickets.edit', $ticket) }}" class="text-decoration-none fw-semibold">{{ $ticket->subject }}</a>
                                 <x-status-badge :status="$ticket->priority" />
                             </div>
-                            <div class="text-muted" style="font-size:0.72rem;">Raised by {{ $ticket->raiser?->name }} · <x-status-badge :status="$ticket->status" /></div>
+                            <div class="text-muted" style="font-size:0.72rem;">Raised by {{ $ticket->raiserDisplayName() }} · <x-status-badge :status="$ticket->status" /></div>
                         </li>
                     @empty
                         <li class="list-group-item"><x-empty-state icon="bi-life-preserver" title="No open tickets" /></li>

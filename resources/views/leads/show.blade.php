@@ -108,6 +108,10 @@
             @can('viewProgressStatus', $lead)
                 @include('leads._training_status')
             @endcan
+
+            @can('manageSupportAccess', $lead)
+                @include('leads._support_access')
+            @endcan
         </div>
 
         <div class="col-lg-8">
