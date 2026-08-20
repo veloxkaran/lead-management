@@ -24,6 +24,8 @@ class StoreRequirementRequest extends FormRequest
             'client_acknowledged_at' => ['nullable', 'date'],
             'assigned_to' => ['nullable', 'exists:users,id'],
             'sprint' => ['nullable', Rule::in(Requirement::sprintOptions())],
+            'attachments' => ['nullable', 'array'],
+            'attachments.*' => ['nullable', 'file', 'max:10240', 'mimes:pdf,docx,xls,xlsx,csv,jpg,jpeg,png,gif,webp'],
         ];
 
         if (! $this->route('lead')) {

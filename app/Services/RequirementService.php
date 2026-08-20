@@ -12,6 +12,7 @@ use App\Models\RequirementComment;
 use App\Models\User;
 use App\Repositories\RequirementRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class RequirementService
@@ -46,23 +47,31 @@ class RequirementService
         return $this->requirements->allFiltered($filters);
     }
 
-    public function create(array $attributes, User $creator): Requirement
+    /**
+     * @param  array<int, UploadedFile|null>  $files
+     */
+    public function create(array $attributes, User $creator, array $files = []): Requirement
     {
         $attributes['created_by'] = $creator->id;
 
         /** @var Requirement $requirement */
         $requirement = $this->requirements->create($attributes);
 
+        $this->storeAttachments($requirement, $files);
+
         event(new RequirementSaved($requirement, true));
 
         return $requirement;
     }
 
-    public function createForLead(Lead $lead, array $attributes, User $creator): Requirement
+    /**
+     * @param  array<int, UploadedFile|null>  $files
+     */
+    public function createForLead(Lead $lead, array $attributes, User $creator, array $files = []): Requirement
     {
         $attributes['lead_id'] = $lead->id;
 
-        return $this->create($attributes, $creator);
+        return $this->create($attributes, $creator, $files);
     }
 
     /**
@@ -72,7 +81,10 @@ class RequirementService
      * change is logged, not just due_date, since there's no reason a
      * priority/status/assignment change should be any less auditable.
      */
-    public function update(Requirement $requirement, array $attributes, User $actor, ?string $ip, ?string $userAgent): Requirement
+    /**
+     * @param  array<int, UploadedFile|null>  $files
+     */
+    public function update(Requirement $requirement, array $attributes, User $actor, ?string $ip, ?string $userAgent, array $files = []): Requirement
     {
         if (($attributes['status'] ?? null) === RequirementStatus::Completed->value && ! $requirement->completed_at) {
             $attributes['completed_at'] = now();
@@ -87,6 +99,8 @@ class RequirementService
         unset($changed['updated_at']);
 
         $requirement->save();
+
+        $this->storeAttachments($requirement, $files);
 
         if (! empty($changed)) {
             $this->logChange($requirement, $actor, $ip, $userAgent, array_intersect_key($originalRaw, $changed), $changed);
@@ -108,6 +122,31 @@ class RequirementService
             ...$attributes,
             'author_id' => $author->id,
         ]);
+    }
+
+    /**
+     * Shared by create() and update() — files can be attached when a
+     * requirement is logged and appended any time afterward, mirroring
+     * SupportTicketService's storeAttachments() pattern.
+     *
+     * @param  array<int, UploadedFile|null>  $files
+     */
+    private function storeAttachments(Requirement $requirement, array $files): void
+    {
+        foreach ($files as $file) {
+            if (! $file instanceof UploadedFile) {
+                continue;
+            }
+
+            $path = $file->store("requirements/{$requirement->id}", 'public');
+
+            $requirement->attachments()->create([
+                'disk_path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getClientMimeType(),
+                'size' => $file->getSize(),
+            ]);
+        }
     }
 
     private function logChange(Requirement $requirement, User $actor, ?string $ip, ?string $userAgent, array $oldValues, array $newValues): void

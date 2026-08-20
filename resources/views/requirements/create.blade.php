@@ -7,7 +7,7 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <form method="POST" action="{{ route('requirements.store') }}">
+            <form method="POST" action="{{ route('requirements.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="row g-3">
                     <div class="col-md-12">
@@ -63,6 +63,12 @@
                             @endforeach
                         </select>
                         @error('sprint')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-semibold">Attachments (optional)</label>
+                        <input type="file" name="attachments[]" multiple class="form-control" accept=".pdf,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.gif,.webp">
+                        <div class="form-text">PDF, Word (.docx), Excel, CSV, or a screenshot image.</div>
+                        @error('attachments.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                 </div>
                 <div class="mt-3">

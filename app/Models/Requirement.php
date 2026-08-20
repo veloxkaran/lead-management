@@ -68,6 +68,11 @@ class Requirement extends Model
         return $this->hasMany(RequirementComment::class)->oldest();
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(RequirementAttachment::class);
+    }
+
     protected function resolvedAtColumn(): string
     {
         return 'completed_at';

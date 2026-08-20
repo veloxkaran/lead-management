@@ -21,7 +21,7 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body">
-            <form method="POST" action="{{ route('requirements.update', $requirement) }}">
+            <form method="POST" action="{{ route('requirements.update', $requirement) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <div class="row g-3">
@@ -78,6 +78,12 @@
                         </select>
                         @error('sprint')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-semibold">Add Attachments</label>
+                        <input type="file" name="attachments[]" multiple class="form-control" accept=".pdf,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png,.gif,.webp">
+                        <div class="form-text">PDF, Word (.docx), Excel, CSV, or a screenshot image.</div>
+                        @error('attachments.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
                 </div>
                 <div class="mt-3">
                     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Update Requirement</button>
@@ -88,6 +94,19 @@
                     @endif
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-white fw-semibold"><i class="bi bi-paperclip"></i> Attachments ({{ $requirement->attachments->count() }})</div>
+        <div class="card-body">
+            @forelse ($requirement->attachments as $attachment)
+                <a href="{{ route('requirement-attachments.download', $attachment) }}" class="badge bg-light text-dark border text-decoration-none me-1 mb-1">
+                    <i class="bi bi-paperclip"></i> {{ $attachment->original_name }}
+                </a>
+            @empty
+                <p class="text-muted small mb-0">No attachments yet.</p>
+            @endforelse
         </div>
     </div>
 

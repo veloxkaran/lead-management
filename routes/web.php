@@ -31,6 +31,7 @@ use App\Http\Controllers\RawDataCommentController;
 use App\Http\Controllers\RawDataController;
 use App\Http\Controllers\ReleaseNoteController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RequirementAttachmentController;
 use App\Http\Controllers\RequirementCommentController;
 use App\Http\Controllers\RequirementController;
 use App\Http\Controllers\SettingsController;
@@ -131,6 +132,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('requirements', RequirementController::class);
     Route::post('leads/{lead}/requirements', [RequirementController::class, 'storeForLead'])->name('leads.requirements.store');
     Route::post('requirements/{requirement}/comments', [RequirementCommentController::class, 'store'])->name('requirements.comments.store');
+    Route::get('requirement-attachments/{attachment}/download', [RequirementAttachmentController::class, 'download'])->name('requirement-attachments.download');
+    Route::get('requirement-attachments/{attachment}/preview', [RequirementAttachmentController::class, 'preview'])->name('requirement-attachments.preview');
 
     // Registered before the resource so /goals/leaderboard isn't swallowed by the {goal} wildcard.
     Route::get('goals/leaderboard', [GoalLeaderboardController::class, 'index'])->name('goals.leaderboard');

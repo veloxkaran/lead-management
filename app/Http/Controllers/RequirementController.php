@@ -87,17 +87,22 @@ class RequirementController extends Controller
 
     public function store(StoreRequirementRequest $request): RedirectResponse
     {
-        $attributes = $request->safe()->except('lead_id');
+        $attributes = $request->safe()->except(['lead_id', 'attachments']);
         $attributes['lead_id'] = $request->validated('lead_id');
 
-        $this->requirementService->create($attributes, $request->user());
+        $this->requirementService->create($attributes, $request->user(), $request->file('attachments', []));
 
         return redirect()->route('requirements.index')->with('success', 'Requirement created successfully.');
     }
 
     public function storeForLead(StoreRequirementRequest $request, Lead $lead): RedirectResponse
     {
-        $this->requirementService->createForLead($lead, $request->validated(), $request->user());
+        $this->requirementService->createForLead(
+            $lead,
+            $request->safe()->except('attachments'),
+            $request->user(),
+            $request->file('attachments', [])
+        );
 
         return back()->with('success', 'Requirement created successfully.');
     }
@@ -112,7 +117,7 @@ class RequirementController extends Controller
     {
         $this->authorize('view', $requirement);
 
-        $requirement->load('lead', 'creator', 'assignee', 'comments.author');
+        $requirement->load('lead', 'creator', 'assignee', 'comments.author', 'attachments');
 
         return view('requirements.show', [
             'requirement' => $requirement,
@@ -124,7 +129,7 @@ class RequirementController extends Controller
     {
         $this->authorize('update', $requirement);
 
-        $requirement->load('lead', 'creator');
+        $requirement->load('lead', 'creator', 'attachments');
 
         return view('requirements.edit', [
             'requirement' => $requirement,
@@ -138,7 +143,14 @@ class RequirementController extends Controller
 
     public function update(UpdateRequirementRequest $request, Requirement $requirement): RedirectResponse
     {
-        $this->requirementService->update($requirement, $request->validated(), $request->user(), $request->ip(), $request->userAgent());
+        $this->requirementService->update(
+            $requirement,
+            $request->safe()->except('attachments'),
+            $request->user(),
+            $request->ip(),
+            $request->userAgent(),
+            $request->file('attachments', [])
+        );
 
         return redirect()->route('requirements.index')->with('success', 'Requirement updated successfully.');
     }
