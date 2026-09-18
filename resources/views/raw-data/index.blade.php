@@ -18,6 +18,9 @@
                 </form>
             @endcan
             @can('create', App\Models\RawData::class)
+                <a href="{{ route('raw-data.bulk-upload.create') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-upload"></i> Bulk Upload
+                </a>
                 <a href="{{ route('raw-data.create') }}" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-lg"></i> Add Raw Data
                 </a>

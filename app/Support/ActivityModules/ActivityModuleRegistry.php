@@ -23,14 +23,14 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 /**
- * The single source of truth for what the Activity Feed knows about each
+ * The single source of truth for what the app knows about each activity
  * module: its label/icon, how a viewer's permission + click-through link is
  * resolved, and which model-creation events log an entry for it. Everywhere
- * else in the app (ActivityLinkResolver, AppServiceProvider, the Super Admin
- * settings checkboxes, ActivityModule::label()/icon()) reads from this
- * registry instead of hardcoding module-specific logic — extending the feed
- * to a 9th module means adding one enum case plus one entry in each array
- * below, not modifying any of those consumers.
+ * else in the app (ActivityLinkResolver, AppServiceProvider,
+ * ActivityModule::label()/icon(), Team Activities) reads from this registry
+ * instead of hardcoding module-specific logic — adding a 9th module means
+ * adding one enum case plus one entry in each array below, not modifying any
+ * of those consumers.
  */
 class ActivityModuleRegistry
 {

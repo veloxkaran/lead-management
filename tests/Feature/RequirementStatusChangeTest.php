@@ -13,11 +13,12 @@ class RequirementStatusChangeTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_company_page_shows_the_status_change_modal_for_users_who_can_update(): void
+    public function test_company_page_shows_the_status_change_modal_to_any_user(): void
     {
         $user = User::factory()->create();
+        $owner = User::factory()->create();
         $lead = Lead::factory()->create();
-        Requirement::factory()->create(['lead_id' => $lead->id, 'created_by' => $user->id]);
+        Requirement::factory()->create(['lead_id' => $lead->id, 'created_by' => $owner->id]);
 
         $response = $this->actingAs($user)->get(route('requirements.company', $lead));
 
@@ -93,7 +94,7 @@ class RequirementStatusChangeTest extends TestCase
         $this->assertDatabaseCount('requirement_comments', 0);
     }
 
-    public function test_a_user_who_cannot_update_the_requirement_is_forbidden(): void
+    public function test_any_user_can_change_status_even_without_update_permission_on_the_requirement(): void
     {
         $user = User::factory()->create();
         $owner = User::factory()->create();
@@ -101,15 +102,41 @@ class RequirementStatusChangeTest extends TestCase
         $requirement = Requirement::factory()->create([
             'lead_id' => $lead->id,
             'created_by' => $owner->id,
+            'assigned_to' => null,
             'status' => RequirementStatus::Pending,
         ]);
 
+        $this->assertFalse($user->can('update', $requirement));
+
         $response = $this->actingAs($user)->patch(route('requirements.status.update', $requirement), [
             'status' => RequirementStatus::InProgress->value,
-            'note' => 'Trying to sneak a change in.',
+            'note' => 'Picking this up.',
         ]);
 
-        $response->assertForbidden();
-        $this->assertSame(RequirementStatus::Pending, $requirement->fresh()->status);
+        $response->assertRedirect();
+        $this->assertSame(RequirementStatus::InProgress, $requirement->fresh()->status);
+        $this->assertDatabaseHas('requirement_comments', [
+            'requirement_id' => $requirement->id,
+            'author_id' => $user->id,
+            'comment' => 'Status changed to In Progress: Picking this up.',
+        ]);
+    }
+
+    public function test_edit_link_still_requires_update_permission_while_status_change_does_not(): void
+    {
+        $user = User::factory()->create();
+        $owner = User::factory()->create();
+        $lead = Lead::factory()->create();
+        $requirement = Requirement::factory()->create([
+            'lead_id' => $lead->id,
+            'created_by' => $owner->id,
+            'assigned_to' => null,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('requirements.company', $lead));
+
+        $response->assertOk();
+        $response->assertSee('statusModal-'.$requirement->id);
+        $response->assertDontSee(route('requirements.edit', $requirement));
     }
 }

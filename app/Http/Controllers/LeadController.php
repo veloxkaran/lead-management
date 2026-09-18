@@ -180,8 +180,6 @@ class LeadController extends Controller
     {
         $this->authorize('update', $lead);
 
-        $lead->load('whatsappUsers');
-
         return view('leads.edit', [
             'lead' => $lead,
             'users' => User::orderBy('name')->get(),

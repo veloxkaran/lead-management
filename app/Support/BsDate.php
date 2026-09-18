@@ -20,7 +20,7 @@ class BsDate
         3 => 'Asar',
         4 => 'Shrawan',
         5 => 'Bhadra',
-        6 => 'Aswin',
+        6 => 'Asoj',
         7 => 'Kartik',
         8 => 'Mangsir',
         9 => 'Poush',
@@ -56,5 +56,50 @@ class BsDate
         )->endOfDay();
 
         return [$start, $end];
+    }
+
+    /**
+     * @return array{year: int, month: int, day: int}
+     */
+    public static function toBsParts(Carbon $date): array
+    {
+        $parts = LaravelNepaliDate::from($date)->toNepaliDateArray();
+
+        return [
+            'year' => (int) $parts->year,
+            'month' => (int) $parts->month,
+            'day' => (int) $parts->day,
+        ];
+    }
+
+    /**
+     * "Asoj 2" — a single day, for the dashboard's Daily snapshot label.
+     */
+    public static function dayLabel(Carbon $date): string
+    {
+        $bs = self::toBsParts($date);
+
+        return self::MONTHS[$bs['month']].' '.$bs['day'];
+    }
+
+    /**
+     * "Asoj" — a whole BS month with no day, for the Monthly snapshot label.
+     */
+    public static function monthLabel(Carbon $date): string
+    {
+        $bs = self::toBsParts($date);
+
+        return self::MONTHS[$bs['month']];
+    }
+
+    /**
+     * "since 2082, Asoj" — for the Lifetime snapshot label, anchored to
+     * whichever date it's tracking since (e.g. the earliest record).
+     */
+    public static function sinceLabel(Carbon $date): string
+    {
+        $bs = self::toBsParts($date);
+
+        return "since {$bs['year']}, ".self::MONTHS[$bs['month']];
     }
 }

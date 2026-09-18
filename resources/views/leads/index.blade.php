@@ -9,6 +9,9 @@
                 <i class="bi bi-archive"></i> {{ !empty($filters['archived']) ? 'Active Leads' : 'Archived Leads' }}
             </a>
             @can('create', App\Models\Lead::class)
+                <a href="{{ route('leads.bulk-upload.create') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-upload"></i> Bulk Upload
+                </a>
                 <a href="{{ route('leads.create') }}" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-lg"></i> Add Lead
                 </a>
@@ -128,7 +131,14 @@
                                     <a href="{{ route('leads.edit', $lead) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
                                 @endcan
                                 @can('archive', $lead)
-                                    <form action="{{ route(!empty($filters['archived']) ? 'leads.restore' : 'leads.archive', $lead) }}" method="POST" class="d-inline">
+                                    <form action="{{ route(!empty($filters['archived']) ? 'leads.restore' : 'leads.archive', $lead) }}" method="POST" class="d-inline"
+                                        @if (empty($filters['archived']))
+                                            data-confirm-delete
+                                            data-confirm-title="Archive this lead?"
+                                            data-confirm-text="{{ $lead->company_name }} will be hidden from the active leads list. You can restore it later from the Archived Leads view."
+                                            data-confirm-button-text="Yes, archive it"
+                                        @endif
+                                    >
                                         @csrf
                                         <button class="btn btn-sm btn-outline-secondary" title="{{ !empty($filters['archived']) ? 'Restore' : 'Archive' }}">
                                             <i class="bi {{ !empty($filters['archived']) ? 'bi-arrow-counterclockwise' : 'bi-archive' }}"></i>

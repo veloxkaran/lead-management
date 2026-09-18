@@ -3,12 +3,10 @@
 namespace Tests\Feature;
 
 use App\Enums\ActivityModule;
-use App\Enums\WhatsappMessageDirection;
 use App\Models\Lead;
 use App\Models\LeadNote;
 use App\Models\Requirement;
 use App\Models\User;
-use App\Models\WhatsappMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -40,46 +38,6 @@ class ActivityLoggingTest extends TestCase
             'subject_type' => Requirement::class,
             'subject_id' => $requirement->id,
             'description' => 'raised a requirement: Needs a custom integration',
-        ]);
-    }
-
-    public function test_outbound_whatsapp_message_logs_an_activity(): void
-    {
-        $user = User::factory()->create();
-        $lead = Lead::factory()->create(['whatsapp_number' => '15551234567', 'company_name' => 'Acme Corp']);
-
-        $message = $lead->whatsappMessages()->create([
-            'direction' => WhatsappMessageDirection::Outbound,
-            'to_number' => $lead->whatsapp_number,
-            'type' => 'text',
-            'body' => 'Hello',
-            'status' => 'queued',
-            'sent_by' => $user->id,
-        ]);
-
-        $this->assertDatabaseHas('activity_log_entries', [
-            'module' => ActivityModule::Whatsapp->value,
-            'user_id' => $user->id,
-            'subject_id' => $message->id,
-            'description' => 'sent a WhatsApp message to Acme Corp',
-        ]);
-    }
-
-    public function test_inbound_whatsapp_message_does_not_log_an_activity(): void
-    {
-        $lead = Lead::factory()->create(['whatsapp_number' => '15551234567']);
-
-        $message = $lead->whatsappMessages()->create([
-            'direction' => WhatsappMessageDirection::Inbound,
-            'from_number' => $lead->whatsapp_number,
-            'type' => 'text',
-            'body' => 'Hi there',
-            'status' => 'received',
-        ]);
-
-        $this->assertDatabaseMissing('activity_log_entries', [
-            'subject_type' => WhatsappMessage::class,
-            'subject_id' => $message->id,
         ]);
     }
 

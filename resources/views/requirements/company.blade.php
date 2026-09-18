@@ -60,10 +60,12 @@
                             <td class="small">{{ $requirement->sprint ?? '—' }}</td>
                             <td class="text-end">
                                 <a href="{{ route('requirements.show', $requirement) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
-                                @can('update', $requirement)
+                                @can('changeStatus', $requirement)
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#statusModal-{{ $requirement->id }}" title="Change status &amp; add note">
                                         <i class="bi bi-chat-square-text"></i>
                                     </button>
+                                @endcan
+                                @can('update', $requirement)
                                     <a href="{{ route('requirements.edit', $requirement) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
                                 @endcan
                                 @can('delete', $requirement)
@@ -87,7 +89,7 @@
     </div>
 
     @foreach ($requirements as $requirement)
-        @can('update', $requirement)
+        @can('changeStatus', $requirement)
             <div class="modal fade" id="statusModal-{{ $requirement->id }}" tabindex="-1">
                 <div class="modal-dialog">
                     <form method="POST" action="{{ route('requirements.status.update', $requirement) }}" class="modal-content">

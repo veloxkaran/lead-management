@@ -1,8 +1,6 @@
 <?php
 
 use App\Http\Controllers\ActivityController;
-use App\Http\Controllers\ActivityFeedController;
-use App\Http\Controllers\ActivityFeedSettingsController;
 use App\Http\Controllers\BulkUploadController;
 use App\Http\Controllers\ClientSupportController;
 use App\Http\Controllers\CommonReportController;
@@ -20,7 +18,6 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LeadNoteAttachmentController;
 use App\Http\Controllers\LeadNoteController;
 use App\Http\Controllers\LeadStatusController;
-use App\Http\Controllers\LeadWhatsappUserController;
 use App\Http\Controllers\MeetingController;
 use App\Http\Controllers\MeetingRoomController;
 use App\Http\Controllers\NotificationController;
@@ -45,18 +42,11 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\WhatsappChatController;
-use App\Http\Controllers\WhatsappSettingsController;
-use App\Http\Controllers\WhatsappWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
 
 require __DIR__.'/auth.php';
-
-// Public — called directly by Meta, not by a logged-in browser session.
-Route::get('whatsapp/webhook', [WhatsappWebhookController::class, 'verify'])->name('whatsapp.webhook.verify');
-Route::post('whatsapp/webhook', [WhatsappWebhookController::class, 'handle'])->name('whatsapp.webhook.handle');
 
 // Public — client self-service support ticket portal. No login; gated by a
 // Support ID + PIN a Super Admin issues from the lead's details page (see
@@ -72,6 +62,7 @@ Route::prefix('support-access')->name('client-support.')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/dashboard/performance-snapshot', [DashboardController::class, 'performanceSnapshotJson'])->name('dashboard.performance-snapshot');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -177,10 +168,6 @@ Route::middleware('auth')->group(function () {
     // Available while impersonating (the active session is a regular user at this point).
     Route::post('impersonate/stop', [ImpersonationController::class, 'stop'])->name('impersonate.stop');
 
-    // Collaborative Activity Feed dashboard widget — one JSON endpoint reused
-    // by the widget instance embedded in every role's dashboard.
-    Route::get('activity-feed', [ActivityFeedController::class, 'index'])->name('activity-feed.index');
-
     // Team Meeting Room — a single shared workspace, open to every user
     // (see AgendaPolicy). Selection/search/filter/sort all live in the
     // query string of one index route rather than a separate show route,
@@ -192,15 +179,6 @@ Route::middleware('auth')->group(function () {
     Route::post('meeting-room/{agenda}/discussions', [MeetingRoomController::class, 'storeComment'])->name('meeting-room.discussions.store');
 
     Route::get('notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
-
-    // WhatsApp inbox — visibility is enforced per-lead by LeadPolicy::chatWhatsapp,
-    // not by a route middleware, since access is per-assignment rather than per-role.
-    Route::get('whatsapp', [WhatsappChatController::class, 'index'])->name('whatsapp.index');
-    Route::get('whatsapp-templates', [WhatsappChatController::class, 'templates'])->name('whatsapp.templates.index');
-    Route::get('whatsapp/{lead}', [WhatsappChatController::class, 'show'])->name('whatsapp.show');
-    Route::get('whatsapp/{lead}/messages', [WhatsappChatController::class, 'messages'])->name('whatsapp.messages');
-    Route::post('whatsapp/{lead}/messages', [WhatsappChatController::class, 'sendMessage'])->name('whatsapp.messages.store');
-    Route::post('whatsapp/{lead}/templates', [WhatsappChatController::class, 'sendTemplate'])->name('whatsapp.templates.store');
 
     // Team & Org Hierarchy — visibility derived from reporting_manager_id,
     // available to any authenticated user regardless of role (an IC with no
@@ -240,14 +218,5 @@ Route::middleware('auth')->group(function () {
 
         Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
-
-        Route::get('whatsapp-settings', [WhatsappSettingsController::class, 'edit'])->name('whatsapp-settings.edit');
-        Route::put('whatsapp-settings', [WhatsappSettingsController::class, 'update'])->name('whatsapp-settings.update');
-        Route::post('whatsapp-settings/test', [WhatsappSettingsController::class, 'test'])->name('whatsapp-settings.test');
-
-        Route::put('leads/{lead}/whatsapp-users', [LeadWhatsappUserController::class, 'update'])->name('leads.whatsapp-users.update');
-
-        Route::get('activity-feed-settings', [ActivityFeedSettingsController::class, 'edit'])->name('activity-feed-settings.edit');
-        Route::put('activity-feed-settings', [ActivityFeedSettingsController::class, 'update'])->name('activity-feed-settings.update');
     });
 });

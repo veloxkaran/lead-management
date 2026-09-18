@@ -10,7 +10,7 @@ class UpdateRequirementStatusRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('update', $this->route('requirement'));
+        return $this->user()->can('changeStatus', $this->route('requirement'));
     }
 
     public function rules(): array

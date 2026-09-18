@@ -19,7 +19,7 @@ window.$ = window.jQuery = jQuery;
 import 'datatables.net-bs5';
 import 'select2';
 
-import './activity-feed';
+import './performance-snapshot';
 import './raw-data-paste-grid';
 import './raw-data-countdown';
 import './ticket-elapsed';

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\FollowUpStatus;
-use App\Enums\RawDataStatus;
 use App\Enums\RequirementStatus;
 use App\Enums\TaskStatus;
 use App\Enums\UserStatus;
@@ -14,16 +13,17 @@ use App\Models\Lead;
 use App\Models\LeadNote;
 use App\Models\LeadStatus;
 use App\Models\Meeting;
-use App\Models\RawData;
 use App\Models\ReleaseNote;
 use App\Models\Requirement;
 use App\Models\RolePlaybook;
 use App\Models\SupportTicket;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\BsDate;
 use App\Support\MotivationQuote;
-use App\Support\PeriodRange;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -31,15 +31,28 @@ class DashboardController extends Controller
     public function __invoke(Request $request): View
     {
         $user = $request->user();
-        $filters = $request->only(['period', 'date_from', 'date_to', 'snapshot_period']);
 
         return match (true) {
-            $user->isSuperAdmin() => $this->superAdminDashboard($user, $filters),
-            $user->isManager() => $this->managerDashboard($user, $filters),
-            $user->isCustomerSuccess() => $this->customerSuccessDashboard($user, $filters),
-            $user->isFinance() => $this->financeDashboard($user, $filters),
-            default => $this->businessDevelopmentDashboard($user, $filters),
+            $user->isSuperAdmin() => $this->superAdminDashboard($user),
+            $user->isManager() => $this->managerDashboard($user),
+            $user->isCustomerSuccess() => $this->customerSuccessDashboard($user),
+            $user->isFinance() => $this->financeDashboard($user),
+            default => $this->businessDevelopmentDashboard($user),
         };
+    }
+
+    /**
+     * JSON backing the "Performance Snapshot" dashboard widget
+     * (resources/js/performance-snapshot.js + x-performance-snapshot).
+     * Fetched client-side on load and on every Daily/Monthly/Lifetime
+     * switch — the widget never triggers a page navigation, so switching
+     * periods can't jump the user's scroll position. Identical for every
+     * role, so it lives outside the per-role dashboard methods entirely
+     * rather than being merged into their view data.
+     */
+    public function performanceSnapshotJson(Request $request): JsonResponse
+    {
+        return response()->json($this->performanceSnapshot($request->only('snapshot_period')));
     }
 
     /**
@@ -62,83 +75,76 @@ class DashboardController extends Controller
     }
 
     /**
-     * "What's New Today?" — also shared across every role dashboard, same
-     * reasoning as greeting(). Defaults to today but accepts the same
-     * period/date_from/date_to vocabulary as the Raw Data filter
-     * (see PeriodRange), so switching to "This Week" or a custom range
-     * re-scopes all five counts at once.
+     * "Performance Snapshot" data — identical for every role, which is why
+     * it's fetched through its own JSON endpoint (performanceSnapshotJson())
+     * instead of being merged into each role dashboard's view data. Three
+     * periods: Daily (today), Monthly (this calendar month), and Lifetime
+     * (unbounded — averageResolutionFormatted()/count() with no from/to
+     * naturally means "every record ever" without any special-casing).
      */
-    protected function whatsNewToday(array $filters): array
+    protected function performanceSnapshot(array $filters): array
     {
-        [$from, $to] = PeriodRange::resolve($filters, 'today');
+        $period = in_array($filters['snapshot_period'] ?? null, ['monthly', 'lifetime'], true)
+            ? $filters['snapshot_period']
+            : 'daily';
 
-        // A "custom" period with no bounds filled in yet has nothing to
-        // scope these counts to — fall back to today rather than silently
-        // running them unbounded, since that would defeat the point of a
-        // "today" widget.
-        if (! $from || ! $to) {
-            [$from, $to] = [now()->startOfDay(), now()->endOfDay()];
-        }
+        [$from, $to, $dateLabel] = match ($period) {
+            'monthly' => [now()->startOfMonth(), now()->endOfMonth(), BsDate::monthLabel(now())],
+            'lifetime' => [null, null, BsDate::sinceLabel($this->earliestActivityDate())],
+            default => [now()->startOfDay(), now()->endOfDay(), BsDate::dayLabel(now())],
+        };
 
-        $newLeadsByStatus = LeadStatus::withCount(['leads' => fn ($q) => $q->whereBetween('created_at', [$from, $to])])
-            ->ordered()->get()->filter(fn (LeadStatus $status) => $status->leads_count > 0)->values();
+        $countBetween = function (string $model, string $column) use ($from, $to) {
+            $query = $model::query();
+
+            if ($from && $to) {
+                $query->whereBetween($column, [$from, $to]);
+            }
+
+            return $query->count();
+        };
+
+        $leadsGenerated = $countBetween(Lead::class, 'created_at');
+        $leadsConverted = $countBetween(Lead::class, 'achieved_at');
 
         return [
-            'whatsNewFilters' => [
-                'period' => $filters['period'] ?? 'today',
-                'date_from' => $filters['date_from'] ?? null,
-                'date_to' => $filters['date_to'] ?? null,
+            'period' => $period,
+            'dateLabel' => $dateLabel,
+            'tickets' => [
+                'created' => $countBetween(SupportTicket::class, 'created_at'),
+                'solved' => $countBetween(SupportTicket::class, 'resolved_at'),
+                'avgTime' => SupportTicket::averageResolutionFormatted($from, $to),
             ],
-            'newLeadsByStatus' => $newLeadsByStatus,
-            'newRawDataCount' => RawData::whereBetween('created_at', [$from, $to])->count(),
-            // Scoped by converted_at (when the conversion happened), not
-            // created_at — a raw-data entry created weeks ago and converted
-            // today belongs in *today's* count, not the day it was created.
-            'convertedRawDataCount' => RawData::where('status', RawDataStatus::ConvertedToLead)
-                ->whereBetween('converted_at', [$from, $to])->count(),
-            'ticketsRaisedCount' => SupportTicket::whereBetween('created_at', [$from, $to])->count(),
-            'ticketsSolvedCount' => SupportTicket::whereBetween('resolved_at', [$from, $to])->count(),
-            'newRequirementsCount' => Requirement::whereBetween('created_at', [$from, $to])->count(),
+            'requirements' => [
+                'created' => $countBetween(Requirement::class, 'created_at'),
+                'closed' => $countBetween(Requirement::class, 'completed_at'),
+                'avgTime' => Requirement::averageResolutionFormatted($from, $to),
+            ],
+            'leads' => [
+                'generated' => $leadsGenerated,
+                'converted' => $leadsConverted,
+                'ratio' => $leadsGenerated > 0 ? round(($leadsConverted / $leadsGenerated) * 100, 1) : null,
+            ],
         ];
     }
 
     /**
-     * "Performance Snapshot" — also shared across every role dashboard.
-     * Toggles between "today" and "this calendar month" (the Daily/Monthly
-     * switch), and re-scopes ticket/requirement/lead throughput and average
-     * resolution times to that window. Deliberately separate from
-     * whatsNewToday(): that widget's period vocabulary (today/week/month/
-     * custom) and this one's (daily/monthly) are independent filters, each
-     * round-tripped through its own query params.
+     * Anchor date for the Lifetime snapshot's "since ..." label — the
+     * earliest activity across the three tracked entities, or now() if the
+     * system has no data yet at all.
      */
-    protected function performanceSnapshot(array $filters): array
+    protected function earliestActivityDate(): Carbon
     {
-        $period = ($filters['snapshot_period'] ?? null) === 'monthly' ? 'monthly' : 'daily';
+        $earliest = array_filter([
+            Lead::min('created_at'),
+            SupportTicket::min('created_at'),
+            Requirement::min('created_at'),
+        ]);
 
-        [$from, $to] = $period === 'monthly'
-            ? [now()->startOfMonth(), now()->endOfMonth()]
-            : [now()->startOfDay(), now()->endOfDay()];
-
-        $leadsGenerated = Lead::whereBetween('created_at', [$from, $to])->count();
-        $leadsConverted = Lead::whereBetween('achieved_at', [$from, $to])->count();
-
-        return [
-            'snapshotPeriod' => $period,
-            'ticketsCreatedSnapshot' => SupportTicket::whereBetween('created_at', [$from, $to])->count(),
-            'ticketsSolvedSnapshot' => SupportTicket::whereBetween('resolved_at', [$from, $to])->count(),
-            'ticketsAvgSolvingTimeSnapshot' => SupportTicket::averageResolutionFormatted($from, $to),
-            'requirementsCreatedSnapshot' => Requirement::whereBetween('created_at', [$from, $to])->count(),
-            'requirementsClosedSnapshot' => Requirement::whereBetween('completed_at', [$from, $to])->count(),
-            'requirementsAvgClosingTimeSnapshot' => Requirement::averageResolutionFormatted($from, $to),
-            'leadsGeneratedSnapshot' => $leadsGenerated,
-            'leadsConvertedSnapshot' => $leadsConverted,
-            'leadsConversionRatioSnapshot' => $leadsGenerated > 0
-                ? round(($leadsConverted / $leadsGenerated) * 100, 1)
-                : null,
-        ];
+        return $earliest ? Carbon::parse(min($earliest)) : now();
     }
 
-    protected function businessDevelopmentDashboard(User $user, array $filters): View
+    protected function businessDevelopmentDashboard(User $user): View
     {
         $leads = Lead::where('assigned_user_id', $user->id)->active();
 
@@ -147,7 +153,7 @@ class DashboardController extends Controller
             ->with('status')
             ->get();
 
-        return view('dashboard.business-development', $this->greeting($user) + $this->whatsNewToday($filters) + $this->performanceSnapshot($filters) + [
+        return view('dashboard.business-development', $this->greeting($user) + [
             'personalLeads' => (clone $leads)->latest()->take(6)->get(),
             'statusSummary' => $statusSummary,
             'todaysReminders' => FollowUp::whereHas('lead', fn ($q) => $q->where('assigned_user_id', $user->id))
@@ -167,14 +173,14 @@ class DashboardController extends Controller
         ]);
     }
 
-    protected function managerDashboard(User $user, array $filters): View
+    protected function managerDashboard(User $user): View
     {
         $statusDistribution = LeadStatus::withCount(['leads' => fn ($q) => $q->active()])->ordered()->get();
 
         $monthlyConversion = DealClosure::selectRaw("strftime('%Y-%m', closed_date) as month, count(*) as total, sum(deal_value) as value")
             ->groupBy('month')->orderBy('month')->get()->slice(-6)->values();
 
-        return view('dashboard.manager', $this->greeting($user) + $this->whatsNewToday($filters) + $this->performanceSnapshot($filters) + [
+        return view('dashboard.manager', $this->greeting($user) + [
             'totalLeads' => Lead::active()->count(),
             'dealStats' => [
                 'count' => DealClosure::count(),
@@ -189,29 +195,28 @@ class DashboardController extends Controller
         ]);
     }
 
-    protected function customerSuccessDashboard(User $user, array $filters): View
+    protected function customerSuccessDashboard(User $user): View
     {
-        return view('dashboard.customer-success', $this->greeting($user) + $this->whatsNewToday($filters) + $this->performanceSnapshot($filters) + [
+        return view('dashboard.customer-success', $this->greeting($user) + [
             'pendingTickets' => SupportTicket::where('status', RequirementStatus::Pending)->count(),
             'ticketQueue' => SupportTicket::whereNotIn('status', [RequirementStatus::Completed])
                 ->with(['lead', 'raiser', 'assignee'])->oldest()->take(8)->get(),
         ]);
     }
 
-    protected function financeDashboard(User $user, array $filters): View
+    protected function financeDashboard(User $user): View
     {
-        return view('dashboard.finance', $this->greeting($user) + $this->whatsNewToday($filters) + $this->performanceSnapshot($filters) + [
-        ]);
+        return view('dashboard.finance', $this->greeting($user));
     }
 
-    protected function superAdminDashboard(User $user, array $filters): View
+    protected function superAdminDashboard(User $user): View
     {
         $statusDistribution = LeadStatus::withCount(['leads' => fn ($q) => $q->active()])->ordered()->get();
 
         $monthlyConversion = DealClosure::selectRaw("strftime('%Y-%m', closed_date) as month, count(*) as total, sum(deal_value) as value")
             ->groupBy('month')->orderBy('month')->get()->slice(-6)->values();
 
-        return view('dashboard.super-admin', $this->greeting($user) + $this->whatsNewToday($filters) + $this->performanceSnapshot($filters) + [
+        return view('dashboard.super-admin', $this->greeting($user) + [
             'totalLeads' => Lead::active()->count(),
             'totalUsers' => User::count(),
             'openTasks' => Task::whereNotIn('status', [TaskStatus::Completed, TaskStatus::Cancelled])->count(),

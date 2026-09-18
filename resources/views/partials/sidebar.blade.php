@@ -19,14 +19,8 @@
             <a href="{{ route('leads.index') }}" class="nav-link {{ request()->routeIs('leads.*') ? 'active' : '' }}" title="Lead Management" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-diagram-3"></i> <span class="nav-label">Lead Management</span>
             </a>
-            <a href="{{ route('raw-data.index') }}" class="nav-link {{ request()->routeIs('raw-data.*') && ! request()->routeIs('raw-data.bulk-upload.*') ? 'active' : '' }}" title="Raw Data" data-bs-toggle="tooltip" data-bs-placement="right">
+            <a href="{{ route('raw-data.index') }}" class="nav-link {{ request()->routeIs('raw-data.*') ? 'active' : '' }}" title="Raw Data" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-inbox"></i> <span class="nav-label">Raw Data</span>
-            </a>
-            <a href="{{ route('bulk-upload.index') }}" class="nav-link {{ request()->routeIs('bulk-upload.*') || request()->routeIs('leads.bulk-upload.*') || request()->routeIs('raw-data.bulk-upload.*') ? 'active' : '' }}" title="Bulk Upload" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-upload"></i> <span class="nav-label">Bulk Upload</span>
-            </a>
-            <a href="{{ route('activities.index') }}" class="nav-link {{ request()->routeIs('activities.*') ? 'active' : '' }}" title="Activities" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-clock-history"></i> <span class="nav-label">Activities</span>
             </a>
             <a href="{{ route('requirements.index') }}" class="nav-link {{ request()->routeIs('requirements.*') ? 'active' : '' }}" title="Requirements" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-list-check"></i> <span class="nav-label">Requirements</span>
@@ -39,11 +33,6 @@
         <div class="nav-section-title">Support</div>
         <a href="{{ route('support-tickets.index') }}" class="nav-link {{ request()->routeIs('support-tickets.*') ? 'active' : '' }}" title="Support Tickets" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-life-preserver"></i> <span class="nav-label">Support Tickets</span>
-        </a>
-
-        <div class="nav-section-title">Messaging</div>
-        <a href="{{ route('whatsapp.index') }}" class="nav-link {{ request()->routeIs('whatsapp.*') ? 'active' : '' }}" title="WhatsApp" data-bs-toggle="tooltip" data-bs-placement="right">
-            <i class="bi bi-whatsapp"></i> <span class="nav-label">WhatsApp</span>
         </a>
 
         <div class="nav-section-title">Knowledge</div>
@@ -69,16 +58,6 @@
                 <i class="bi bi-diagram-3"></i> <span class="nav-label">Organization Tree</span>
             </a>
         @endcan
-        @if ($user?->isOverseer())
-            <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" title="Reports" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-bar-chart-line"></i> <span class="nav-label">Reports</span>
-            </a>
-        @else
-            <a href="{{ route('common-reports.my-contributions') }}" class="nav-link {{ request()->routeIs('common-reports.*') ? 'active' : '' }}" title="Reports" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-bar-chart-line"></i> <span class="nav-label">Reports</span>
-            </a>
-        @endif
-
         @if ($user?->isSuperAdmin())
             <div class="nav-section-title">Administration</div>
             <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" title="Users" data-bs-toggle="tooltip" data-bs-placement="right">
@@ -89,12 +68,6 @@
             </a>
             <a href="{{ route('settings.edit') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" title="Settings" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-gear"></i> <span class="nav-label">Settings</span>
-            </a>
-            <a href="{{ route('whatsapp-settings.edit') }}" class="nav-link {{ request()->routeIs('whatsapp-settings.*') ? 'active' : '' }}" title="WhatsApp Settings" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-whatsapp"></i> <span class="nav-label">WhatsApp Settings</span>
-            </a>
-            <a href="{{ route('activity-feed-settings.edit') }}" class="nav-link {{ request()->routeIs('activity-feed-settings.*') ? 'active' : '' }}" title="Activity Feed Settings" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-activity"></i> <span class="nav-label">Activity Feed Settings</span>
             </a>
         @endif
 

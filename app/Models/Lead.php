@@ -2,12 +2,10 @@
 
 namespace App\Models;
 
-use App\Enums\WhatsappMessageDirection;
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -18,7 +16,7 @@ class Lead extends Model
     use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'company_id', 'company_name', 'contact_person', 'email', 'phone', 'whatsapp_number',
+        'company_id', 'company_name', 'contact_person', 'email', 'phone',
         'address', 'website',
         'industry', 'number_of_employees', 'business_details', 'about_client_business',
         'source', 'opportunity_cost', 'achieved_cost', 'achieved_at',
@@ -125,42 +123,6 @@ class Lead extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
-    }
-
-    public function whatsappUsers(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class, 'lead_whatsapp_user');
-    }
-
-    public function whatsappMessages(): HasMany
-    {
-        return $this->hasMany(WhatsappMessage::class)->oldest();
-    }
-
-    /**
-     * The single most recent inbound message, for cheaply eager-loading the
-     * 24-hour customer-service window state without pulling the full thread.
-     */
-    public function lastInboundWhatsappMessage(): HasOne
-    {
-        return $this->hasOne(WhatsappMessage::class)
-            ->where('direction', WhatsappMessageDirection::Inbound)
-            ->latestOfMany('wa_timestamp');
-    }
-
-    /**
-     * Meta only allows free-form replies within 24 hours of the customer's
-     * last message — outside that window, only approved templates can be sent.
-     */
-    public function isWhatsappWindowOpen(): bool
-    {
-        $lastInbound = $this->relationLoaded('lastInboundWhatsappMessage')
-            ? $this->lastInboundWhatsappMessage
-            : $this->lastInboundWhatsappMessage()->first();
-
-        $timestamp = $lastInbound?->wa_timestamp ?? $lastInbound?->created_at;
-
-        return $timestamp !== null && $timestamp->gt(now()->subHours(24));
     }
 
     public function scopeArchived($query)

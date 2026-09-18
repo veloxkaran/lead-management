@@ -19,10 +19,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'super_admin' => \App\Http\Middleware\EnsureUserIsSuperAdmin::class,
             'overseer' => \App\Http\Middleware\EnsureUserIsOverseer::class,
         ]);
-
-        $middleware->validateCsrfTokens(except: [
-            'whatsapp/webhook',
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

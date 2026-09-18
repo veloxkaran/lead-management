@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Everything the Activity Feed needs to know about one module in order to
+ * Everything the app needs to know about one activity module in order to
  * display it and resolve a viewer-specific permission/link for a logged
  * entry. See ActivityModuleRegistry for how these are assembled — adding a
  * new module means adding one of these, not editing ActivityLinkResolver.

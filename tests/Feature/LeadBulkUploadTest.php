@@ -20,6 +20,17 @@ class LeadBulkUploadTest extends TestCase
         $this->actingAs($user)->get(route('leads.bulk-upload.create'))->assertOk();
     }
 
+    public function test_leads_index_links_to_the_bulk_upload_page(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('leads.index'));
+
+        $response->assertOk();
+        $response->assertSee('Bulk Upload');
+        $response->assertSee(route('leads.bulk-upload.create'));
+    }
+
     public function test_template_can_be_downloaded(): void
     {
         $user = User::factory()->create();

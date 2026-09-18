@@ -20,6 +20,17 @@ class RawDataBulkUploadTest extends TestCase
         $this->actingAs($user)->get(route('raw-data.bulk-upload.create'))->assertOk();
     }
 
+    public function test_raw_data_index_links_to_the_bulk_upload_page(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('raw-data.index'));
+
+        $response->assertOk();
+        $response->assertSee('Bulk Upload');
+        $response->assertSee(route('raw-data.bulk-upload.create'));
+    }
+
     public function test_template_can_be_downloaded(): void
     {
         $user = User::factory()->create();

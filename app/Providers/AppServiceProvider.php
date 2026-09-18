@@ -64,12 +64,6 @@ class AppServiceProvider extends ServiceProvider
         }
     }
 
-    /**
-     * Writes are unconditional — the Super Admin per-module toggle
-     * (ActivityFeedSettings::enabledModules()) only filters what the feed
-     * query returns (ActivityFeedController), not what gets recorded, so
-     * history survives a module being switched off and back on.
-     */
     private function logActivity(ActivityLoggingRegistration $registration, $model): void
     {
         $actorId = ($registration->actorId)($model);

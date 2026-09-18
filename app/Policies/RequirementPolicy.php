@@ -29,6 +29,17 @@ class RequirementPolicy
             || $requirement->assigned_to === $user->id;
     }
 
+    /**
+     * The list page's quick "Status" popup (status + a required note) is
+     * open to any user, unlike update() — which stays restricted to the
+     * creator/assignee/super admin and gates the full edit form and
+     * destructive actions.
+     */
+    public function changeStatus(User $user, Requirement $requirement): bool
+    {
+        return true;
+    }
+
     public function delete(User $user, Requirement $requirement): bool
     {
         return $this->update($user, $requirement);

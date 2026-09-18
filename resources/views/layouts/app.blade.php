@@ -10,6 +10,7 @@
         }
     </script>
     <title>@yield('title', 'Dashboard') - {{ config('app.name') }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     @vite(['resources/css/app.scss', 'resources/js/app.js'])
     @stack('styles')
 </head>

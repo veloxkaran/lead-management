@@ -31,17 +31,6 @@
                         <dt class="col-5 text-muted">Contact</dt><dd class="col-7">{{ $lead->contact_person }}</dd>
                         <dt class="col-5 text-muted">Email</dt><dd class="col-7">{{ $lead->email ?: '—' }}</dd>
                         <dt class="col-5 text-muted">Phone</dt><dd class="col-7">{{ $lead->phone ?: '—' }}</dd>
-                        <dt class="col-5 text-muted">WhatsApp</dt>
-                        <dd class="col-7">
-                            @if ($lead->whatsapp_number)
-                                <i class="bi bi-whatsapp text-success"></i> {{ $lead->whatsapp_number }}
-                                @can('chatWhatsapp', $lead)
-                                    <a href="{{ route('whatsapp.show', $lead) }}" class="small ms-1">Chat</a>
-                                @endcan
-                            @else
-                                —
-                            @endif
-                        </dd>
                         <dt class="col-5 text-muted">Website</dt><dd class="col-7">{{ $lead->website ?: '—' }}</dd>
                         <dt class="col-5 text-muted">Address</dt><dd class="col-7">{{ $lead->address ?: '—' }}</dd>
                         <dt class="col-5 text-muted">Employees</dt><dd class="col-7">{{ $lead->number_of_employees ?: '—' }}</dd>

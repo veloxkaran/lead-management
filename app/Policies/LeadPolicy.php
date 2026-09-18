@@ -106,22 +106,6 @@ class LeadPolicy
     }
 
     /**
-     * WhatsApp access is intentionally exclusive: unlike the rest of the
-     * lead, being the assigned owner or an overseer does NOT grant chat
-     * access — only Super Admin (who configures the assignments) and the
-     * users Super Admin has explicitly assigned can see or send messages.
-     */
-    public function chatWhatsapp(User $user, Lead $lead): bool
-    {
-        return $user->isSuperAdmin() || $lead->whatsappUsers()->where('user_id', $user->id)->exists();
-    }
-
-    public function manageWhatsappUsers(User $user, Lead $lead): bool
-    {
-        return $user->isSuperAdmin();
-    }
-
-    /**
      * The full-history PDF pulls together every module's records for this
      * lead (requirements, support tickets + comments, tasks + comments,
      * account handoffs, etc.) into one document — restricted to Super Admin
@@ -138,7 +122,7 @@ class LeadPolicy
      * Gates issuing/rotating/revoking the Support ID + PIN that let this
      * lead's client contact self-serve support tickets without a staff
      * login — Super Admin only, same as the other config-style abilities
-     * above (manageWhatsappUsers, exportPdf).
+     * above (exportPdf).
      */
     public function manageSupportAccess(User $user, Lead $lead): bool
     {

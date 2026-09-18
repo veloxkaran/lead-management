@@ -15,10 +15,9 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * The Team Meeting Room, mirroring WhatsappChatController's single
- * list+detail view keyed by a selected id, rather than a separate
- * AgendaController resource — this is one cohesive shared workspace, not a
- * CRUD resource with per-record pages.
+ * The Team Meeting Room, using a single list+detail view keyed by a selected
+ * id, rather than a separate AgendaController resource — this is one
+ * cohesive shared workspace, not a CRUD resource with per-record pages.
  */
 class MeetingRoomController extends Controller
 {
@@ -70,9 +69,8 @@ class MeetingRoomController extends Controller
     }
 
     /**
-     * Cursor-append poll endpoint, same shape as
-     * WhatsappChatController::messages() — returns only comments/replies
-     * created after the client's last-seen id.
+     * Cursor-append poll endpoint — returns only comments/replies created
+     * after the client's last-seen id.
      */
     public function discussions(Request $request, Agenda $agenda): JsonResponse
     {
