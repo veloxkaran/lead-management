@@ -17,8 +17,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class RequirementService
 {
-    public function __construct(protected RequirementRepository $requirements)
-    {
+    public function __construct(
+        protected RequirementRepository $requirements,
+        protected ClientNotifier $notifier,
+    ) {
     }
 
     public function list(array $filters, int $perPage = 20): LengthAwarePaginator
@@ -58,6 +60,11 @@ class RequirementService
         $requirement = $this->requirements->create($attributes);
 
         $this->storeAttachments($requirement, $files);
+
+        $this->notifier->notify('requirement_created', $requirement->lead?->email, [
+            ...$this->clientVariables($requirement),
+            'due_date' => $requirement->due_date?->format('M d, Y'),
+        ], $requirement);
 
         event(new RequirementSaved($requirement, true));
 
@@ -106,9 +113,30 @@ class RequirementService
             $this->logChange($requirement, $actor, $ip, $userAgent, array_intersect_key($originalRaw, $changed), $changed);
         }
 
+        if (array_key_exists('status', $changed)) {
+            $this->notifier->notify('requirement_status_changed', $requirement->lead?->email, [
+                ...$this->clientVariables($requirement),
+                'old_status' => RequirementStatus::from($originalRaw['status'])->label(),
+                'new_status' => $requirement->status->label(),
+            ], $requirement);
+        }
+
         event(new RequirementSaved($requirement, false));
 
         return $requirement;
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    private function clientVariables(Requirement $requirement): array
+    {
+        return [
+            'company_name' => $requirement->lead?->company_name,
+            'contact_person' => $requirement->lead?->contact_person,
+            'requirement' => $requirement->requirement,
+            'priority' => $requirement->priority->label(),
+        ];
     }
 
     /**

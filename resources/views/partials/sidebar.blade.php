@@ -44,12 +44,6 @@
         </a>
 
         <div class="nav-section-title">Reporting</div>
-        <a href="{{ route('daily-summaries.index') }}" class="nav-link {{ request()->routeIs('daily-summaries.*') ? 'active' : '' }}" title="Daily Summary" data-bs-toggle="tooltip" data-bs-placement="right">
-            <i class="bi bi-journal-text"></i> <span class="nav-label">Daily Summary</span>
-        </a>
-        <a href="{{ route('team.index') }}" class="nav-link {{ request()->routeIs('team.index') ? 'active' : '' }}" title="My Team" data-bs-toggle="tooltip" data-bs-placement="right">
-            <i class="bi bi-people-fill"></i> <span class="nav-label">My Team</span>
-        </a>
         <a href="{{ route('team.activities') }}" class="nav-link {{ request()->routeIs('team.activities') ? 'active' : '' }}" title="Team Activities" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-clock-history"></i> <span class="nav-label">Team Activities</span>
         </a>
@@ -68,6 +62,12 @@
             </a>
             <a href="{{ route('settings.edit') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" title="Settings" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-gear"></i> <span class="nav-label">Settings</span>
+            </a>
+            <a href="{{ route('email-templates.index') }}" class="nav-link {{ request()->routeIs('email-templates.*') ? 'active' : '' }}" title="Email Templates" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-file-earmark-text"></i> <span class="nav-label">Email Templates</span>
+            </a>
+            <a href="{{ route('email-logs.index') }}" class="nav-link {{ request()->routeIs('email-logs.*') ? 'active' : '' }}" title="Email Log" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-envelope-paper"></i> <span class="nav-label">Email Log</span>
             </a>
         @endif
 

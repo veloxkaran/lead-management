@@ -16,8 +16,10 @@ use Illuminate\Support\Facades\DB;
 
 class SupportTicketService
 {
-    public function __construct(protected SupportTicketRepository $tickets)
-    {
+    public function __construct(
+        protected SupportTicketRepository $tickets,
+        protected ClientNotifier $notifier,
+    ) {
     }
 
     public function list(array $filters, int $perPage = 20): LengthAwarePaginator
@@ -30,7 +32,7 @@ class SupportTicketService
      */
     public function create(array $attributes, User $raiser, array $files = []): SupportTicket
     {
-        return DB::transaction(function () use ($attributes, $raiser, $files) {
+        $ticket = DB::transaction(function () use ($attributes, $raiser, $files) {
             $assignedTo = $attributes['assigned_to'] ?? null;
             unset($attributes['assigned_to']);
             $attributes['raised_by'] = $raiser->id;
@@ -46,6 +48,15 @@ class SupportTicketService
 
             return $ticket->load('attachments');
         });
+
+        // Sent after the transaction commits, not inside it — a rollback
+        // must never leave an already-sent email describing a ticket that
+        // no longer exists.
+        $this->notifier->notify('support_ticket_created', $ticket->lead?->email, [
+            ...$this->clientVariables($ticket),
+        ], $ticket);
+
+        return $ticket;
     }
 
     /**
@@ -102,11 +113,52 @@ class SupportTicketService
             $this->assign($ticket, $assignedTo !== null ? (int) $assignedTo : null, $actor);
         }
 
+        $previousStatus = $ticket->status;
+
         $ticket = $this->tickets->update($ticket, $attributes);
+
+        $this->logStatusChange($ticket, $previousStatus, $actor);
 
         $this->storeAttachments($ticket, $files);
 
         return $ticket;
+    }
+
+    /**
+     * Every actual status transition gets its own row — mirrors assign()'s
+     * assignmentLogs() reasoning, just for status instead of assignee.
+     * Resubmitting the same status is a no-op (no log entry).
+     */
+    private function logStatusChange(SupportTicket $ticket, RequirementStatus $previousStatus, User $actor): void
+    {
+        if ($ticket->status === $previousStatus) {
+            return;
+        }
+
+        $ticket->statusLogs()->create([
+            'from_status' => $previousStatus,
+            'to_status' => $ticket->status,
+            'changed_by' => $actor->id,
+        ]);
+
+        $this->notifier->notify('support_ticket_status_changed', $ticket->lead?->email, [
+            ...$this->clientVariables($ticket),
+            'old_status' => $previousStatus->label(),
+            'new_status' => $ticket->status->label(),
+        ], $ticket);
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    private function clientVariables(SupportTicket $ticket): array
+    {
+        return [
+            'company_name' => $ticket->lead?->company_name,
+            'contact_person' => $ticket->lead?->contact_person,
+            'subject' => $ticket->subject,
+            'priority' => $ticket->priority->label(),
+        ];
     }
 
     public function delete(SupportTicket $ticket): void

@@ -61,6 +61,11 @@ class SupportTicket extends Model
         return $this->hasMany(SupportTicketAssignmentLog::class)->latest();
     }
 
+    public function statusLogs(): HasMany
+    {
+        return $this->hasMany(SupportTicketStatusLog::class)->latest();
+    }
+
     public function attachments(): HasMany
     {
         return $this->hasMany(SupportTicketAttachment::class)->latest();

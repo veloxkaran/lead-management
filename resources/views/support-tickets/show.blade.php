@@ -92,6 +92,8 @@
         </div>
     </div>
 
+    @include('support-tickets._status_log')
+
     @include('support-tickets._assignment_log')
 
     @include('support-tickets._comments')

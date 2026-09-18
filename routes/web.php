@@ -7,6 +7,8 @@ use App\Http\Controllers\CommonReportController;
 use App\Http\Controllers\DailySummaryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailAccountController;
+use App\Http\Controllers\EmailLogController;
+use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\FollowUpController;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\GoalLeaderboardController;
@@ -218,5 +220,13 @@ Route::middleware('auth')->group(function () {
 
         Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+
+        Route::get('email-templates', [EmailTemplateController::class, 'index'])->name('email-templates.index');
+        Route::get('email-templates/{emailTemplate}/edit', [EmailTemplateController::class, 'edit'])->name('email-templates.edit');
+        Route::put('email-templates/{emailTemplate}', [EmailTemplateController::class, 'update'])->name('email-templates.update');
+        Route::get('email-templates/{emailTemplate}/preview', [EmailTemplateController::class, 'preview'])->name('email-templates.preview');
+
+        Route::get('email-logs', [EmailLogController::class, 'index'])->name('email-logs.index');
+        Route::get('email-logs/{emailLog}', [EmailLogController::class, 'show'])->name('email-logs.show');
     });
 });

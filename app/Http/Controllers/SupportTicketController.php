@@ -72,7 +72,7 @@ class SupportTicketController extends Controller
     {
         $this->authorize('view', $supportTicket);
 
-        $supportTicket->load('lead', 'raiser', 'assignee', 'comments.author', 'attachments', 'assignmentLogs.user', 'assignmentLogs.performedBy');
+        $supportTicket->load('lead', 'raiser', 'assignee', 'comments.author', 'attachments', 'assignmentLogs.user', 'assignmentLogs.performedBy', 'statusLogs.changedBy');
 
         return view('support-tickets.show', [
             'supportTicket' => $supportTicket,
