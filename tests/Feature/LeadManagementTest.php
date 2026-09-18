@@ -90,7 +90,7 @@ class LeadManagementTest extends TestCase
         $this->assertNotNull($lead->fresh()->archived_at);
     }
 
-    public function test_leads_index_defaults_to_leads_created_by_the_logged_in_user(): void
+    public function test_leads_index_defaults_to_showing_everyones_leads(): void
     {
         $user = User::factory()->create();
         $other = User::factory()->create();
@@ -101,7 +101,25 @@ class LeadManagementTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('My Own Co');
-        $response->assertDontSee('Other Co');
+        $response->assertSee('Other Co');
+    }
+
+    public function test_leads_index_sorts_the_logged_in_users_own_leads_first(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        // Others' lead is more recent, but the logged in user's own lead
+        // (created earlier) should still sort ahead of it.
+        $theirs = Lead::factory()->create(['created_by' => $other->id, 'created_at' => now()]);
+        $mine = Lead::factory()->create(['created_by' => $user->id, 'created_at' => now()->subDay()]);
+
+        $response = $this->actingAs($user)->get(route('leads.index'));
+
+        $response->assertOk();
+        $ids = $response->viewData('leads')->pluck('id')->all();
+
+        $this->assertSame([$mine->id, $theirs->id], $ids);
     }
 
     public function test_leads_index_created_by_filter_can_be_widened_to_everyone(): void

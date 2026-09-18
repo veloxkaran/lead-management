@@ -2,6 +2,8 @@
 
 namespace App\Models\Concerns;
 
+use Illuminate\Support\Carbon;
+
 /**
  * Shared "how long did this take to resolve" arithmetic for models that
  * track a start (created_at) and an optional completion timestamp — e.g.
@@ -49,15 +51,27 @@ trait TracksResolutionTime
     }
 
     /**
-     * Average resolution time across every resolved record, in minutes.
-     * Null when nothing has been resolved yet, so callers can tell "no
-     * data" apart from a genuine zero.
+     * Average resolution time in minutes, across every resolved record by
+     * default or — when $from/$to are given — only those resolved within
+     * that window (e.g. the dashboard's Daily/Monthly performance snapshot).
+     * Null when nothing matching has been resolved yet, so callers can tell
+     * "no data" apart from a genuine zero.
      */
-    public static function averageResolutionMinutes(): ?float
+    public static function averageResolutionMinutes(?Carbon $from = null, ?Carbon $to = null): ?float
     {
         $column = (new static)->resolvedAtColumn();
 
-        $resolved = static::query()->whereNotNull($column)->get(['created_at', $column]);
+        $query = static::query()->whereNotNull($column);
+
+        if ($from) {
+            $query->where($column, '>=', $from);
+        }
+
+        if ($to) {
+            $query->where($column, '<=', $to);
+        }
+
+        $resolved = $query->get(['created_at', $column]);
 
         if ($resolved->isEmpty()) {
             return null;
@@ -68,11 +82,12 @@ trait TracksResolutionTime
 
     /**
      * averageResolutionMinutes() broken into "N days, N hour and N min",
-     * for display on a dashboard stat.
+     * for display on a dashboard stat. Accepts the same optional $from/$to
+     * window.
      */
-    public static function averageResolutionFormatted(): string
+    public static function averageResolutionFormatted(?Carbon $from = null, ?Carbon $to = null): string
     {
-        $avgMinutes = static::averageResolutionMinutes();
+        $avgMinutes = static::averageResolutionMinutes($from, $to);
 
         if ($avgMinutes === null) {
             return static::noResolvedRecordsMessage();

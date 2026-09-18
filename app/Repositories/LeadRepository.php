@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Lead;
 use App\Repositories\Contracts\LeadRepositoryInterface;
+use App\Support\BsDate;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class LeadRepository extends BaseRepository implements LeadRepositoryInterface
@@ -13,7 +14,7 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
         parent::__construct($model);
     }
 
-    public function filter(array $filters, int $perPage = 15): LengthAwarePaginator
+    public function filter(array $filters, int $perPage = 15, ?int $currentUserId = null): LengthAwarePaginator
     {
         $query = $this->query()->with(['assignedUser', 'status', 'latestStatusHistory'])->withCount(['activities', 'notes', 'requirements']);
 
@@ -50,6 +51,16 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
 
         if (! empty($filters['source'])) {
             $query->where('source', $filters['source']);
+        }
+
+        if (! empty($filters['bs_year']) && ! empty($filters['bs_month'])) {
+            [$from, $to] = BsDate::monthToAdRange((int) $filters['bs_year'], (int) $filters['bs_month']);
+
+            $query->whereBetween('created_at', [$from, $to]);
+        }
+
+        if ($currentUserId) {
+            $query->orderByRaw('CASE WHEN created_by = ? THEN 0 ELSE 1 END', [$currentUserId]);
         }
 
         return $query->latest()->paginate($perPage)->withQueryString();

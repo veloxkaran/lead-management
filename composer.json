@@ -7,6 +7,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "anuzpandey/laravel-nepali-date": "^3.3",
         "barryvdh/laravel-dompdf": "^3.1",
         "guzzlehttp/guzzle": "^7.13",
         "jenssegers/agent": "^2.6",

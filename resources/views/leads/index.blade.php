@@ -57,6 +57,24 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="col-md-2">
+                    <label class="form-label small">Created (BS Year)</label>
+                    <select name="bs_year" class="form-select form-select-sm">
+                        <option value="">Any year</option>
+                        @foreach ($bsYears as $bsYear)
+                            <option value="{{ $bsYear }}" @selected(($filters['bs_year'] ?? '') == $bsYear)>{{ $bsYear }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small">Created (BS Month)</label>
+                    <select name="bs_month" class="form-select form-select-sm">
+                        <option value="">Any month</option>
+                        @foreach ($bsMonths as $value => $label)
+                            <option value="{{ $value }}" @selected(($filters['bs_month'] ?? '') == $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-sm btn-primary flex-fill"><i class="bi bi-funnel"></i> Filter</button>
                     <a href="{{ route('leads.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>

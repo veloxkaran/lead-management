@@ -21,9 +21,9 @@ class LeadService
         protected GoalContributionService $goalContributions,
     ) {}
 
-    public function list(array $filters, int $perPage = 15): LengthAwarePaginator
+    public function list(array $filters, int $perPage = 15, ?int $currentUserId = null): LengthAwarePaginator
     {
-        return $this->leads->filter($filters, $perPage);
+        return $this->leads->filter($filters, $perPage, $currentUserId);
     }
 
     public function create(array $attributes, User $creator): Lead

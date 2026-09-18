@@ -6,5 +6,5 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 interface LeadRepositoryInterface extends RepositoryInterface
 {
-    public function filter(array $filters, int $perPage = 15): LengthAwarePaginator;
+    public function filter(array $filters, int $perPage = 15, ?int $currentUserId = null): LengthAwarePaginator;
 }

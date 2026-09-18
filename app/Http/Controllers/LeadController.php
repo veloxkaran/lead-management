@@ -14,6 +14,7 @@ use App\Models\Lead;
 use App\Models\LeadStatus;
 use App\Models\User;
 use App\Services\LeadService;
+use App\Support\BsDate;
 use App\Support\LeadWalkthrough;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -30,19 +31,19 @@ class LeadController extends Controller
     {
         $this->authorize('viewAny', Lead::class);
 
-        $filters = $request->only(['search', 'company_name', 'status_id', 'assigned_user_id', 'created_by', 'source', 'archived']);
+        $filters = $request->only(['search', 'company_name', 'status_id', 'assigned_user_id', 'created_by', 'source', 'archived', 'bs_year', 'bs_month']);
 
-        if (! $request->has('created_by')) {
-            $filters['created_by'] = $request->user()->id;
-        }
+        $leads = $this->leadService->list($filters, 15, $request->user()->id);
 
-        $leads = $this->leadService->list($filters);
+        $currentBsYear = BsDate::currentYear();
 
         return view('leads.index', [
             'leads' => $leads,
             'statuses' => LeadStatus::ordered()->get(),
             'users' => User::orderBy('name')->get(),
             'filters' => $filters,
+            'bsMonths' => BsDate::MONTHS,
+            'bsYears' => range($currentBsYear, $currentBsYear - 5),
         ]);
     }
 

@@ -111,6 +111,24 @@ class RequirementService
         return $requirement;
     }
 
+    /**
+     * The list page's quick "Status" popup: changes only the status field
+     * (reusing update() so completed_at/activity-log/RequirementSaved all
+     * behave exactly as they do from the full edit form), and requires a
+     * note explaining the change — recorded in the same comment thread as
+     * addComment(), prefixed so it reads distinctly from a plain comment.
+     */
+    public function updateStatus(Requirement $requirement, string $status, string $note, User $actor, ?string $ip, ?string $userAgent): Requirement
+    {
+        $requirement = $this->update($requirement, ['status' => $status], $actor, $ip, $userAgent);
+
+        $this->addComment($requirement, [
+            'comment' => "Status changed to {$requirement->status->label()}: {$note}",
+        ], $actor);
+
+        return $requirement;
+    }
+
     public function delete(Requirement $requirement): void
     {
         $this->requirements->delete($requirement);

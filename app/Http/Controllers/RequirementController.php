@@ -49,6 +49,7 @@ class RequirementController extends Controller
         return view('requirements.company', [
             'lead' => $lead,
             'requirements' => $this->requirementService->listForCompany($lead),
+            'statuses' => RequirementStatus::cases(),
         ]);
     }
 

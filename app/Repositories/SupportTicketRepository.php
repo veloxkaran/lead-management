@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
 use App\Models\SupportTicket;
+use App\Support\PeriodRange;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class SupportTicketRepository extends BaseRepository
@@ -29,6 +30,16 @@ class SupportTicketRepository extends BaseRepository
 
         if (! empty($filters['priority'])) {
             $query->where('priority', $filters['priority']);
+        }
+
+        [$from, $to] = PeriodRange::resolve($filters);
+
+        if ($from) {
+            $query->where('created_at', '>=', $from);
+        }
+
+        if ($to) {
+            $query->where('created_at', '<=', $to);
         }
 
         return $query

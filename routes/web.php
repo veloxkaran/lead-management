@@ -34,6 +34,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RequirementAttachmentController;
 use App\Http\Controllers\RequirementCommentController;
 use App\Http\Controllers\RequirementController;
+use App\Http\Controllers\RequirementStatusController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupportTicketAttachmentController;
 use App\Http\Controllers\SupportTicketCommentController;
@@ -132,6 +133,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('requirements', RequirementController::class);
     Route::post('leads/{lead}/requirements', [RequirementController::class, 'storeForLead'])->name('leads.requirements.store');
     Route::post('requirements/{requirement}/comments', [RequirementCommentController::class, 'store'])->name('requirements.comments.store');
+    Route::patch('requirements/{requirement}/status', [RequirementStatusController::class, 'update'])->name('requirements.status.update');
     Route::get('requirement-attachments/{attachment}/download', [RequirementAttachmentController::class, 'download'])->name('requirement-attachments.download');
     Route::get('requirement-attachments/{attachment}/preview', [RequirementAttachmentController::class, 'preview'])->name('requirement-attachments.preview');
 

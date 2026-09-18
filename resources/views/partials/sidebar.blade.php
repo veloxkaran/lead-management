@@ -13,9 +13,6 @@
         <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->routeIs('tasks.*') ? 'active' : '' }}" title="Tasks" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-list-task"></i> <span class="nav-label">Tasks</span>
         </a>
-        <a href="{{ route('meeting-room.index') }}" class="nav-link {{ request()->routeIs('meeting-room.*') ? 'active' : '' }}" title="Team Meeting Room" data-bs-toggle="tooltip" data-bs-placement="right">
-            <i class="bi bi-people"></i> <span class="nav-label">Team Meeting Room</span>
-        </a>
 
         @if ($user?->isBusinessDevelopment() || $user?->isManager() || $user?->isSuperAdmin())
             <div class="nav-section-title">Business Development</div>
@@ -36,22 +33,6 @@
             </a>
             <a href="{{ route('follow-ups.index') }}" class="nav-link {{ request()->routeIs('follow-ups.*') ? 'active' : '' }}" title="Follow Ups" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-bell"></i> <span class="nav-label">Follow Ups</span>
-            </a>
-            <a href="{{ route('goals.index') }}" class="nav-link {{ request()->routeIs('goals.index') || request()->routeIs('goals.show') || request()->routeIs('goals.create') || request()->routeIs('goals.edit') ? 'active' : '' }}" title="Goals" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-bullseye"></i> <span class="nav-label">Goals</span>
-            </a>
-            <a href="{{ route('goals.leaderboard') }}" class="nav-link {{ request()->routeIs('goals.leaderboard') ? 'active' : '' }}" title="Goals Leaderboard" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-trophy"></i> <span class="nav-label">Goals Leaderboard</span>
-            </a>
-            <a href="{{ route('meetings.index') }}" class="nav-link {{ request()->routeIs('meetings.*') ? 'active' : '' }}" title="Google Meet" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-camera-video"></i> <span class="nav-label">Google Meet</span>
-            </a>
-        @endif
-
-        @if ($user?->isCustomerSuccess() || $user?->isManager() || $user?->isSuperAdmin())
-            <div class="nav-section-title">Customer Success</div>
-            <a href="{{ route('trainings.index') }}" class="nav-link {{ request()->routeIs('trainings.*') ? 'active' : '' }}" title="Trainings" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-mortarboard"></i> <span class="nav-label">Trainings</span>
             </a>
         @endif
 
