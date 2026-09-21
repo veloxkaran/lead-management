@@ -103,8 +103,16 @@ class SupportTicketService
      */
     public function update(SupportTicket $ticket, array $attributes, User $actor, array $files = []): SupportTicket
     {
-        if (($attributes['status'] ?? null) === RequirementStatus::Completed->value && ! $ticket->resolved_at) {
-            $attributes['resolved_at'] = now();
+        if (array_key_exists('status', $attributes)) {
+            if ($attributes['status'] === RequirementStatus::Completed->value && ! $ticket->resolved_at) {
+                $attributes['resolved_at'] = now();
+            } elseif ($attributes['status'] !== RequirementStatus::Completed->value && $ticket->resolved_at) {
+                // Reopening a resolved ticket clears resolved_at —
+                // otherwise it keeps counting as "solved" (and skewing the
+                // average solving time) on the dashboard's Performance
+                // Snapshot even though it's active again.
+                $attributes['resolved_at'] = null;
+            }
         }
 
         if (array_key_exists('assigned_to', $attributes)) {

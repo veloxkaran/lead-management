@@ -64,15 +64,25 @@ class DashboardPerformanceSnapshotTest extends TestCase
         $response->assertJson(['period' => 'daily', 'dateLabel' => BsDate::dayLabel(now())]);
     }
 
-    public function test_monthly_snapshot_scopes_to_the_whole_calendar_month_and_labels_it_with_the_bs_month(): void
+    /**
+     * BS and AD month boundaries don't line up (a BS month typically spans
+     * the back half of one AD month into the front half of the next), so
+     * "Monthly" has to scope its query to the current BS month's actual AD
+     * date range — not the AD calendar month — to match the BS name it's
+     * labeled with.
+     */
+    public function test_monthly_snapshot_scopes_to_the_current_bs_month_and_labels_it_accordingly(): void
     {
         $user = User::factory()->create();
 
-        // Inside this month but not today.
-        SupportTicket::factory()->create(['created_at' => now()->startOfMonth()->addDays(2)]);
+        $bs = BsDate::toBsParts(now());
+        [$start] = BsDate::monthToAdRange($bs['year'], $bs['month']);
 
-        // Outside this month entirely.
-        SupportTicket::factory()->create(['created_at' => now()->subMonthNoOverflow()]);
+        // Inside the current BS month but not necessarily today.
+        SupportTicket::factory()->create(['created_at' => $start->copy()->addDay()]);
+
+        // The day before the current BS month started — outside it entirely.
+        SupportTicket::factory()->create(['created_at' => $start->copy()->subDay()]);
 
         $response = $this->actingAs($user)->getJson(route('dashboard.performance-snapshot', ['snapshot_period' => 'monthly']));
 
@@ -111,5 +121,51 @@ class DashboardPerformanceSnapshotTest extends TestCase
 
         $response->assertOk();
         $response->assertJson(['leads' => ['generated' => 0, 'converted' => 0, 'ratio' => null]]);
+    }
+
+    /**
+     * A ticket/requirement resolved and then reopened must stop counting
+     * as "Solved"/"Closed" on the snapshot — this drives the reopen through
+     * the real update endpoints (which clear resolved_at/completed_at, see
+     * RequirementStatusChangeTest/SupportTicketStatusLogTest) rather than
+     * setting the DB state directly, so it proves the snapshot no longer
+     * relies on a timestamp that survives reopening.
+     */
+    public function test_a_reopened_ticket_and_requirement_stop_counting_as_solved_closed(): void
+    {
+        $superAdmin = User::factory()->superAdmin()->create();
+
+        $ticket = SupportTicket::factory()->create([
+            'created_at' => now(),
+            'status' => \App\Enums\RequirementStatus::Completed,
+            'resolved_at' => now(),
+        ]);
+        $this->actingAs($superAdmin)->put(route('support-tickets.update', $ticket), [
+            'subject' => $ticket->subject,
+            'details' => $ticket->details,
+            'priority' => $ticket->priority->value,
+            'status' => \App\Enums\RequirementStatus::InProgress->value,
+        ])->assertRedirect();
+
+        $lead = Lead::factory()->create();
+        $requirement = Requirement::factory()->create([
+            'lead_id' => $lead->id,
+            'created_at' => now(),
+            'status' => \App\Enums\RequirementStatus::Completed,
+            'completed_at' => now(),
+        ]);
+        $this->actingAs($superAdmin)->put(route('requirements.update', $requirement), [
+            'requirement' => $requirement->requirement,
+            'priority' => $requirement->priority->value,
+            'status' => \App\Enums\RequirementStatus::InProgress->value,
+        ])->assertRedirect();
+
+        $response = $this->actingAs($superAdmin)->getJson(route('dashboard.performance-snapshot', ['snapshot_period' => 'daily']));
+
+        $response->assertOk();
+        $response->assertJson([
+            'tickets' => ['created' => 1, 'solved' => 0],
+            'requirements' => ['created' => 1, 'closed' => 0],
+        ]);
     }
 }

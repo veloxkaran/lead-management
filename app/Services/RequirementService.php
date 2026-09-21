@@ -98,8 +98,16 @@ class RequirementService
      */
     public function update(Requirement $requirement, array $attributes, User $actor, ?string $ip, ?string $userAgent, array $files = []): Requirement
     {
-        if (($attributes['status'] ?? null) === RequirementStatus::Completed->value && ! $requirement->completed_at) {
-            $attributes['completed_at'] = now();
+        if (array_key_exists('status', $attributes)) {
+            if ($attributes['status'] === RequirementStatus::Completed->value && ! $requirement->completed_at) {
+                $attributes['completed_at'] = now();
+            } elseif ($attributes['status'] !== RequirementStatus::Completed->value && $requirement->completed_at) {
+                // Reopening a completed requirement clears completed_at —
+                // otherwise it keeps counting as "closed" (and skewing the
+                // average closing time) on the dashboard's Performance
+                // Snapshot even though it's active again.
+                $attributes['completed_at'] = null;
+            }
         }
 
         if (array_key_exists('requirement', $attributes)) {

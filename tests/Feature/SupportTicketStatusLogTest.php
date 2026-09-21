@@ -96,6 +96,32 @@ class SupportTicketStatusLogTest extends TestCase
         $this->assertNotNull($ticket->resolved_at);
     }
 
+    /**
+     * Reopening a resolved ticket must clear resolved_at — otherwise it
+     * keeps counting as "solved" (and skewing the average solving time) on
+     * the dashboard's Performance Snapshot even though it's active again.
+     */
+    public function test_reopening_a_resolved_ticket_clears_resolved_at(): void
+    {
+        $superAdmin = User::factory()->superAdmin()->create();
+        $ticket = SupportTicket::factory()->create([
+            'status' => RequirementStatus::Completed,
+            'resolved_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($superAdmin)->put(route('support-tickets.update', $ticket), [
+            'subject' => $ticket->subject,
+            'details' => $ticket->details,
+            'priority' => $ticket->priority->value,
+            'status' => RequirementStatus::InProgress->value,
+        ])->assertRedirect();
+
+        $ticket->refresh();
+
+        $this->assertSame(RequirementStatus::InProgress, $ticket->status);
+        $this->assertNull($ticket->resolved_at);
+    }
+
     public function test_show_page_renders_status_history(): void
     {
         $superAdmin = User::factory()->superAdmin()->create(['name' => 'Jamie Admin']);

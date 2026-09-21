@@ -89,7 +89,12 @@ class DashboardController extends Controller
             : 'daily';
 
         [$from, $to, $dateLabel] = match ($period) {
-            'monthly' => [now()->startOfMonth(), now()->endOfMonth(), BsDate::monthLabel(now())],
+            // The "Monthly" label is a BS month name, so the query range
+            // must be that BS month's actual AD date span — BS/AD month
+            // boundaries don't line up, so now()->startOfMonth()/endOfMonth()
+            // (an AD calendar month) would silently aggregate the wrong ~2
+            // weeks of data for whatever BS month is currently showing.
+            'monthly' => $this->currentBsMonthRange(),
             'lifetime' => [null, null, BsDate::sinceLabel($this->earliestActivityDate())],
             default => [now()->startOfDay(), now()->endOfDay(), BsDate::dayLabel(now())],
         };
@@ -126,6 +131,24 @@ class DashboardController extends Controller
                 'ratio' => $leadsGenerated > 0 ? round(($leadsConverted / $leadsGenerated) * 100, 1) : null,
             ],
         ];
+    }
+
+    /**
+     * The current BS month's AD date span plus its label, e.g. today being
+     * 2026-09-21 AD is BS "Asoj" — whose AD range is 2026-09-17 to
+     * 2026-10-17, not the AD calendar month (2026-09-01 to 2026-09-30).
+     * Mirrors LeadRepository's bs_year/bs_month filter, which resolves the
+     * same way via BsDate::monthToAdRange().
+     *
+     * @return array{0: Carbon, 1: Carbon, 2: string}
+     */
+    protected function currentBsMonthRange(): array
+    {
+        $bs = BsDate::toBsParts(now());
+
+        [$start, $end] = BsDate::monthToAdRange($bs['year'], $bs['month']);
+
+        return [$start, $end, BsDate::MONTHS[$bs['month']]];
     }
 
     /**

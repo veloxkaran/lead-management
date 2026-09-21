@@ -74,6 +74,33 @@ class RequirementStatusChangeTest extends TestCase
         $this->assertNotNull($requirement->completed_at);
     }
 
+    /**
+     * Reopening a completed requirement must clear completed_at — otherwise
+     * it keeps counting as "closed" (and skewing the average closing time)
+     * on the dashboard's Performance Snapshot even though it's active again.
+     */
+    public function test_reopening_a_completed_requirement_clears_completed_at(): void
+    {
+        $user = User::factory()->create();
+        $lead = Lead::factory()->create();
+        $requirement = Requirement::factory()->create([
+            'lead_id' => $lead->id,
+            'created_by' => $user->id,
+            'status' => RequirementStatus::Completed,
+            'completed_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($user)->patch(route('requirements.status.update', $requirement), [
+            'status' => RequirementStatus::InProgress->value,
+            'note' => 'Client found a regression, reopening.',
+        ]);
+
+        $requirement->refresh();
+
+        $this->assertSame(RequirementStatus::InProgress, $requirement->status);
+        $this->assertNull($requirement->completed_at);
+    }
+
     public function test_status_cannot_be_changed_without_a_note(): void
     {
         $user = User::factory()->create();
