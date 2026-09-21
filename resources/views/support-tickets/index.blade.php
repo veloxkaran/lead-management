@@ -6,9 +6,9 @@
     <x-page-header title="Support Tickets" icon="bi-life-preserver" subtitle="Raised by Managers, worked by Customer Success.">
         <x-slot:actions>
             @can('create', App\Models\SupportTicket::class)
-                <a href="{{ route('support-tickets.create') }}" class="btn btn-primary btn-sm">
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#raiseTicketModal">
                     <i class="bi bi-plus-lg"></i> Raise Ticket
-                </a>
+                </button>
             @endcan
         </x-slot:actions>
     </x-page-header>
@@ -22,7 +22,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Status</label>
-                    <select name="status" class="form-select form-select-sm" data-select2>
+                    <select name="status" class="form-select form-select-sm" data-select2-field>
                         <option value="">All statuses</option>
                         @foreach ($statuses as $status)
                             <option value="{{ $status->value }}" @selected(($filters['status'] ?? null) === $status->value)>{{ $status->label() }}</option>
@@ -31,7 +31,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Priority</label>
-                    <select name="priority" class="form-select form-select-sm" data-select2>
+                    <select name="priority" class="form-select form-select-sm" data-select2-field>
                         <option value="">All priorities</option>
                         @foreach ($priorities as $priority)
                             <option value="{{ $priority->value }}" @selected(($filters['priority'] ?? null) === $priority->value)>{{ $priority->label() }}</option>
@@ -130,4 +130,80 @@
             </div>
         @endif
     </div>
+
+    @can('create', App\Models\SupportTicket::class)
+        <div class="modal fade" id="raiseTicketModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <form method="POST" action="{{ route('support-tickets.store') }}" enctype="multipart/form-data" class="modal-content">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title">Raise Support Ticket</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label small fw-semibold">Related Lead (optional)</label>
+                                <select name="lead_id" class="form-select form-select-sm" data-select2-field>
+                                    <option value=""></option>
+                                    @foreach ($leads as $lead)
+                                        <option value="{{ $lead->id }}" @selected(old('lead_id') == $lead->id)>{{ $lead->company_name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('lead_id')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label small fw-semibold">Subject</label>
+                                <input type="text" name="subject" class="form-control" value="{{ old('subject') }}" required>
+                                @error('subject')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label small fw-semibold">Details</label>
+                                <textarea name="details" rows="4" class="form-control">{{ old('details') }}</textarea>
+                                @error('details')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Priority</label>
+                                <select name="priority" class="form-select form-select-sm">
+                                    @foreach ($priorities as $priority)
+                                        <option value="{{ $priority->value }}" @selected(old('priority', 'medium') === $priority->value)>{{ $priority->label() }}</option>
+                                    @endforeach
+                                </select>
+                                @error('priority')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Assign To (optional)</label>
+                                <select name="assigned_to" class="form-select form-select-sm" data-select2-field>
+                                    <option value="">Unassigned</option>
+                                    @foreach ($users as $u)
+                                        <option value="{{ $u->id }}" @selected(old('assigned_to') == $u->id)>{{ $u->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('assigned_to')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label small fw-semibold">Documents (optional)</label>
+                                <input type="file" name="attachments[]" multiple class="form-control">
+                                @error('attachments.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Raise Ticket</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @if ($errors->any())
+            @push('scripts')
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        new bootstrap.Modal(document.getElementById('raiseTicketModal')).show();
+                    });
+                </script>
+            @endpush
+        @endif
+    @endcan
 @endsection

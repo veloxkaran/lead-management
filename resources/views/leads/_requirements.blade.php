@@ -33,7 +33,9 @@
             @forelse ($lead->requirements as $requirement)
                 <tr>
                     <td class="small">
-                        <a href="{{ route('requirements.show', $requirement) }}" class="text-decoration-none">{{ $requirement->requirement }}</a>
+                        <a href="{{ route('requirements.show', $requirement) }}" class="text-decoration-none">
+                            {{ $requirement->title ?: Str::limit(strip_tags($requirement->requirementHtml()), 80) }}
+                        </a>
                         @if ($requirement->comments->count())
                             <span class="text-muted"><i class="bi bi-chat-left-text"></i> {{ $requirement->comments->count() }}</span>
                         @endif

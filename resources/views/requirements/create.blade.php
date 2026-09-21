@@ -12,7 +12,7 @@
                 <div class="row g-3">
                     <div class="col-md-12">
                         <label class="form-label small fw-semibold">Lead</label>
-                        <select name="lead_id" class="form-select" data-select2 required>
+                        <select name="lead_id" class="form-select" data-select2-field required>
                             <option value=""></option>
                             @foreach ($leads as $lead)
                                 <option value="{{ $lead->id }}" @selected(old('lead_id') == $lead->id)>{{ $lead->company_name }}</option>
@@ -21,9 +21,12 @@
                         @error('lead_id')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-12">
-                        <label class="form-label small fw-semibold">Requirement</label>
-                        <textarea name="requirement" rows="3" class="form-control" required>{{ old('requirement') }}</textarea>
-                        @error('requirement')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        <label class="form-label small fw-semibold">Title</label>
+                        <input type="text" name="title" class="form-control" value="{{ old('title') }}" maxlength="255">
+                        @error('title')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-12">
+                        <x-rich-text-editor name="requirement" label="Requirement" :value="old('requirement')" required placeholder="Describe the requirement..." />
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small fw-semibold">Priority</label>
@@ -46,7 +49,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small fw-semibold">Assign To</label>
-                        <select name="assigned_to" class="form-select" data-select2>
+                        <select name="assigned_to" class="form-select" data-select2-field>
                             <option value="">Unassigned</option>
                             @foreach ($users as $u)
                                 <option value="{{ $u->id }}" @selected(old('assigned_to') == $u->id)>{{ $u->name }}</option>
@@ -56,7 +59,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label small fw-semibold">Sprint</label>
-                        <select name="sprint" class="form-select" data-select2>
+                        <select name="sprint" class="form-select" data-select2-field>
                             <option value="">Unscheduled</option>
                             @foreach ($sprints as $sprint)
                                 <option value="{{ $sprint }}" @selected(old('sprint') === $sprint)>{{ $sprint }}</option>

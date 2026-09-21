@@ -7,9 +7,19 @@
                 <span class="text-muted">{{ $entry->created_at->format('M d, Y g:i A') }}</span>
                 <ul class="mb-0 mt-1">
                     @foreach ($entry->new_values as $field => $newValue)
+                        @php
+                            $oldDisplay = $entry->old_values[$field] ?? null;
+                            $newDisplay = $newValue;
+                            if ($field === 'requirement') {
+                                // Rich-text content — the diff shows a plain-text
+                                // snippet rather than raw HTML tags.
+                                $oldDisplay = $oldDisplay !== null ? \Illuminate\Support\Str::limit(strip_tags($oldDisplay), 80) : null;
+                                $newDisplay = $newDisplay !== null ? \Illuminate\Support\Str::limit(strip_tags($newDisplay), 80) : null;
+                            }
+                        @endphp
                         <li>
                             <strong>{{ \Illuminate\Support\Str::headline($field) }}:</strong>
-                            {{ $entry->old_values[$field] ?? '—' }} &rarr; {{ $newValue ?? '—' }}
+                            {{ $oldDisplay ?? '—' }} &rarr; {{ $newDisplay ?? '—' }}
                         </li>
                     @endforeach
                 </ul>

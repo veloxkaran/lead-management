@@ -24,7 +24,12 @@ class RequirementCompanySearchTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Acme Corp');
-        $response->assertDontSee('Globex Inc');
+        // Scoped to the grouped companies table, not the whole page — the
+        // "Add Requirement" modal's lead picker lists every active lead
+        // regardless of the search filter.
+        $companyNames = $response->viewData('companies')->pluck('company_name');
+        $this->assertTrue($companyNames->contains('Acme Corp'));
+        $this->assertFalse($companyNames->contains('Globex Inc'));
     }
 
     public function test_company_search_is_case_insensitive_and_partial(): void

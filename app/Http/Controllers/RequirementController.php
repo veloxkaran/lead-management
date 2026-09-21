@@ -39,6 +39,8 @@ class RequirementController extends Controller
             'priorities' => RequirementPriority::cases(),
             'sprints' => Requirement::sprintOptions(),
             'filters' => $filters,
+            'leads' => Lead::active()->orderBy('company_name')->get(),
+            'users' => User::orderBy('name')->get(),
         ]);
     }
 
@@ -50,6 +52,9 @@ class RequirementController extends Controller
             'lead' => $lead,
             'requirements' => $this->requirementService->listForCompany($lead),
             'statuses' => RequirementStatus::cases(),
+            'priorities' => RequirementPriority::cases(),
+            'sprints' => Requirement::sprintOptions(),
+            'users' => User::orderBy('name')->get(),
         ]);
     }
 

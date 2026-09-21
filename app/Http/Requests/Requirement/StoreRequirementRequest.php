@@ -18,6 +18,7 @@ class StoreRequirementRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
+            'title' => ['nullable', 'string', 'max:255'],
             'requirement' => ['required', 'string'],
             'priority' => ['required', new Enum(RequirementPriority::class)],
             'due_date' => ['nullable', 'date'],

@@ -25,7 +25,9 @@ class RequirementSprintTest extends TestCase
             'sprint' => 'Sprint 40',
         ])->assertRedirect();
 
-        $requirement = Requirement::firstWhere('requirement', 'Needs a custom dashboard');
+        // The rich-text sanitizer wraps plain text in a <p> on save, so
+        // match on content rather than exact equality.
+        $requirement = Requirement::where('requirement', 'like', '%Needs a custom dashboard%')->first();
 
         $this->assertNotNull($requirement);
         $this->assertSame('Sprint 40', $requirement->sprint);
@@ -42,7 +44,7 @@ class RequirementSprintTest extends TestCase
             'priority' => 'low',
         ])->assertRedirect();
 
-        $requirement = Requirement::firstWhere('requirement', 'Unscheduled requirement');
+        $requirement = Requirement::where('requirement', 'like', '%Unscheduled requirement%')->first();
 
         $this->assertNotNull($requirement);
         $this->assertNull($requirement->sprint);
@@ -138,7 +140,12 @@ class RequirementSprintTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Sprint 40 Co');
-        $response->assertDontSee('Sprint 41 Co');
+        // Scoped to the grouped companies table, not the whole page — the
+        // "Add Requirement" modal's lead picker lists every active lead
+        // regardless of the sprint filter.
+        $companyNames = $response->viewData('companies')->pluck('company_name');
+        $this->assertTrue($companyNames->contains('Sprint 40 Co'));
+        $this->assertFalse($companyNames->contains('Sprint 41 Co'));
     }
 
     public function test_pdf_export_respects_the_sprint_filter(): void

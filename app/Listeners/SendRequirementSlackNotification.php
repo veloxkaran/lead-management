@@ -16,6 +16,6 @@ class SendRequirementSlackNotification implements ShouldQueue
     {
         $requirement = $event->requirement->loadMissing('lead');
 
-        $this->slack->send("{$requirement->lead->company_name} :: {$requirement->requirement}");
+        $this->slack->send("{$requirement->lead->company_name} :: ".trim(strip_tags($requirement->requirement)));
     }
 }

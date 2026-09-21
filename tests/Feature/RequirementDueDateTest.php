@@ -23,7 +23,9 @@ class RequirementDueDateTest extends TestCase
             'due_date' => '2026-08-15',
         ])->assertRedirect();
 
-        $requirement = Requirement::firstWhere('requirement', 'Needs SSO integration');
+        // The rich-text sanitizer wraps plain text in a <p> on save, so
+        // match on content rather than exact equality.
+        $requirement = Requirement::where('requirement', 'like', '%Needs SSO integration%')->first();
         $this->assertNotNull($requirement);
         $this->assertSame('2026-08-15', $requirement->due_date->toDateString());
     }

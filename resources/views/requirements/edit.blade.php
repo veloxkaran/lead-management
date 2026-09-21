@@ -26,9 +26,12 @@
                 @method('PUT')
                 <div class="row g-3">
                     <div class="col-md-12">
-                        <label class="form-label small fw-semibold">Requirement</label>
-                        <textarea name="requirement" rows="3" class="form-control" required>{{ old('requirement', $requirement->requirement) }}</textarea>
-                        @error('requirement')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        <label class="form-label small fw-semibold">Title</label>
+                        <input type="text" name="title" class="form-control" value="{{ old('title', $requirement->title) }}" maxlength="255">
+                        @error('title')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-12">
+                        <x-rich-text-editor name="requirement" label="Requirement" :value="old('requirement', $requirement->requirement)" required placeholder="Describe the requirement..." />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small fw-semibold">Priority</label>
@@ -60,7 +63,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-semibold">Assign To</label>
-                        <select name="assigned_to" class="form-select" data-select2>
+                        <select name="assigned_to" class="form-select" data-select2-field>
                             <option value="">Unassigned</option>
                             @foreach ($users as $u)
                                 <option value="{{ $u->id }}" @selected(old('assigned_to', $requirement->assigned_to) == $u->id)>{{ $u->name }}</option>
@@ -70,7 +73,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-semibold">Sprint</label>
-                        <select name="sprint" class="form-select" data-select2>
+                        <select name="sprint" class="form-select" data-select2-field>
                             <option value="">Unscheduled</option>
                             @foreach ($sprints as $sprint)
                                 <option value="{{ $sprint }}" @selected(old('sprint', $requirement->sprint) === $sprint)>{{ $sprint }}</option>

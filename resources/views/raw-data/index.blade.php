@@ -37,7 +37,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Status</label>
-                    <select name="status" class="form-select form-select-sm" data-select2>
+                    <select name="status" class="form-select form-select-sm" data-select2-field>
                         <option value="">All statuses</option>
                         @foreach (App\Enums\RawDataStatus::cases() as $status)
                             <option value="{{ $status->value }}" @selected(($filters['status'] ?? null) === $status->value)>{{ $status->label() }}</option>

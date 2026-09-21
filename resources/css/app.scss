@@ -444,3 +444,26 @@ body {
 [x-cloak] {
     display: none !important;
 }
+
+// ---- select2: one continuous field, not "field + floating search box" ----
+// select2-bootstrap-5-theme already docks the dropdown flush against the
+// selection box (no positioning gap), but its own search input still reads
+// as a separate nested control — its own border, border-radius, and focus
+// ring inside a padded inset. Stripping that border/shadow and the inset
+// padding makes the search field sit flat against the surface it's already
+// touching, so the whole thing reads as one field that expands downward
+// rather than a field with a second boxed input floating inside it.
+.select2-container--bootstrap-5 .select2-dropdown .select2-search {
+    padding: 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.select2-container--bootstrap-5 .select2-dropdown .select2-search .select2-search__field {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none !important;
+}
+
+.select2-container--bootstrap-5 .select2-dropdown .select2-search .select2-search__field:focus {
+    border: 0;
+}

@@ -159,7 +159,7 @@ class LeadWalkthrough
             'accent' => 'warning',
             'title' => 'Requirement raised',
             'subtitle' => $requirement->priority->label().' priority · '.$requirement->status->label(),
-            'body' => $requirement->requirement,
+            'body' => trim(strip_tags($requirement->requirement)),
             'actor' => $requirement->creator?->name,
             'meta' => $requirement->created_at->format('M d, Y g:i A'),
             'at' => $requirement->created_at,

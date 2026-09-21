@@ -161,7 +161,7 @@ class ReportService
         }
 
         $rows = $query->latest()->get()->map(fn (Requirement $r) => [
-            'Company' => $r->lead->company_name, 'Requirement' => $r->requirement, 'Priority' => $r->priority->label(), 'Status' => $r->status->label(), 'Assigned To' => $r->assignee?->name,
+            'Company' => $r->lead->company_name, 'Requirement' => $r->title ?: trim(strip_tags($r->requirement)), 'Priority' => $r->priority->label(), 'Status' => $r->status->label(), 'Assigned To' => $r->assignee?->name,
         ]);
 
         return ['title' => 'Requirement Report', 'headings' => ['Company', 'Requirement', 'Priority', 'Status', 'Assigned To'], 'rows' => $rows];

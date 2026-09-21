@@ -31,6 +31,8 @@ class SupportTicketController extends Controller
             'statuses' => RequirementStatus::cases(),
             'priorities' => RequirementPriority::cases(),
             'filters' => $filters,
+            'leads' => Lead::active()->orderBy('company_name')->get(),
+            'users' => User::orderBy('name')->get(),
         ]);
     }
 

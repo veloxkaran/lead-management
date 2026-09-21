@@ -64,7 +64,9 @@ class RequirementClientNotificationTest extends TestCase
         $this->assertSame('requirement_created', $log->template_key);
         $this->assertTrue($log->status === \App\Enums\EmailLogStatus::Sent);
 
-        $requirement = Requirement::firstWhere('requirement', 'Needs a custom integration');
+        // The rich-text sanitizer wraps plain text in a <p> on save, so
+        // match on content rather than exact equality.
+        $requirement = Requirement::where('requirement', 'like', '%Needs a custom integration%')->first();
         $this->assertTrue($log->related->is($requirement));
     }
 

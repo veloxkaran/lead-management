@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Mews\Purifier\Facades\Purifier;
 
 class Requirement extends Model
 {
@@ -20,7 +21,7 @@ class Requirement extends Model
     public const MAX_SPRINT = 50;
 
     protected $fillable = [
-        'company_id', 'lead_id', 'requirement', 'priority', 'status', 'due_date',
+        'company_id', 'lead_id', 'title', 'requirement', 'priority', 'status', 'due_date',
         'client_acknowledged_at', 'assigned_to', 'sprint', 'created_by', 'completed_at',
     ];
 
@@ -46,6 +47,17 @@ class Requirement extends Model
     public function isAcknowledgedByClient(): bool
     {
         return $this->client_acknowledged_at !== null;
+    }
+
+    /**
+     * `requirement` is saved already-sanitized by RequirementService, but
+     * this re-cleans on read too so older rows written before the rich-text
+     * editor existed (plain text, possibly with stray "<"/">") still render
+     * safely as HTML instead of being interpreted as broken markup.
+     */
+    public function requirementHtml(): string
+    {
+        return Purifier::clean((string) $this->requirement);
     }
 
     public function lead(): BelongsTo

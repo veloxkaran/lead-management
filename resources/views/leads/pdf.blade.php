@@ -144,7 +144,7 @@
             <thead><tr><th>Requirement</th><th>Priority</th><th>Status</th><th>Assigned</th><th>Raised By</th></tr></thead>
             <tbody>
                 <tr>
-                    <td>{{ $requirement->requirement }}</td>
+                    <td>{!! $requirement->requirementHtml() !!}</td>
                     <td>{{ $requirement->priority->label() }}</td>
                     <td>{{ $requirement->status->label() }}</td>
                     <td>{{ $requirement->assignee?->name ?? '—' }}</td>

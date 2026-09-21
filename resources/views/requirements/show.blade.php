@@ -19,9 +19,15 @@
     <div class="card border-0 shadow-sm">
         <div class="card-body">
             <div class="row g-3">
+                @if ($requirement->title)
+                    <div class="col-12">
+                        <div class="small text-muted">Title</div>
+                        <p class="mb-0 fw-semibold">{{ $requirement->title }}</p>
+                    </div>
+                @endif
                 <div class="col-12">
                     <div class="small text-muted">Requirement</div>
-                    <p class="mb-0">{{ $requirement->requirement }}</p>
+                    <div class="requirement-rich-content">{!! $requirement->requirementHtml() !!}</div>
                 </div>
                 <div class="col-md-3">
                     <div class="small text-muted">Priority</div>

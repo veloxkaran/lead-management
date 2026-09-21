@@ -18,7 +18,7 @@
             <form method="GET" class="row g-2 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label small">Status</label>
-                    <select name="status" class="form-select form-select-sm" data-select2>
+                    <select name="status" class="form-select form-select-sm" data-select2-field>
                         <option value="">All statuses</option>
                         @foreach ($statuses as $status)
                             <option value="{{ $status->value }}" @selected(($filters['status'] ?? null) === $status->value)>{{ $status->label() }}</option>
@@ -27,7 +27,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Priority</label>
-                    <select name="priority" class="form-select form-select-sm" data-select2>
+                    <select name="priority" class="form-select form-select-sm" data-select2-field>
                         <option value="">All priorities</option>
                         @foreach ($priorities as $priority)
                             <option value="{{ $priority->value }}" @selected(($filters['priority'] ?? null) === $priority->value)>{{ $priority->label() }}</option>
@@ -36,7 +36,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small">Module</label>
-                    <select name="module" class="form-select form-select-sm" data-select2>
+                    <select name="module" class="form-select form-select-sm" data-select2-field>
                         <option value="">All modules</option>
                         @foreach ($modules as $module)
                             <option value="{{ $module->value }}" @selected(($filters['module'] ?? null) === $module->value)>{{ $module->label() }}</option>

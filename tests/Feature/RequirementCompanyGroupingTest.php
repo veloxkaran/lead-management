@@ -40,7 +40,12 @@ class RequirementCompanyGroupingTest extends TestCase
         $response = $this->actingAs($user)->get(route('requirements.index'));
 
         $response->assertOk();
-        $response->assertDontSee('No Requirements Co');
+        // Only the grouped companies table is asserted here, not the whole
+        // page — the "Add Requirement" modal's lead picker legitimately
+        // lists every active lead, including ones with no requirements yet.
+        $this->assertFalse(
+            $response->viewData('companies')->pluck('company_name')->contains('No Requirements Co')
+        );
     }
 
     public function test_company_status_badge_reflects_all_of_that_companys_requirements_not_just_filtered_ones(): void

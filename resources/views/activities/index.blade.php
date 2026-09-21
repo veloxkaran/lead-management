@@ -10,7 +10,7 @@
             <form method="GET" class="row g-2 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label small">Type</label>
-                    <select name="activity_type" class="form-select form-select-sm" data-select2>
+                    <select name="activity_type" class="form-select form-select-sm" data-select2-field>
                         <option value="">All types</option>
                         @foreach ($activityTypes as $type)
                             <option value="{{ $type->value }}" @selected(($filters['activity_type'] ?? null) === $type->value)>{{ $type->label() }}</option>

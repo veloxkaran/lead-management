@@ -31,7 +31,9 @@ class RequirementAttachmentTest extends TestCase
             ],
         ])->assertRedirect();
 
-        $requirement = Requirement::firstWhere('requirement', 'Needs a custom onboarding flow');
+        // The rich-text sanitizer wraps plain text in a <p> on save, so
+        // match on content rather than exact equality.
+        $requirement = Requirement::where('requirement', 'like', '%Needs a custom onboarding flow%')->first();
 
         $this->assertNotNull($requirement);
         $this->assertCount(2, $requirement->attachments);
@@ -141,7 +143,7 @@ class RequirementAttachmentTest extends TestCase
             'attachments' => [UploadedFile::fake()->create('doc.csv', 60)],
         ])->assertRedirect();
 
-        $requirement = Requirement::firstWhere('requirement', 'Needs a data migration');
+        $requirement = Requirement::where('requirement', 'like', '%Needs a data migration%')->first();
         $this->assertCount(1, $requirement->attachments);
     }
 }

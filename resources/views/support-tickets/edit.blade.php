@@ -46,7 +46,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-semibold">Assigned To</label>
-                        <select name="assigned_to" class="form-select" data-select2>
+                        <select name="assigned_to" class="form-select" data-select2-field>
                             <option value="">Unassigned</option>
                             @foreach ($users as $u)
                                 <option value="{{ $u->id }}" @selected(old('assigned_to', $supportTicket->assigned_to) == $u->id)>{{ $u->name }}</option>

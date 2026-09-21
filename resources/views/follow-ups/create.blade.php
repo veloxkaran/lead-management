@@ -12,7 +12,7 @@
                 <div class="row g-3">
                     <div class="col-md-12">
                         <label class="form-label small fw-semibold">Lead</label>
-                        <select name="lead_id" class="form-select" data-select2 required>
+                        <select name="lead_id" class="form-select" data-select2-field required>
                             <option value=""></option>
                             @foreach ($leads as $lead)
                                 <option value="{{ $lead->id }}" @selected(old('lead_id') == $lead->id)>{{ $lead->company_name }}</option>

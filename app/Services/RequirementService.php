@@ -14,6 +14,7 @@ use App\Repositories\RequirementRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Mews\Purifier\Facades\Purifier;
 
 class RequirementService
 {
@@ -56,6 +57,10 @@ class RequirementService
     {
         $attributes['created_by'] = $creator->id;
 
+        if (array_key_exists('requirement', $attributes)) {
+            $attributes['requirement'] = Purifier::clean($attributes['requirement']);
+        }
+
         /** @var Requirement $requirement */
         $requirement = $this->requirements->create($attributes);
 
@@ -97,6 +102,10 @@ class RequirementService
             $attributes['completed_at'] = now();
         }
 
+        if (array_key_exists('requirement', $attributes)) {
+            $attributes['requirement'] = Purifier::clean($attributes['requirement']);
+        }
+
         $originalRaw = collect(array_keys($attributes))
             ->mapWithKeys(fn ($key) => [$key => $requirement->getRawOriginal($key)])
             ->all();
@@ -134,7 +143,11 @@ class RequirementService
         return [
             'company_name' => $requirement->lead?->company_name,
             'contact_person' => $requirement->lead?->contact_person,
-            'requirement' => $requirement->requirement,
+            // The email body is escaped+nl2br'd, not rendered as HTML (see
+            // emails/client-notification.blade.php), so the rich-text
+            // requirement content is flattened to plain text here rather
+            // than leaking raw tags into the sent email.
+            'requirement' => trim(strip_tags($requirement->requirement)),
             'priority' => $requirement->priority->label(),
         ];
     }

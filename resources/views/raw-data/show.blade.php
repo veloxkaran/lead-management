@@ -106,7 +106,7 @@
                     <h6 class="fw-semibold mb-2"><i class="bi bi-person-check"></i> Assign</h6>
                     <form method="POST" action="{{ route('raw-data.assign', $rawData) }}" class="d-flex flex-wrap gap-2">
                         @csrf
-                        <select name="assigned_to" class="form-select form-select-sm" style="max-width: 260px;" data-select2>
+                        <select name="assigned_to" class="form-select form-select-sm" style="max-width: 260px;" data-select2-field>
                             <option value="">Unassigned</option>
                             @foreach ($users as $u)
                                 <option value="{{ $u->id }}" @selected($rawData->assigned_to === $u->id)>{{ $u->name }}</option>

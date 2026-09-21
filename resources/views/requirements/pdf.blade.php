@@ -28,6 +28,7 @@
         <thead>
             <tr>
                 <th>Lead</th>
+                <th>Title</th>
                 <th>Requirement</th>
                 <th>Priority</th>
                 <th>Status</th>
@@ -41,7 +42,8 @@
             @forelse ($requirements as $requirement)
                 <tr>
                     <td>{{ $requirement->lead?->company_name ?? '—' }}</td>
-                    <td>{{ $requirement->requirement }}</td>
+                    <td>{{ $requirement->title ?? '—' }}</td>
+                    <td>{!! $requirement->requirementHtml() !!}</td>
                     <td>{{ $requirement->priority->label() }}</td>
                     <td>{{ $requirement->status->label() }}</td>
                     <td>{{ $requirement->due_date?->format('M d, Y') ?? '—' }}</td>
@@ -50,7 +52,7 @@
                     <td>{{ $requirement->creator?->name ?? '—' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="8">No requirements match the selected filters.</td></tr>
+                <tr><td colspan="9">No requirements match the selected filters.</td></tr>
             @endforelse
         </tbody>
     </table>

@@ -65,7 +65,7 @@
                     @can('changeStatus', $lead)
                         <form method="POST" action="{{ route('leads.status.update', $lead) }}" class="d-flex gap-2">
                             @csrf
-                            <select name="lead_status_id" class="form-select form-select-sm" data-select2>
+                            <select name="lead_status_id" class="form-select form-select-sm" data-select2-field>
                                 @foreach ($statuses as $status)
                                     <option value="{{ $status->id }}" @selected($lead->lead_status_id === $status->id)>{{ $status->name }}</option>
                                 @endforeach

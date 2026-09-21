@@ -6,7 +6,7 @@
     </div>
     <div class="col-md-4">
         <label class="form-label small fw-semibold">Category *</label>
-        <select name="category_id" class="form-select" data-select2 required>
+        <select name="category_id" class="form-select" data-select2-field required>
             <option value="">Select category</option>
             @foreach ($categories as $category)
                 <option value="{{ $category->id }}" @selected(old('category_id', $item->category_id ?? '') == $category->id)>{{ $category->name }}</option>

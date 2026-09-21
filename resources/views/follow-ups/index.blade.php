@@ -18,7 +18,7 @@
             <form method="GET" class="row g-2 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label small">Status</label>
-                    <select name="status" class="form-select form-select-sm" data-select2>
+                    <select name="status" class="form-select form-select-sm" data-select2-field>
                         <option value="">All statuses</option>
                         @foreach ($statuses as $status)
                             <option value="{{ $status->value }}" @selected(($filters['status'] ?? null) === $status->value)>{{ $status->label() }}</option>

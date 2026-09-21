@@ -72,7 +72,7 @@
     @if (!$lead)
         <div class="col-md-6">
             <label class="form-label small fw-semibold">Assigned User</label>
-            <select name="assigned_user_id" class="form-select" data-select2>
+            <select name="assigned_user_id" class="form-select" data-select2-field>
                 <option value="">Unassigned</option>
                 @foreach ($users as $u)
                     <option value="{{ $u->id }}" @selected(old('assigned_user_id') == $u->id)>{{ $u->name }}</option>
@@ -81,7 +81,7 @@
         </div>
         <div class="col-md-6">
             <label class="form-label small fw-semibold">Initial Status</label>
-            <select name="lead_status_id" class="form-select" data-select2>
+            <select name="lead_status_id" class="form-select" data-select2-field>
                 <option value="">Default</option>
                 @foreach ($statuses as $status)
                     <option value="{{ $status->id }}" @selected(old('lead_status_id') == $status->id)>{{ $status->name }}</option>
@@ -91,7 +91,7 @@
     @else
         <div class="col-md-6">
             <label class="form-label small fw-semibold">Assigned User</label>
-            <select name="assigned_user_id" class="form-select" data-select2>
+            <select name="assigned_user_id" class="form-select" data-select2-field>
                 <option value="">Unassigned</option>
                 @foreach ($users as $u)
                     <option value="{{ $u->id }}" @selected(old('assigned_user_id', $lead->assigned_user_id) == $u->id)>{{ $u->name }}</option>
