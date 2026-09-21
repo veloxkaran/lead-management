@@ -29,6 +29,6 @@ class SupportTicketPolicy
 
     public function delete(User $user, SupportTicket $ticket): bool
     {
-        return true;
+        return $user->isSuperAdmin();
     }
 }

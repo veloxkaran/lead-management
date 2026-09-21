@@ -42,13 +42,13 @@ class LeadPolicy
     }
 
     /**
-     * Pipeline-progression actions stay with whoever owns the sale — a
-     * handoff to Customer Success or Finance grants them the lead's
-     * details, not the ability to archive it or move it through statuses.
+     * Archiving/restoring is Super Admin only — unlike the other
+     * pipeline-progression actions below (changeStatus, close), which stay
+     * with whoever owns the sale.
      */
     public function archive(User $user, Lead $lead): bool
     {
-        return $this->isOwnerOrOverseer($user, $lead);
+        return $user->isSuperAdmin();
     }
 
     public function changeStatus(User $user, Lead $lead): bool

@@ -82,12 +82,44 @@ class LeadManagementTest extends TestCase
 
     public function test_archiving_a_lead_hides_it_from_default_index_filter(): void
     {
+        $admin = User::factory()->superAdmin()->create();
+        $lead = Lead::factory()->create();
+
+        $this->actingAs($admin)->post(route('leads.archive', $lead))->assertRedirect();
+
+        $this->assertNotNull($lead->fresh()->archived_at);
+    }
+
+    public function test_the_owner_of_a_lead_cannot_archive_it(): void
+    {
         $user = User::factory()->create();
         $lead = Lead::factory()->create(['created_by' => $user->id, 'assigned_user_id' => $user->id]);
 
-        $this->actingAs($user)->post(route('leads.archive', $lead))->assertRedirect();
+        $this->actingAs($user)->post(route('leads.archive', $lead))->assertForbidden();
 
-        $this->assertNotNull($lead->fresh()->archived_at);
+        $this->assertNull($lead->fresh()->archived_at);
+    }
+
+    public function test_the_archive_button_is_hidden_from_a_regular_user_on_the_index_page(): void
+    {
+        $user = User::factory()->create();
+        Lead::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('leads.index'));
+
+        $response->assertOk();
+        $response->assertDontSee(route('leads.archive', Lead::first()));
+    }
+
+    public function test_the_archive_button_is_visible_to_a_super_admin_on_the_index_page(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $lead = Lead::factory()->create();
+
+        $response = $this->actingAs($admin)->get(route('leads.index'));
+
+        $response->assertOk();
+        $response->assertSee(route('leads.archive', $lead));
     }
 
     public function test_leads_index_defaults_to_showing_everyones_leads(): void
