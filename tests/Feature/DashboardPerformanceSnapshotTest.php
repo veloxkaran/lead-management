@@ -111,6 +111,40 @@ class DashboardPerformanceSnapshotTest extends TestCase
         ]);
     }
 
+    /**
+     * The Lifetime period has no from/to, so $countBetween's whereBetween
+     * never runs — without an explicit whereNotNull, "Solved"/"Closed"/
+     * "Converted" fell back to a bare count() of the whole table (e.g.
+     * every ticket, resolved or not), instead of only ones that actually
+     * have a resolved_at/completed_at/achieved_at set.
+     */
+    public function test_lifetime_snapshot_only_counts_solved_closed_converted_not_every_record(): void
+    {
+        $user = User::factory()->create();
+
+        SupportTicket::factory()->create(['resolved_at' => now()]);
+        SupportTicket::factory()->create(['resolved_at' => null]);
+        SupportTicket::factory()->create(['resolved_at' => null]);
+
+        $lead = Lead::factory()->create();
+        Requirement::factory()->create(['lead_id' => $lead->id, 'completed_at' => now()]);
+        Requirement::factory()->create(['lead_id' => $lead->id, 'completed_at' => null]);
+
+        Lead::factory()->create(['achieved_at' => now()]);
+        Lead::factory()->create(['achieved_at' => null]);
+        Lead::factory()->create(['achieved_at' => null]);
+
+        $response = $this->actingAs($user)->getJson(route('dashboard.performance-snapshot', ['snapshot_period' => 'lifetime']));
+
+        $response->assertOk();
+        $response->assertJson([
+            'period' => 'lifetime',
+            'tickets' => ['created' => 3, 'solved' => 1],
+            'requirements' => ['created' => 2, 'closed' => 1],
+            'leads' => ['generated' => 4, 'converted' => 1],
+        ]);
+    }
+
     public function test_conversion_ratio_is_null_when_no_leads_were_generated_in_the_window(): void
     {
         $user = User::factory()->create();

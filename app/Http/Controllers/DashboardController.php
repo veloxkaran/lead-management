@@ -100,7 +100,14 @@ class DashboardController extends Controller
         };
 
         $countBetween = function (string $model, string $column) use ($from, $to) {
-            $query = $model::query();
+            // whereNotNull matters most for the Lifetime period (no
+            // from/to): without it this fell back to a bare count() of
+            // every row — e.g. "Solved" tickets showing the total ticket
+            // count instead of only ones with resolved_at set. For
+            // Daily/Monthly it's already implied by whereBetween (SQL
+            // BETWEEN on a NULL column is never true), but stating it
+            // explicitly keeps both branches consistent.
+            $query = $model::query()->whereNotNull($column);
 
             if ($from && $to) {
                 $query->whereBetween($column, [$from, $to]);
