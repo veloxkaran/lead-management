@@ -44,10 +44,11 @@ class SupportTicketRepository extends BaseRepository
 
         return $query
             ->orderByRaw(
-                'CASE status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 ELSE 5 END',
+                'CASE status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 WHEN ? THEN 5 ELSE 6 END',
                 [
                     RequirementStatus::Pending->value,
                     RequirementStatus::InProgress->value,
+                    RequirementStatus::InReview->value,
                     RequirementStatus::OnHold->value,
                     RequirementStatus::Completed->value,
                 ]

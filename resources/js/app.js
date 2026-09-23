@@ -34,6 +34,7 @@ import './attachment-preview';
 import './lead-duplicate-check';
 
 import { initRichTextEditors } from './rich-text-editor';
+import { initCkEditors } from './ck-editor';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Bootstrap tooltip/popover activation
@@ -42,7 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Rich text editors outside modals init now; ones inside a modal defer
     // to shown.bs.modal below (same reasoning as the select2 deferral).
     initRichTextEditors();
-    document.addEventListener('shown.bs.modal', (event) => initRichTextEditors(event.target));
+    initCkEditors();
+    document.addEventListener('shown.bs.modal', (event) => {
+        initRichTextEditors(event.target);
+        initCkEditors(event.target);
+    });
 
     // Select2 on any [data-select2-field] element. Wrapped defensively: a failure
     // here (e.g. a jQuery/select2 version mismatch) would otherwise throw

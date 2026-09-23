@@ -63,7 +63,7 @@
                                 <a href="{{ route('knowledge-base.show', $item) }}" class="text-decoration-none">{{ $item->title }}</a>
                             </h6>
                             @if ($item->description)
-                                <p class="text-muted small mb-2">{{ \Illuminate\Support\Str::limit($item->description, 90) }}</p>
+                                <p class="text-muted small mb-2">{{ \Illuminate\Support\Str::limit(strip_tags($item->descriptionHtml()), 90) }}</p>
                             @endif
                             <div class="mt-auto">
                                 @if ($item->tags->isNotEmpty())

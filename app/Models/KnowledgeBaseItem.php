@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
+use Mews\Purifier\Facades\Purifier;
 
 class KnowledgeBaseItem extends Model
 {
@@ -40,6 +41,18 @@ class KnowledgeBaseItem extends Model
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(KnowledgeBaseTag::class, 'knowledge_base_item_tag', 'knowledge_base_item_id', 'knowledge_base_tag_id');
+    }
+
+    /**
+     * `description` is saved already-sanitized by KnowledgeBaseItemService,
+     * but this re-cleans on read too so older rows written before the
+     * rich-text editor existed (plain text, possibly with stray "<"/">")
+     * still render safely as HTML instead of being interpreted as broken
+     * markup.
+     */
+    public function descriptionHtml(): string
+    {
+        return Purifier::clean((string) $this->description);
     }
 
     public function url(): ?string

@@ -14,8 +14,7 @@
         </select>
     </div>
     <div class="col-12">
-        <label class="form-label small fw-semibold">Description</label>
-        <textarea name="description" rows="3" class="form-control">{{ old('description', $item->description ?? '') }}</textarea>
+        <x-ck-editor name="description" label="Description" :value="old('description', $item->description ?? '')" placeholder="Describe this knowledge base item..." />
     </div>
     <div class="col-md-4">
         <label class="form-label small fw-semibold">Type *</label>

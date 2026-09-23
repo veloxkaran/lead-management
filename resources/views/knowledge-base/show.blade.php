@@ -49,7 +49,7 @@
 
                     @if ($item->description)
                         <hr>
-                        <p class="mb-0">{{ $item->description }}</p>
+                        <div class="mb-0">{!! $item->descriptionHtml() !!}</div>
                     @endif
                 </div>
             </div>

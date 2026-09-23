@@ -11,6 +11,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Mews\Purifier\Facades\Purifier;
 
 class KnowledgeBaseItemService
 {
@@ -28,6 +29,10 @@ class KnowledgeBaseItemService
         return DB::transaction(function () use ($attributes, $file, $tagsInput, $uploaderId) {
             $type = KnowledgeBaseType::from($attributes['type']);
             $attributes['uploaded_by'] = $uploaderId;
+
+            if (array_key_exists('description', $attributes)) {
+                $attributes['description'] = Purifier::clean($attributes['description']);
+            }
 
             if ($type === KnowledgeBaseType::Link) {
                 $attributes['disk_path'] = null;
@@ -55,6 +60,10 @@ class KnowledgeBaseItemService
     {
         return DB::transaction(function () use ($item, $attributes, $file, $tagsInput) {
             $type = KnowledgeBaseType::from($attributes['type']);
+
+            if (array_key_exists('description', $attributes)) {
+                $attributes['description'] = Purifier::clean($attributes['description']);
+            }
 
             if ($type === KnowledgeBaseType::Link) {
                 if ($item->disk_path) {
