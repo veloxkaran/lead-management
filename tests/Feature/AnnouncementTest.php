@@ -87,7 +87,9 @@ class AnnouncementTest extends TestCase
             $response->assertOk()
                 ->assertSee('Announcements')
                 ->assertSee('Announcement number 6')
-                ->assertDontSee('Announcement number 1'); // only the latest 5
+                ->assertDontSee('Announcement number 1') // only the latest 5
+                // Same place on every dashboard: below the performance snapshot.
+                ->assertSeeInOrder(['id="performance-snapshot"', 'bi-broadcast me-1'], false);
 
             $role === \App\Enums\UserRole::SuperAdmin
                 ? $response->assertSee(route('announcements.create'))
