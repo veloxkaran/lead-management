@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\SupportTicket;
 use App\Models\User;
+use Illuminate\Auth\Access\Response;
 
 class SupportTicketPolicy
 {
@@ -22,8 +23,16 @@ class SupportTicketPolicy
         return true;
     }
 
-    public function update(User $user, SupportTicket $ticket): bool
+    /**
+     * Open to everyone — until the ticket has been completed for more than
+     * the edit window, after which only Super Admin can change or reopen it.
+     */
+    public function update(User $user, SupportTicket $ticket): Response|bool
     {
+        if ($ticket->isLockedFor($user)) {
+            return Response::deny('This support ticket was completed more than '.SupportTicket::EDIT_WINDOW_HOURS.' hours ago and is locked. Ask a Super Admin to reopen it.');
+        }
+
         return true;
     }
 

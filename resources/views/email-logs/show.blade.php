@@ -23,7 +23,7 @@
                 <dt class="col-2 text-muted">Related To</dt>
                 <dd class="col-10">
                     @if ($log->related instanceof \App\Models\Requirement)
-                        <a href="{{ route('requirements.show', $log->related) }}">Requirement — {{ $log->related->requirement }}</a>
+                        <a href="{{ route('requirements.show', $log->related) }}">Requirement — {{ $log->related->summary(80) }}</a>
                     @elseif ($log->related instanceof \App\Models\SupportTicket)
                         <a href="{{ route('support-tickets.show', $log->related) }}">Support Ticket — {{ $log->related->subject }}</a>
                     @elseif ($log->related instanceof \App\Models\Announcement)

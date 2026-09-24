@@ -153,9 +153,9 @@ class RequirementService
             'contact_person' => $requirement->lead?->contact_person,
             // The email body is escaped+nl2br'd, not rendered as HTML (see
             // emails/client-notification.blade.php), so the rich-text
-            // requirement content is flattened to plain text here rather
-            // than leaking raw tags into the sent email.
-            'requirement' => trim(strip_tags($requirement->requirement)),
+            // requirement is flattened to plain text — keeping paragraphs
+            // and list items on their own lines, entities decoded.
+            'requirement' => $requirement->plainText(),
             'priority' => $requirement->priority->label(),
         ];
     }

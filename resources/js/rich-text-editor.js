@@ -27,7 +27,9 @@ function initOne(root) {
 
     const quill = new Quill(body, {
         theme: 'snow',
-        modules: { toolbar },
+        // table: keeps pasted tables (e.g. from ChatGPT/Docs/Excel) as real
+        // rows/cells — without it Quill flattens them into one run-on line.
+        modules: { toolbar, table: true },
         placeholder: root.dataset.richTextPlaceholder || '',
     });
 

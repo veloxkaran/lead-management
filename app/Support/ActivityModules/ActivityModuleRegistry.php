@@ -159,7 +159,7 @@ class ActivityModuleRegistry
             ),
             new ActivityLoggingRegistration(
                 Requirement::class, ActivityModule::Requirement,
-                fn (Requirement $requirement) => 'raised a requirement: '.Str::limit(strip_tags($requirement->requirement), 60),
+                fn (Requirement $requirement) => 'raised a requirement: '.$requirement->summary(60),
                 fn (Requirement $requirement) => $requirement->created_by,
             ),
             new ActivityLoggingRegistration(

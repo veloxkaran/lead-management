@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Requirement;
 use App\Models\User;
+use Illuminate\Auth\Access\Response;
 
 class RequirementPolicy
 {
@@ -22,8 +23,12 @@ class RequirementPolicy
         return true;
     }
 
-    public function update(User $user, Requirement $requirement): bool
+    public function update(User $user, Requirement $requirement): Response|bool
     {
+        if ($requirement->isLockedFor($user)) {
+            return $this->lockedResponse();
+        }
+
         return $user->isSuperAdmin()
             || $requirement->created_by === $user->id
             || $requirement->assigned_to === $user->id;
@@ -35,13 +40,18 @@ class RequirementPolicy
      * creator/assignee/super admin and gates the full edit form and
      * destructive actions.
      */
-    public function changeStatus(User $user, Requirement $requirement): bool
+    public function changeStatus(User $user, Requirement $requirement): Response|bool
     {
-        return true;
+        return $requirement->isLockedFor($user) ? $this->lockedResponse() : true;
     }
 
-    public function delete(User $user, Requirement $requirement): bool
+    public function delete(User $user, Requirement $requirement): Response|bool
     {
         return $this->update($user, $requirement);
+    }
+
+    private function lockedResponse(): Response
+    {
+        return Response::deny('This requirement was completed more than '.Requirement::EDIT_WINDOW_HOURS.' hours ago and is locked. Ask a Super Admin to reopen it.');
     }
 }

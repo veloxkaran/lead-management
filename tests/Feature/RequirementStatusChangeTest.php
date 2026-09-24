@@ -87,7 +87,9 @@ class RequirementStatusChangeTest extends TestCase
             'lead_id' => $lead->id,
             'created_by' => $user->id,
             'status' => RequirementStatus::Completed,
-            'completed_at' => now()->subDay(),
+            // Inside the 4-hour edit window — after it only Super Admin can
+            // reopen (see CompletionLockTest).
+            'completed_at' => now()->subHours(2),
         ]);
 
         $this->actingAs($user)->patch(route('requirements.status.update', $requirement), [

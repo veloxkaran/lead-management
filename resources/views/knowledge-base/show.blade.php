@@ -49,7 +49,7 @@
 
                     @if ($item->description)
                         <hr>
-                        <div class="mb-0">{!! $item->descriptionHtml() !!}</div>
+                        <div class="mb-0 rich-content">{!! $item->descriptionHtml() !!}</div>
                     @endif
                 </div>
             </div>

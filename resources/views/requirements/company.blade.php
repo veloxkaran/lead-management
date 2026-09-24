@@ -37,7 +37,7 @@
                         <tr>
                             <td class="small">
                                 <a href="{{ route('requirements.show', $requirement) }}" class="text-decoration-none">
-                                    {{ $requirement->title ?: Str::limit(strip_tags($requirement->requirementHtml()), 80) }}
+                                    {{ $requirement->summary(80) }}
                                 </a>
                                 @if ($requirement->comments_count)
                                     <span class="text-muted"><i class="bi bi-chat-left-text"></i> {{ $requirement->comments_count }}</span>
@@ -102,7 +102,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <p class="small text-muted">{{ $requirement->title ?: Str::limit(strip_tags($requirement->requirementHtml()), 120) }}</p>
+                            <p class="small text-muted">{{ $requirement->summary(120) }}</p>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Status</label>
                                 <select name="status" class="form-select" required>

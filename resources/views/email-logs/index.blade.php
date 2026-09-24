@@ -68,7 +68,7 @@
                             <td class="small">{{ $log->subject }}</td>
                             <td class="small text-muted">
                                 @if ($log->related instanceof \App\Models\Requirement)
-                                    Requirement — {{ \Illuminate\Support\Str::limit($log->related->requirement, 40) }}
+                                    Requirement — {{ $log->related->summary(40) }}
                                 @elseif ($log->related instanceof \App\Models\SupportTicket)
                                     Support Ticket — {{ $log->related->subject }}
                                 @elseif ($log->related instanceof \App\Models\Announcement)

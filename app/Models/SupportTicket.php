@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\LocksAfterCompletion;
 use App\Models\Concerns\TracksResolutionTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SupportTicket extends Model
 {
-    use BelongsToCompany, HasFactory, TracksResolutionTime;
+    use BelongsToCompany, HasFactory, LocksAfterCompletion, TracksResolutionTime;
 
     protected $fillable = [
         'company_id', 'lead_id', 'subject', 'details', 'priority', 'status', 'raised_by',

@@ -16,6 +16,8 @@
         </x-slot:actions>
     </x-page-header>
 
+    <x-completion-lock-notice :record="$requirement" noun="requirement" />
+
     <div class="card border-0 shadow-sm">
         <div class="card-body">
             <div class="row g-3">

@@ -5,16 +5,19 @@ namespace App\Models;
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\LocksAfterCompletion;
 use App\Models\Concerns\TracksResolutionTime;
+use App\Support\HtmlToText;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use Mews\Purifier\Facades\Purifier;
 
 class Requirement extends Model
 {
-    use BelongsToCompany, HasFactory, TracksResolutionTime;
+    use BelongsToCompany, HasFactory, LocksAfterCompletion, TracksResolutionTime;
 
     public const MIN_SPRINT = 35;
 
@@ -58,6 +61,23 @@ class Requirement extends Model
     public function requirementHtml(): string
     {
         return Purifier::clean((string) $this->requirement);
+    }
+
+    /**
+     * The requirement as readable plain text (structure kept, no tags or
+     * entities) — for client emails, Slack, activity and exports.
+     */
+    public function plainText(): string
+    {
+        return HtmlToText::convert($this->requirement);
+    }
+
+    /**
+     * One-line label: the title if set, otherwise the start of the text.
+     */
+    public function summary(int $limit = 60): string
+    {
+        return $this->title ?: Str::limit(preg_replace('/\s+/u', ' ', $this->plainText()), $limit);
     }
 
     public function lead(): BelongsTo
