@@ -19,6 +19,12 @@
                     <tr>
                         <td style="padding: 32px; color:#1f2937; font-size: 14px; line-height: 1.6;">
                             {!! nl2br(e($body)) !!}
+                            {{-- $message only exists while actually mailing. width="" is for Outlook for Windows, which ignores CSS max-width. --}}
+                            @foreach ($images ?? [] as $image)
+                                <div style="margin-top: 16px;">
+                                    <img src="{{ isset($message) ? $message->embed($image['path']) : $image['path'] }}" width="{{ $image['width'] }}" alt="" style="width: 100%; max-width: {{ $image['width'] }}px; height: auto; border: 0; border-radius: 4px; display: block;">
+                                </div>
+                            @endforeach
                         </td>
                     </tr>
                     <tr>

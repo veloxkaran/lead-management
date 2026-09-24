@@ -42,6 +42,9 @@
         <a href="{{ route('release-notes.index') }}" class="nav-link {{ request()->routeIs('release-notes.*') ? 'active' : '' }}" title="Release Notes" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-megaphone"></i> <span class="nav-label">Release Notes</span>
         </a>
+        <a href="{{ route('announcements.index') }}" class="nav-link {{ request()->routeIs('announcements.*') ? 'active' : '' }}" title="Announcements" data-bs-toggle="tooltip" data-bs-placement="right">
+            <i class="bi bi-broadcast"></i> <span class="nav-label">Announcements</span>
+        </a>
 
         <div class="nav-section-title">Reporting</div>
         <a href="{{ route('team.activities') }}" class="nav-link {{ request()->routeIs('team.activities') ? 'active' : '' }}" title="Team Activities" data-bs-toggle="tooltip" data-bs-placement="right">

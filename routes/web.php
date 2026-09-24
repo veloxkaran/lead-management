@@ -7,6 +7,8 @@ use App\Http\Controllers\CommonReportController;
 use App\Http\Controllers\DailySummaryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailAccountController;
+use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\AnnouncementDocumentController;
 use App\Http\Controllers\EmailLogController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\FollowUpController;
@@ -158,6 +160,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('daily-summaries', DailySummaryController::class)->only(['index', 'create', 'store', 'edit', 'update']);
 
     Route::resource('release-notes', ReleaseNoteController::class);
+
+    // Everyone reads; only Super Admin creates — see AnnouncementPolicy.
+    Route::resource('announcements', AnnouncementController::class)->only(['index', 'create', 'store', 'show']);
+    Route::get('announcement-documents/{document}/download', [AnnouncementDocumentController::class, 'download'])->name('announcement-documents.download');
+    Route::get('announcement-documents/{document}/preview', [AnnouncementDocumentController::class, 'preview'])->name('announcement-documents.preview');
 
     Route::resource('knowledge-base', KnowledgeBaseController::class);
     Route::get('knowledge-base/{knowledge_base}/download', [KnowledgeBaseController::class, 'download'])->name('knowledge-base.download');

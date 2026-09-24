@@ -35,6 +35,19 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Announcement Send Rate
+    |--------------------------------------------------------------------------
+    |
+    | Announcement emails are queued with staggered delays so no more than
+    | this many go out per minute — shared hosts (cPanel) cap outgoing mail
+    | per hour and suspend sending past it. 8/min ≈ 480/hour.
+    |
+    */
+
+    'announcement_per_minute' => max(1, (int) env('ANNOUNCEMENT_EMAILS_PER_MINUTE', 8)),
+
     'mailers' => [
 
         'smtp' => [

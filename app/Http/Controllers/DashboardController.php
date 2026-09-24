@@ -6,6 +6,7 @@ use App\Enums\FollowUpStatus;
 use App\Enums\RequirementStatus;
 use App\Enums\TaskStatus;
 use App\Enums\UserStatus;
+use App\Models\Announcement;
 use App\Models\DailySummary;
 use App\Models\DealClosure;
 use App\Models\FollowUp;
@@ -59,7 +60,7 @@ class DashboardController extends Controller
      * Shared greeting data every role dashboard renders above its own
      * content: role playbook (motivation), the rotating motivational quote,
      * and the org-wide average solving time for support tickets and
-     * requirements — highlighted on every dashboard rather than just the
+     * requirements, plus the latest announcements — highlighted on every dashboard rather than just the
      * role-specific ones, so it's one query per metric here instead of
      * being repeated in each role's method below.
      */
@@ -71,6 +72,7 @@ class DashboardController extends Controller
             'quote' => MotivationQuote::current(),
             'avgSupportTicketResolutionTime' => SupportTicket::averageResolutionFormatted(),
             'avgRequirementResolutionTime' => Requirement::averageResolutionFormatted(),
+            'announcements' => Announcement::with('creator', 'images')->withCount('documents')->latest()->limit(5)->get(),
         ];
     }
 

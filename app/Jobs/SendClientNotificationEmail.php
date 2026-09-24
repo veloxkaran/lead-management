@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\EmailLogStatus;
 use App\Mail\ClientNotificationMail;
+use App\Models\Announcement;
 use App\Models\EmailLog;
 use App\Services\EmailTemplateService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -59,7 +60,18 @@ class SendClientNotificationEmail implements ShouldQueue
         }
 
         try {
-            Mail::to($log->to_email)->send(new ClientNotificationMail($log->subject, $log->body));
+            $images = $log->related instanceof Announcement
+                ? $log->related->images->map->absolutePath()->filter(fn (string $path) => is_file($path))->values()->all()
+                : [];
+
+            $documents = $log->related instanceof Announcement
+                ? $log->related->documents
+                    ->filter(fn ($document) => is_file($document->absolutePath()))
+                    ->map(fn ($document) => ['path' => $document->absolutePath(), 'name' => $document->original_name, 'mime' => $document->mime_type])
+                    ->values()->all()
+                : [];
+
+            Mail::to($log->to_email)->send(new ClientNotificationMail($log->subject, $log->body, $images, $documents));
 
             $log->status = EmailLogStatus::Sent;
             $log->sent_at = now();

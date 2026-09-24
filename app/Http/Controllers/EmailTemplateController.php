@@ -79,6 +79,8 @@ class EmailTemplateController extends Controller
             'old_status' => 'Pending',
             'new_status' => 'In Progress',
             'due_date' => now()->addDays(7)->format('M d, Y'),
+            'title' => 'New feature: scheduled reports',
+            'content' => "We've just released scheduled reports — you can now have any report emailed to you daily or weekly.",
             'app_name' => config('app.name'),
         ];
     }
@@ -93,6 +95,7 @@ class EmailTemplateController extends Controller
             'requirement_status_changed' => ['company_name', 'contact_person', 'requirement', 'old_status', 'new_status', 'app_name'],
             'support_ticket_created' => ['company_name', 'contact_person', 'subject', 'priority', 'app_name'],
             'support_ticket_status_changed' => ['company_name', 'contact_person', 'subject', 'old_status', 'new_status', 'app_name'],
+            'announcement' => ['title', 'content', 'company_name', 'contact_person', 'app_name'],
             default => self::ALL_VARIABLE_NAMES,
         };
     }

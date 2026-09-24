@@ -11,13 +11,14 @@ class EmailTemplateControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_the_four_default_templates_exist_after_migrating(): void
+    public function test_the_default_templates_exist_after_migrating(): void
     {
-        $this->assertDatabaseCount('email_templates', 4);
+        $this->assertDatabaseCount('email_templates', 5);
         $this->assertDatabaseHas('email_templates', ['key' => 'requirement_created']);
         $this->assertDatabaseHas('email_templates', ['key' => 'requirement_status_changed']);
         $this->assertDatabaseHas('email_templates', ['key' => 'support_ticket_created']);
         $this->assertDatabaseHas('email_templates', ['key' => 'support_ticket_status_changed']);
+        $this->assertDatabaseHas('email_templates', ['key' => 'announcement']);
     }
 
     public function test_a_non_super_admin_cannot_access_email_templates(): void

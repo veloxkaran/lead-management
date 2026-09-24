@@ -26,6 +26,8 @@
                         <a href="{{ route('requirements.show', $log->related) }}">Requirement — {{ $log->related->requirement }}</a>
                     @elseif ($log->related instanceof \App\Models\SupportTicket)
                         <a href="{{ route('support-tickets.show', $log->related) }}">Support Ticket — {{ $log->related->subject }}</a>
+                    @elseif ($log->related instanceof \App\Models\Announcement)
+                        <a href="{{ route('announcements.show', $log->related) }}">Announcement — {{ $log->related->title }}</a>
                     @else
                         &mdash;
                     @endif

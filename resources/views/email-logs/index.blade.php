@@ -71,6 +71,8 @@
                                     Requirement — {{ \Illuminate\Support\Str::limit($log->related->requirement, 40) }}
                                 @elseif ($log->related instanceof \App\Models\SupportTicket)
                                     Support Ticket — {{ $log->related->subject }}
+                                @elseif ($log->related instanceof \App\Models\Announcement)
+                                    Announcement — {{ $log->related->title }}
                                 @else
                                     &mdash;
                                 @endif
