@@ -118,26 +118,36 @@ class DashboardController extends Controller
             return $query->count();
         };
 
+        // Same "done ÷ created in this period" formula as the lead
+        // conversion ratio; null (shown as "—") when nothing was created.
+        $ratio = fn (int $done, int $created) => $created > 0 ? round(($done / $created) * 100, 1) : null;
+
         $leadsGenerated = $countBetween(Lead::class, 'created_at');
         $leadsConverted = $countBetween(Lead::class, 'achieved_at');
+        $ticketsCreated = $countBetween(SupportTicket::class, 'created_at');
+        $ticketsSolved = $countBetween(SupportTicket::class, 'resolved_at');
+        $requirementsCreated = $countBetween(Requirement::class, 'created_at');
+        $requirementsClosed = $countBetween(Requirement::class, 'completed_at');
 
         return [
             'period' => $period,
             'dateLabel' => $dateLabel,
             'tickets' => [
-                'created' => $countBetween(SupportTicket::class, 'created_at'),
-                'solved' => $countBetween(SupportTicket::class, 'resolved_at'),
+                'created' => $ticketsCreated,
+                'solved' => $ticketsSolved,
+                'ratio' => $ratio($ticketsSolved, $ticketsCreated),
                 'avgTime' => SupportTicket::averageResolutionFormatted($from, $to),
             ],
             'requirements' => [
-                'created' => $countBetween(Requirement::class, 'created_at'),
-                'closed' => $countBetween(Requirement::class, 'completed_at'),
+                'created' => $requirementsCreated,
+                'closed' => $requirementsClosed,
+                'ratio' => $ratio($requirementsClosed, $requirementsCreated),
                 'avgTime' => Requirement::averageResolutionFormatted($from, $to),
             ],
             'leads' => [
                 'generated' => $leadsGenerated,
                 'converted' => $leadsConverted,
-                'ratio' => $leadsGenerated > 0 ? round(($leadsConverted / $leadsGenerated) * 100, 1) : null,
+                'ratio' => $ratio($leadsConverted, $leadsGenerated),
             ],
         ];
     }

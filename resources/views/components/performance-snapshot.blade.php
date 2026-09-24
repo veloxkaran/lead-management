@@ -29,6 +29,8 @@
                         <span class="text-muted small">Solved</span>
                         <span class="fs-4 fw-semibold" x-text="data.tickets ? data.tickets.solved : 0"></span>
                     </div>
+                    {{-- Formatted inline (not in performance-snapshot.js) so no asset rebuild is needed. --}}
+                    <div class="small text-muted">Solving Ratio — <span class="fw-semibold text-body" x-text="data.tickets && data.tickets.ratio != null ? data.tickets.ratio + '%' : '—'"></span></div>
                     <div class="small text-muted">Avg. Solving Time — <span class="fw-semibold text-body" x-text="data.tickets ? data.tickets.avgTime : '—'"></span></div>
                 </div>
             </div>
@@ -43,6 +45,7 @@
                         <span class="text-muted small">Closed</span>
                         <span class="fs-4 fw-semibold" x-text="data.requirements ? data.requirements.closed : 0"></span>
                     </div>
+                    <div class="small text-muted">Solving Ratio — <span class="fw-semibold text-body" x-text="data.requirements && data.requirements.ratio != null ? data.requirements.ratio + '%' : '—'"></span></div>
                     <div class="small text-muted">Avg. Closing Time — <span class="fw-semibold text-body" x-text="data.requirements ? data.requirements.avgTime : '—'"></span></div>
                 </div>
             </div>

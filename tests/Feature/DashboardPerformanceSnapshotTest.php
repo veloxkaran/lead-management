@@ -48,10 +48,31 @@ class DashboardPerformanceSnapshotTest extends TestCase
         $response->assertJson([
             'period' => 'daily',
             'dateLabel' => BsDate::dayLabel(now()),
-            'tickets' => ['created' => 2, 'solved' => 1],
-            'requirements' => ['created' => 2, 'closed' => 1],
+            'tickets' => ['created' => 2, 'solved' => 1, 'ratio' => 50.0],
+            'requirements' => ['created' => 2, 'closed' => 1, 'ratio' => 50.0],
             'leads' => ['generated' => 2, 'converted' => 1, 'ratio' => 50.0],
         ]);
+    }
+
+    public function test_solving_ratios_are_null_when_nothing_was_created_and_shown_on_the_widget(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->getJson(route('dashboard.performance-snapshot', ['snapshot_period' => 'daily']))
+            ->assertOk()
+            ->assertJsonPath('tickets.ratio', null)
+            ->assertJsonPath('requirements.ratio', null);
+
+        SupportTicket::factory()->count(3)->create(['created_at' => now()]);
+        SupportTicket::factory()->create(['created_at' => now(), 'resolved_at' => now()]);
+
+        $this->actingAs($user)->getJson(route('dashboard.performance-snapshot', ['snapshot_period' => 'daily']))
+            ->assertJsonPath('tickets.ratio', 25);
+
+        $this->actingAs($user)->get(route('dashboard'))
+            ->assertSee('Solving Ratio')
+            ->assertSee('data.tickets.ratio', false)
+            ->assertSee('data.requirements.ratio', false);
     }
 
     public function test_missing_period_param_defaults_to_daily(): void
