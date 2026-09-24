@@ -8,9 +8,20 @@
         .brand { font-size: 11px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
         h1 { font-size: 18px; margin-top: 2px; }
         .filters { color: #6c757d; margin-top: 2px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
-        th { background: #f4f6f9; }
+        /* Fixed layout + explicit widths: without them Dompdf sizes columns to
+           content, and long requirement text pushed the last columns off the page. */
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; table-layout: fixed; }
+        th, td { border: 1px solid #ccc; padding: 5px 6px; text-align: left; vertical-align: top; word-wrap: break-word; overflow-wrap: break-word; }
+        th { background: #f4f6f9; font-size: 11px; }
+        td { font-size: 11px; }
+        td p { margin: 0 0 4px; }
+        td img { max-width: 100%; height: auto; }
+        .status { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; white-space: nowrap; }
+        .status-pending { background: #e9ecef; color: #495057; }
+        .status-in_progress { background: #cfe2ff; color: #084298; }
+        .status-in_review { background: #cff4fc; color: #055160; }
+        .status-completed { background: #d1e7dd; color: #0f5132; }
+        .status-on_hold { background: #fff3cd; color: #664d03; }
     </style>
 </head>
 <body>
@@ -27,15 +38,15 @@
     <table>
         <thead>
             <tr>
-                <th>Lead</th>
-                <th>Title</th>
-                <th>Requirement</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Due Date</th>
-                <th>Client Acknowledged</th>
-                <th>Assigned To</th>
-                <th>Created By</th>
+                <th style="width: 11%;">Lead</th>
+                <th style="width: 10%;">Title</th>
+                <th style="width: 27%;">Requirement</th>
+                <th style="width: 7%;">Priority</th>
+                <th style="width: 9%;">Status</th>
+                <th style="width: 8%;">Due Date</th>
+                <th style="width: 10%;">Client Acknowledged</th>
+                <th style="width: 9%;">Assigned To</th>
+                <th style="width: 9%;">Created By</th>
             </tr>
         </thead>
         <tbody>
@@ -45,7 +56,7 @@
                     <td>{{ $requirement->title ?? '—' }}</td>
                     <td>{!! $requirement->requirementHtml() !!}</td>
                     <td>{{ $requirement->priority->label() }}</td>
-                    <td>{{ $requirement->status->label() }}</td>
+                    <td><span class="status status-{{ $requirement->status->value }}">{{ $requirement->status->label() }}</span></td>
                     <td>{{ $requirement->due_date?->format('M d, Y') ?? '—' }}</td>
                     <td>{{ $requirement->client_acknowledged_at?->format('M d, Y g:i A') ?? 'Not yet' }}</td>
                     <td>{{ $requirement->assignee?->name ?? '—' }}</td>

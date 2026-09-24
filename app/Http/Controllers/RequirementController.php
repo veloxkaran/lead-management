@@ -76,7 +76,7 @@ class RequirementController extends Controller
             'filters' => $filters,
             'statuses' => RequirementStatus::cases(),
             'priorities' => RequirementPriority::cases(),
-        ])->download('requirements.pdf');
+        ])->setPaper('a4', 'landscape')->download('requirements.pdf');
     }
 
     public function create(): View
