@@ -74,4 +74,50 @@ class EmailLogControllerTest extends TestCase
         $response->assertSee('failed@example.test');
         $response->assertDontSee('sent@example.test');
     }
+
+    public function test_index_can_be_filtered_by_custom_date_range(): void
+    {
+        $superAdmin = User::factory()->superAdmin()->create();
+
+        $old = EmailLog::create([
+            'to_email' => 'old@example.test',
+            'subject' => 'Old one',
+            'body' => 'Body',
+            'status' => EmailLogStatus::Sent,
+        ]);
+        $old->forceFill(['created_at' => now()->subDays(10)])->save();
+
+        EmailLog::create([
+            'to_email' => 'recent@example.test',
+            'subject' => 'Recent one',
+            'body' => 'Body',
+            'status' => EmailLogStatus::Pending,
+        ]);
+
+        $response = $this->actingAs($superAdmin)->get(route('email-logs.index', [
+            'period' => 'custom',
+            'date_from' => now()->subDay()->toDateString(),
+            'date_to' => now()->toDateString(),
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('recent@example.test');
+        $response->assertDontSee('old@example.test');
+    }
+
+    public function test_pending_log_is_marked_failed_when_the_job_gives_up(): void
+    {
+        $log = EmailLog::create([
+            'to_email' => 'client@example.test',
+            'subject' => 'Subject',
+            'body' => 'Body',
+            'status' => EmailLogStatus::Pending,
+        ]);
+
+        (new \App\Jobs\SendClientNotificationEmail($log))->failed(new \RuntimeException('Worker timed out'));
+
+        $log->refresh();
+        $this->assertSame(EmailLogStatus::Failed, $log->status);
+        $this->assertSame('Worker timed out', $log->error);
+    }
 }

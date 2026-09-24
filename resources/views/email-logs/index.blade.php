@@ -3,12 +3,12 @@
 @section('title', 'Email Log')
 
 @section('content')
-    <x-page-header title="Email Log" icon="bi-envelope-paper" subtitle="Every client notification email the system has sent." />
+    <x-page-header title="Email Log" icon="bi-envelope-paper" subtitle="Every client notification email the system has queued or sent." />
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
-            <form method="GET" class="row g-2 align-items-end">
-                <div class="col-md-4">
+            <form method="GET" class="row g-2 align-items-end" x-data="{ period: '{{ $filters['period'] ?? '' }}' }">
+                <div class="col-md-3">
                     <label class="form-label small">Search</label>
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Recipient or subject" value="{{ $filters['search'] ?? '' }}">
                 </div>
@@ -20,6 +20,24 @@
                             <option value="{{ $status->value }}" @selected(($filters['status'] ?? null) === $status->value)>{{ $status->label() }}</option>
                         @endforeach
                     </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Date</label>
+                    <select name="period" class="form-select form-select-sm" x-model="period">
+                        <option value="">Any time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                <div class="col-md-3" x-show="period === 'custom'" x-cloak>
+                    <label class="form-label small">From</label>
+                    <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3" x-show="period === 'custom'" x-cloak>
+                    <label class="form-label small">To</label>
+                    <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}" class="form-control form-control-sm">
                 </div>
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-sm btn-primary flex-fill"><i class="bi bi-funnel"></i> Filter</button>
@@ -38,6 +56,7 @@
                         <th>Subject</th>
                         <th>Related To</th>
                         <th>Status</th>
+                        <th>Queued</th>
                         <th>Sent</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -58,14 +77,15 @@
                             </td>
                             <td><x-status-badge :status="$log->status" /></td>
                             <td class="small text-muted">{{ $log->created_at->format('M d, Y g:i A') }}</td>
+                            <td class="small text-muted">{{ $log->sent_at?->format('M d, Y g:i A') ?? '—' }}</td>
                             <td class="text-end">
                                 <a href="{{ route('email-logs.show', $log) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6">
-                                <x-empty-state icon="bi-envelope-paper" title="No emails sent yet" description="Notification emails appear here once a requirement or support ticket is created or changes status." />
+                            <td colspan="7">
+                                <x-empty-state icon="bi-envelope-paper" title="No emails found" description="Notification emails appear here once a requirement or support ticket is created or changes status." />
                             </td>
                         </tr>
                     @endforelse

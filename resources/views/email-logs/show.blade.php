@@ -30,7 +30,8 @@
                         &mdash;
                     @endif
                 </dd>
-                <dt class="col-2 text-muted">Sent</dt><dd class="col-10">{{ $log->created_at->format('M d, Y g:i A') }}</dd>
+                <dt class="col-2 text-muted">Queued</dt><dd class="col-10">{{ $log->created_at->format('M d, Y g:i A') }}</dd>
+                <dt class="col-2 text-muted">Sent</dt><dd class="col-10">{{ $log->sent_at?->format('M d, Y g:i A') ?? '—' }}</dd>
             </dl>
         </div>
     </div>

@@ -32,11 +32,14 @@ class RequirementClientNotificationTest extends TestCase
         ])->assertRedirect();
 
         Queue::assertPushedOn('emails', SendClientNotificationEmail::class, function (SendClientNotificationEmail $job) {
-            return $job->templateKey === 'requirement_created' && $job->toEmail === 'jordan@acme.test';
+            return $job->log->template_key === 'requirement_created' && $job->log->to_email === 'jordan@acme.test';
         });
 
-        // Nothing runs until a worker processes the queue.
-        $this->assertDatabaseCount('email_logs', 0);
+        // Logged as pending straight away; nothing is sent until a worker
+        // processes the queue.
+        $this->assertDatabaseCount('email_logs', 1);
+        $this->assertSame(\App\Enums\EmailLogStatus::Pending, EmailLog::first()->status);
+        $this->assertNull(EmailLog::first()->sent_at);
     }
 
     public function test_creating_a_requirement_emails_the_leads_contact(): void

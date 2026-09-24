@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\EmailLogStatus;
 use App\Models\EmailLog;
+use App\Support\PeriodRange;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -11,7 +12,7 @@ class EmailLogController extends Controller
 {
     public function index(Request $request): View
     {
-        $filters = $request->only(['status', 'search']);
+        $filters = $request->only(['status', 'search', 'period', 'date_from', 'date_to']);
 
         $query = EmailLog::with('related')->latest();
 
@@ -23,6 +24,16 @@ class EmailLogController extends Controller
             $search = $filters['search'];
             $query->where(fn ($q) => $q->where('to_email', 'like', "%{$search}%")
                 ->orWhere('subject', 'like', "%{$search}%"));
+        }
+
+        [$from, $to] = PeriodRange::resolve($filters);
+
+        if ($from) {
+            $query->where('created_at', '>=', $from);
+        }
+
+        if ($to) {
+            $query->where('created_at', '<=', $to);
         }
 
         return view('email-logs.index', [

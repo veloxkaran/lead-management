@@ -14,24 +14,36 @@ use Throwable;
 
 /**
  * Queued so a slow/unavailable mail server can't hold up the requirement
- * or support-ticket request that triggered it. Rendering, sending, and the
- * email_logs row all happen here (on the worker), not in ClientNotifier —
- * a job failure must still leave a "failed" row instead of losing the
- * attempt silently.
+ * or support-ticket request that triggered it. ClientNotifier has already
+ * rendered the email into a "pending" email_logs row; this job only sends
+ * it and records the outcome — a failure still leaves a "failed" row
+ * instead of losing the attempt silently.
  */
 class SendClientNotificationEmail implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * @param  array<string, string|null>  $variables
-     */
-    public function __construct(
-        public string $templateKey,
-        public string $toEmail,
-        public array $variables,
-        public ?Model $related = null,
-    ) {
+    /** Log row was deleted before the worker got to it — nothing to send. */
+    public bool $deleteWhenMissingModels = true;
+
+    public ?EmailLog $log = null;
+
+    // Legacy payload — jobs queued before the log row was created at
+    // dispatch time carry these instead of $log. Kept so any still sitting
+    // in the jobs table are sent rather than failing after a deploy.
+    public ?string $templateKey = null;
+
+    public ?string $toEmail = null;
+
+    /** @var array<string, string|null> */
+    public array $variables = [];
+
+    public ?Model $related = null;
+
+    public function __construct(EmailLog $log)
+    {
+        $this->log = $log;
+
         // Its own queue, not "default" — keeps it processable independently
         // of whatever else (e.g. Slack notification listeners) shares the
         // default queue on this connection.
@@ -40,10 +52,46 @@ class SendClientNotificationEmail implements ShouldQueue
 
     public function handle(EmailTemplateService $templates): void
     {
-        $template = $templates->findByKey($this->templateKey);
+        $log = $this->log ?? $this->legacyLog($templates);
 
-        if (! $template) {
+        if (! $log) {
             return;
+        }
+
+        try {
+            Mail::to($log->to_email)->send(new ClientNotificationMail($log->subject, $log->body));
+
+            $log->status = EmailLogStatus::Sent;
+            $log->sent_at = now();
+            $log->error = null;
+        } catch (Throwable $e) {
+            $log->status = EmailLogStatus::Failed;
+            $log->error = $e->getMessage();
+        }
+
+        $log->save();
+    }
+
+    /**
+     * Called once the job has run out of attempts (e.g. worker killed or
+     * timed out mid-send) — don't leave the row stuck on "pending".
+     */
+    public function failed(?Throwable $e): void
+    {
+        if ($this->log?->status === EmailLogStatus::Pending) {
+            $this->log->update([
+                'status' => EmailLogStatus::Failed,
+                'error' => $e?->getMessage() ?? 'Job failed.',
+            ]);
+        }
+    }
+
+    private function legacyLog(EmailTemplateService $templates): ?EmailLog
+    {
+        $template = $this->templateKey ? $templates->findByKey($this->templateKey) : null;
+
+        if (! $template || ! $this->toEmail) {
+            return null;
         }
 
         $rendered = $templates->render($template, $this->variables);
@@ -59,16 +107,6 @@ class SendClientNotificationEmail implements ShouldQueue
             $log->related()->associate($this->related);
         }
 
-        try {
-            Mail::to($this->toEmail)->send(new ClientNotificationMail($rendered['subject'], $rendered['body']));
-
-            $log->status = EmailLogStatus::Sent;
-            $log->sent_at = now();
-        } catch (Throwable $e) {
-            $log->status = EmailLogStatus::Failed;
-            $log->error = $e->getMessage();
-        }
-
-        $log->save();
+        return $log;
     }
 }
