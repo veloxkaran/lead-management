@@ -12,3 +12,9 @@ Schedule::command('follow-ups:send-reminders')->everyFiveMinutes();
 Schedule::command('goals:reset-monthly')->dailyAt('00:10');
 Schedule::command('slack:daily-summary')->dailyAt('18:00');
 Schedule::command('db:backup')->hourly();
+
+// Shared hosting (cPanel) has no long-running worker, so drain the queue from
+// cron each minute. Must include "emails" — SendClientNotificationEmail uses it.
+Schedule::command('queue:work --queue=emails,default --stop-when-empty --tries=3 --max-time=55')
+    ->everyMinute()
+    ->withoutOverlapping();

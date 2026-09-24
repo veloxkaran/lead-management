@@ -22,6 +22,13 @@
                 <div class="col-md-3">
                     <div class="small text-muted">Status</div>
                     <x-status-badge :status="$supportTicket->status" />
+                    <div class="small text-muted mt-1">
+                        @if ($lastStatusChange = $supportTicket->statusLogs->first())
+                            Changed {{ $lastStatusChange->created_at->format('M d, Y g:i A') }}
+                        @else
+                            Unchanged since raised
+                        @endif
+                    </div>
                 </div>
                 <div class="col-md-3">
                     <div class="small text-muted">Priority</div>
