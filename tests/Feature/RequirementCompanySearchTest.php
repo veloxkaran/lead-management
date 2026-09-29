@@ -24,10 +24,10 @@ class RequirementCompanySearchTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Acme Corp');
-        // Scoped to the grouped companies table, not the whole page — the
+        // Scoped to the requirements table, not the whole page — the
         // "Add Requirement" modal's lead picker lists every active lead
         // regardless of the search filter.
-        $companyNames = $response->viewData('companies')->pluck('company_name');
+        $companyNames = $response->viewData('requirements')->pluck('lead.company_name');
         $this->assertTrue($companyNames->contains('Acme Corp'));
         $this->assertFalse($companyNames->contains('Globex Inc'));
     }

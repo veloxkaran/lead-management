@@ -11,6 +11,7 @@ use App\Models\Requirement;
 use App\Models\RequirementComment;
 use App\Models\User;
 use App\Repositories\RequirementRepository;
+use App\Support\RequirementSummary;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -29,9 +30,15 @@ class RequirementService
         return $this->requirements->filter($filters, $perPage);
     }
 
-    public function listGroupedByCompany(array $filters, int $perPage = 15): LengthAwarePaginator
+    /**
+     * Counts for everything $filters matches, ignoring the quick "view" so
+     * the Open/Overdue/Completed numbers stay visible while one is selected.
+     */
+    public function summary(array $filters): RequirementSummary
     {
-        return $this->requirements->groupedByCompany($filters, $perPage);
+        unset($filters['view']);
+
+        return RequirementSummary::of($this->requirements->forSummary($filters));
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Models\Concerns;
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * Shared "how long did this take to resolve" arithmetic for models that
@@ -71,13 +72,36 @@ trait TracksResolutionTime
             $query->where($column, '<=', $to);
         }
 
-        $resolved = $query->get(['created_at', $column]);
+        return static::averageResolutionMinutesAmong($query->get(['created_at', $column]));
+    }
+
+    /**
+     * Average resolution time in minutes across an already-loaded set of
+     * records (e.g. one company's requirements), ignoring any still open.
+     * Null when none of them has been resolved yet.
+     */
+    public static function averageResolutionMinutesAmong(Collection $records): ?float
+    {
+        $column = (new static)->resolvedAtColumn();
+
+        $resolved = $records->filter(fn (self $record) => $record->{$column} !== null);
 
         if ($resolved->isEmpty()) {
             return null;
         }
 
         return $resolved->avg(fn (self $record) => $record->created_at->diffInMinutes($record->{$column}));
+    }
+
+    /**
+     * averageResolutionMinutesAmong() broken into "N days, N hour and N min",
+     * or null when none of the records has been resolved yet.
+     */
+    public static function averageResolutionFormattedAmong(Collection $records): ?string
+    {
+        $avgMinutes = static::averageResolutionMinutesAmong($records);
+
+        return $avgMinutes === null ? null : static::formatMinutesAsDaysHoursMinutes((int) round($avgMinutes));
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Enums\RequirementPriority;
+use App\Enums\RequirementStatus;
 use App\Models\Lead;
 use App\Models\Requirement;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,40 +23,13 @@ class RequirementRepository extends BaseRepository
     }
 
     /**
-     * One page entry per company (Lead) — search/status/priority/sprint only
-     * decide which companies qualify (any company with at least one matching
-     * requirement), since the company-wide status badge is computed from
-     * that company's complete requirement set, not a filtered subset.
+     * Every requirement matching $filters, with only the columns
+     * RequirementSummary needs, for the counts strip on the Requirements list.
      */
-    public function groupedByCompany(array $filters, int $perPage = 15): LengthAwarePaginator
+    public function forSummary(array $filters = []): Collection
     {
-        $query = Lead::query()->whereHas('requirements');
-
-        if (! empty($filters['search'])) {
-            $query->where('company_name', 'like', '%'.$filters['search'].'%');
-        }
-
-        if (! empty($filters['status']) || ! empty($filters['priority']) || ! empty($filters['sprint'])) {
-            $query->whereHas('requirements', function (Builder $q) use ($filters) {
-                if (! empty($filters['status'])) {
-                    $q->where('status', $filters['status']);
-                }
-
-                if (! empty($filters['priority'])) {
-                    $q->where('priority', $filters['priority']);
-                }
-
-                if (! empty($filters['sprint'])) {
-                    $q->where('sprint', $filters['sprint']);
-                }
-            });
-        }
-
-        return $query
-            ->with(['requirements' => fn ($q) => $this->orderedForDisplay($q)])
-            ->orderBy('company_name')
-            ->paginate($perPage)
-            ->withQueryString();
+        return $this->applyFilters($this->query(), $filters)
+            ->get(['id', 'status', 'due_date', 'created_at', 'completed_at']);
     }
 
     /**
@@ -64,24 +38,12 @@ class RequirementRepository extends BaseRepository
      */
     public function forLead(Lead $lead): Collection
     {
-        return $this->orderedForDisplay($lead->requirements())->get();
+        return $this->orderedForDisplay($lead->requirements()->with('attachments'))->get();
     }
 
     private function orderedForDisplay($query)
     {
-        return $query
-            ->with(['assignee', 'creator'])
-            ->withCount('comments')
-            ->orderByRaw(
-                'CASE priority WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 ELSE 5 END',
-                [
-                    RequirementPriority::Urgent->value,
-                    RequirementPriority::High->value,
-                    RequirementPriority::Medium->value,
-                    RequirementPriority::Low->value,
-                ]
-            )
-            ->oldest();
+        return $this->applyDisplayOrder($query->with(['assignee', 'creator'])->withCount('comments'));
     }
 
     /**
@@ -98,11 +60,61 @@ class RequirementRepository extends BaseRepository
 
     private function filteredQuery(array $filters): Builder
     {
-        $query = $this->query()->with(['lead', 'assignee', 'creator'])->withCount('comments');
+        $query = $this->query()->with(['lead', 'assignee', 'creator', 'attachments'])->withCount('comments');
 
+        return $this->applyDisplayOrder($this->applyFilters($query, $filters));
+    }
+
+    /**
+     * Same order as the Support Tickets list: by status (open work first,
+     * completed last), then priority (urgent first), then newest first.
+     */
+    private function applyDisplayOrder($query)
+    {
+        return $query
+            ->orderByRaw(
+                'CASE status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 WHEN ? THEN 5 ELSE 6 END',
+                [
+                    RequirementStatus::Pending->value,
+                    RequirementStatus::InProgress->value,
+                    RequirementStatus::InReview->value,
+                    RequirementStatus::OnHold->value,
+                    RequirementStatus::Completed->value,
+                ]
+            )
+            ->orderByRaw(
+                'CASE priority WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 ELSE 5 END',
+                [
+                    RequirementPriority::Urgent->value,
+                    RequirementPriority::High->value,
+                    RequirementPriority::Medium->value,
+                    RequirementPriority::Low->value,
+                ]
+            )
+            ->latest();
+    }
+
+    /**
+     * Where-clauses only, shared by the list/PDF query and the summary
+     * counts so both always describe the same set of requirements.
+     */
+    private function applyFilters(Builder $query, array $filters): Builder
+    {
         if (! empty($filters['search'])) {
             $term = '%'.$filters['search'].'%';
-            $query->whereHas('lead', fn ($q) => $q->where('company_name', 'like', $term));
+            $query->where(function (Builder $q) use ($term) {
+                $q->where('title', 'like', $term)
+                    ->orWhere('requirement', 'like', $term)
+                    ->orWhereHas('lead', fn ($lead) => $lead->where('company_name', 'like', $term));
+            });
+        }
+
+        if (! empty($filters['lead_id'])) {
+            $query->where('lead_id', $filters['lead_id']);
+        }
+
+        if (! empty($filters['lead_assigned_user_id'])) {
+            $query->whereHas('lead', fn ($q) => $q->where('assigned_user_id', $filters['lead_assigned_user_id']));
         }
 
         if (! empty($filters['status'])) {
@@ -113,24 +125,20 @@ class RequirementRepository extends BaseRepository
             $query->where('priority', $filters['priority']);
         }
 
-        if (! empty($filters['sprint'])) {
-            $query->where('sprint', $filters['sprint']);
-        }
-
         if (! empty($filters['lead_ids'])) {
             $query->whereIn('lead_id', $filters['lead_ids']);
         }
 
-        return $query
-            ->orderByRaw(
-                'CASE priority WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 ELSE 5 END',
-                [
-                    RequirementPriority::Urgent->value,
-                    RequirementPriority::High->value,
-                    RequirementPriority::Medium->value,
-                    RequirementPriority::Low->value,
-                ]
-            )
-            ->oldest();
+        // Quick views from the counts strip; "overdue" mirrors Requirement::isOverdue().
+        match ($filters['view'] ?? null) {
+            'open' => $query->where('status', '!=', RequirementStatus::Completed->value),
+            'completed' => $query->where('status', RequirementStatus::Completed->value),
+            'overdue' => $query->where('status', '!=', RequirementStatus::Completed->value)
+                ->whereNotNull('due_date')
+                ->whereDate('due_date', '<=', today()),
+            default => null,
+        };
+
+        return $query;
     }
 }

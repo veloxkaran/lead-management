@@ -65,9 +65,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // document body select2 defaults to.
             const $modal = $el.closest('.modal');
 
+            // Keep form-select-sm fields the same height as the small inputs
+            // and buttons beside them (the theme is full-height otherwise).
+            const sizeClass = $el.hasClass('form-select-sm') ? 'select2--small' : '';
+
             $el.select2({
                 theme: 'bootstrap-5',
                 width: '100%',
+                selectionCssClass: sizeClass,
+                dropdownCssClass: sizeClass,
                 dropdownParent: $modal.length ? $modal : window.jQuery(document.body),
             });
         };

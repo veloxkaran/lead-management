@@ -19,13 +19,9 @@ class Requirement extends Model
 {
     use BelongsToCompany, HasFactory, LocksAfterCompletion, TracksResolutionTime;
 
-    public const MIN_SPRINT = 35;
-
-    public const MAX_SPRINT = 50;
-
     protected $fillable = [
         'company_id', 'lead_id', 'title', 'requirement', 'priority', 'status', 'due_date',
-        'client_acknowledged_at', 'assigned_to', 'sprint', 'created_by', 'completed_at',
+        'client_acknowledged_at', 'assigned_to', 'created_by', 'completed_at',
     ];
 
     protected function casts(): array
@@ -40,11 +36,13 @@ class Requirement extends Model
     }
 
     /**
-     * @return array<int, string>
+     * Past its due date and not yet completed.
      */
-    public static function sprintOptions(): array
+    public function isOverdue(): bool
     {
-        return array_map(fn (int $n) => "Sprint {$n}", range(self::MIN_SPRINT, self::MAX_SPRINT));
+        return $this->due_date !== null
+            && $this->due_date->isPast()
+            && $this->status !== RequirementStatus::Completed;
     }
 
     public function isAcknowledgedByClient(): bool

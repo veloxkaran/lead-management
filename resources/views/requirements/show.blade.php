@@ -43,7 +43,7 @@
                     <div class="small text-muted">Due Date</div>
                     <div class="small fw-semibold">
                         {{ $requirement->due_date?->format('M d, Y') ?? '—' }}
-                        @if ($requirement->due_date && $requirement->due_date->isPast() && $requirement->status->value !== 'completed')
+                        @if ($requirement->isOverdue())
                             <span class="badge bg-danger-subtle text-danger-emphasis">Overdue</span>
                         @endif
                     </div>
@@ -62,10 +62,13 @@
                         @endif
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="small text-muted">Sprint</div>
-                    <div class="small fw-semibold">{{ $requirement->sprint ?? '—' }}</div>
-                </div>
+                @if ($requirement->sprint)
+                    {{-- Sprint is no longer set from the forms; older requirements still show theirs. --}}
+                    <div class="col-md-3">
+                        <div class="small text-muted">Sprint</div>
+                        <div class="small fw-semibold">{{ $requirement->sprint }}</div>
+                    </div>
+                @endif
                 <div class="col-md-6">
                     <div class="small text-muted">Created By</div>
                     <div class="small fw-semibold">{{ $requirement->creator?->name ?? 'Unknown' }} on {{ $requirement->created_at->format('M d, Y g:i A') }}</div>

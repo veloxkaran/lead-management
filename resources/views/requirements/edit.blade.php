@@ -61,7 +61,7 @@
                         <input type="datetime-local" name="client_acknowledged_at" class="form-control" value="{{ old('client_acknowledged_at', $requirement->client_acknowledged_at?->format('Y-m-d\TH:i')) }}">
                         @error('client_acknowledged_at')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-8">
                         <label class="form-label small fw-semibold">Assign To</label>
                         <select name="assigned_to" class="form-select" data-select2-field>
                             <option value="">Unassigned</option>
@@ -70,16 +70,6 @@
                             @endforeach
                         </select>
                         @error('assigned_to')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Sprint</label>
-                        <select name="sprint" class="form-select" data-select2-field>
-                            <option value="">Unscheduled</option>
-                            @foreach ($sprints as $sprint)
-                                <option value="{{ $sprint }}" @selected(old('sprint', $requirement->sprint) === $sprint)>{{ $sprint }}</option>
-                            @endforeach
-                        </select>
-                        @error('sprint')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-12">
                         <label class="form-label small fw-semibold">Add Attachments</label>

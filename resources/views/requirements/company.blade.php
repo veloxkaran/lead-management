@@ -3,11 +3,11 @@
 @section('title', $lead->company_name.' — Requirements')
 
 @section('content')
-    <x-page-header :title="$lead->company_name" icon="bi-list-check" subtitle="Requirements for this company.">
+    <x-page-header :title="$lead->company_name" icon="bi-list-check" :subtitle="'Requirements for this company'.($lead->assignedUser ? ' · Lead owner: '.$lead->assignedUser->name : '').'.'">
         <x-slot:actions>
             <x-status-badge :status="App\Enums\CompanyRequirementStatus::fromRequirements($requirements)" />
             <a href="{{ route('requirements.index') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left"></i> Back to Companies
+                <i class="bi bi-arrow-left"></i> All Requirements
             </a>
             @can('create', App\Models\Requirement::class)
                 <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addRequirementModal">
@@ -17,7 +17,38 @@
         </x-slot:actions>
     </x-page-header>
 
-    <div class="card border-0 shadow-sm">
+    @php
+        $listItems = $requirements->mapWithKeys(fn ($requirement) => [$requirement->id => [
+            'completed' => $requirement->status === App\Enums\RequirementStatus::Completed,
+            'overdue' => $requirement->isOverdue(),
+            'text' => Str::lower(implode(' ', [$requirement->summary(500), $requirement->assignee?->name])),
+        ]]);
+    @endphp
+
+    <div class="card border-0 shadow-sm" x-data="requirementList(@js($listItems))">
+        @if ($requirements->isNotEmpty())
+            <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2">
+                <div class="btn-group btn-group-sm" role="group" aria-label="Filter requirements">
+                    @foreach (['all' => ['All', $summary->total], 'open' => ['Open', $summary->open], 'overdue' => ['Overdue', $summary->overdue], 'completed' => ['Completed', $summary->completed]] as $key => [$label, $count])
+                        <button type="button" class="btn" :class="view === '{{ $key }}' ? 'btn-primary' : 'btn-outline-secondary'" @click="view = '{{ $key }}'">
+                            {{ $label }} <span class="badge rounded-pill ms-1" :class="view === '{{ $key }}' ? 'bg-white text-primary' : 'bg-secondary-subtle text-secondary-emphasis'">{{ $count }}</span>
+                        </button>
+                    @endforeach
+                </div>
+                <div class="input-group input-group-sm ms-md-auto" style="max-width: 280px;">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="search" class="form-control" placeholder="Search requirements or assignee" x-model.debounce.150ms="q">
+                </div>
+                <div class="d-flex align-items-center gap-3 small text-muted">
+                    @include('requirements._progress', ['summary' => $summary])
+                    <span title="Average time from generated to solved" class="text-nowrap"><i class="bi bi-stopwatch"></i> {{ $summary->avgSolvingTime ?? 'No completed yet' }}</span>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" @click="toggleAll()">
+                    <i class="bi" :class="allExpanded ? 'bi-arrows-collapse' : 'bi-arrows-expand'"></i>
+                    <span x-text="allExpanded ? 'Collapse all' : 'Expand all'">Expand all</span>
+                </button>
+            </div>
+        @endif
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -28,26 +59,36 @@
                         <th>Due Date</th>
                         <th>Client Acknowledged</th>
                         <th>Assigned To</th>
-                        <th>Sprint</th>
+                        <th>Generated / Solved</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($requirements as $requirement)
-                        <tr>
+                        <tr x-show="visible({{ $requirement->id }})">
                             <td class="small">
-                                <a href="{{ route('requirements.show', $requirement) }}" class="text-decoration-none">
-                                    {{ $requirement->summary(80) }}
-                                </a>
-                                @if ($requirement->comments_count)
-                                    <span class="text-muted"><i class="bi bi-chat-left-text"></i> {{ $requirement->comments_count }}</span>
-                                @endif
+                                <div class="d-flex align-items-start gap-1">
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" @click="toggle({{ $requirement->id }})" :aria-expanded="isExpanded({{ $requirement->id }})" title="Show full requirement">
+                                        <i class="bi" :class="isExpanded({{ $requirement->id }}) ? 'bi-chevron-down' : 'bi-chevron-right'"></i>
+                                    </button>
+                                    <div>
+                                        <a href="{{ route('requirements.show', $requirement) }}" class="text-decoration-none fw-semibold">{{ $requirement->summary(80) }}</a>
+                                        <div class="text-muted">
+                                            @if ($requirement->comments_count)
+                                                <span class="me-2"><i class="bi bi-chat-left-text"></i> {{ $requirement->comments_count }}</span>
+                                            @endif
+                                            @if ($requirement->attachments->isNotEmpty())
+                                                <span><i class="bi bi-paperclip"></i> {{ $requirement->attachments->count() }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                             <td><x-status-badge :status="$requirement->priority" /></td>
                             <td><x-status-badge :status="$requirement->status" /></td>
-                            <td class="small">
+                            <td class="small text-nowrap">
                                 {{ $requirement->due_date?->format('M d, Y') ?? '—' }}
-                                @if ($requirement->due_date && $requirement->due_date->isPast() && $requirement->status->value !== 'completed')
+                                @if ($requirement->isOverdue())
                                     <span class="badge bg-danger-subtle text-danger-emphasis">Overdue</span>
                                 @endif
                             </td>
@@ -59,23 +100,28 @@
                                 @endif
                             </td>
                             <td class="small">{{ $requirement->assignee?->name ?? '—' }}</td>
-                            <td class="small">{{ $requirement->sprint ?? '—' }}</td>
-                            <td class="text-end">
-                                <a href="{{ route('requirements.show', $requirement) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                            <td>@include('requirements._timing')</td>
+                            <td class="text-end text-nowrap">
+                                <a href="{{ route('requirements.show', $requirement) }}" class="btn btn-sm btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
                                 @can('changeStatus', $requirement)
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#statusModal-{{ $requirement->id }}" title="Change status &amp; add note">
                                         <i class="bi bi-chat-square-text"></i>
                                     </button>
                                 @endcan
                                 @can('update', $requirement)
-                                    <a href="{{ route('requirements.edit', $requirement) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                                    <a href="{{ route('requirements.edit', $requirement) }}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="bi bi-pencil"></i></a>
                                 @endcan
                                 @can('delete', $requirement)
                                     <form method="POST" action="{{ route('requirements.destroy', $requirement) }}" class="d-inline" data-confirm-delete data-confirm-title="Delete this requirement?">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                        <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
                                     </form>
                                 @endcan
+                            </td>
+                        </tr>
+                        <tr x-show="visible({{ $requirement->id }}) && isExpanded({{ $requirement->id }})" x-cloak class="table-light">
+                            <td colspan="8" class="px-4 py-3">
+                                @include('requirements._details')
                             </td>
                         </tr>
                     @empty
@@ -85,47 +131,70 @@
                             </td>
                         </tr>
                     @endforelse
+                    @if ($requirements->isNotEmpty())
+                        <tr x-show="visibleCount === 0" x-cloak>
+                            <td colspan="8">
+                                <x-empty-state icon="bi-search" title="No requirements match" description="Try another search or pick a different filter." />
+                            </td>
+                        </tr>
+                    @endif
                 </tbody>
             </table>
         </div>
     </div>
 
-    @foreach ($requirements as $requirement)
-        @can('changeStatus', $requirement)
-            <div class="modal fade" id="statusModal-{{ $requirement->id }}" tabindex="-1">
-                <div class="modal-dialog">
-                    <form method="POST" action="{{ route('requirements.status.update', $requirement) }}" class="modal-content">
-                        @csrf
-                        @method('PATCH')
-                        <div class="modal-header">
-                            <h5 class="modal-title">Change Status</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p class="small text-muted">{{ $requirement->summary(120) }}</p>
-                            <div class="mb-3">
-                                <label class="form-label small fw-semibold">Status</label>
-                                <select name="status" class="form-select" required>
-                                    @foreach ($statuses as $status)
-                                        <option value="{{ $status->value }}" @selected($requirement->status === $status)>{{ $status->label() }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label small fw-semibold">Notes *</label>
-                                <textarea name="note" rows="3" class="form-control" required placeholder="Explain why the status is changing"></textarea>
-                                <div class="form-text">A note is required to change the status.</div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Update Status</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        @endcan
-    @endforeach
+    @push('scripts')
+        <script>
+            // Instant, client-side filter pills + search + expand/collapse for one company's requirements.
+            window.requirementList = function (items) {
+                return {
+                    items,
+                    view: 'all',
+                    q: '',
+                    expanded: [],
+
+                    visible(id) {
+                        const item = this.items[id];
+                        const inView = this.view === 'all'
+                            || (this.view === 'open' && ! item.completed)
+                            || (this.view === 'overdue' && item.overdue)
+                            || (this.view === 'completed' && item.completed);
+
+                        return inView && item.text.includes(this.q.trim().toLowerCase());
+                    },
+
+                    get visibleIds() {
+                        return Object.keys(this.items).map(Number).filter(id => this.visible(id));
+                    },
+
+                    get visibleCount() {
+                        return this.visibleIds.length;
+                    },
+
+                    isExpanded(id) {
+                        return this.expanded.includes(id);
+                    },
+
+                    toggle(id) {
+                        this.expanded = this.isExpanded(id) ? this.expanded.filter(i => i !== id) : [...this.expanded, id];
+                    },
+
+                    get allExpanded() {
+                        return this.visibleCount > 0 && this.visibleIds.every(id => this.isExpanded(id));
+                    },
+
+                    toggleAll() {
+                        const ids = this.visibleIds;
+                        this.expanded = this.allExpanded
+                            ? this.expanded.filter(i => ! ids.includes(i))
+                            : [...new Set([...this.expanded, ...ids])];
+                    },
+                };
+            };
+        </script>
+    @endpush
+
+    @include('requirements._status_modals')
 
     @can('create', App\Models\Requirement::class)
         <div class="modal fade" id="addRequirementModal" tabindex="-1">
@@ -165,7 +234,7 @@
                                 <input type="datetime-local" name="client_acknowledged_at" class="form-control" value="{{ old('client_acknowledged_at') }}">
                                 @error('client_acknowledged_at')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label small fw-semibold">Assign To</label>
                                 <select name="assigned_to" class="form-select form-select-sm" data-select2-field>
                                     <option value="">Unassigned</option>
@@ -174,16 +243,6 @@
                                     @endforeach
                                 </select>
                                 @error('assigned_to')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Sprint</label>
-                                <select name="sprint" class="form-select form-select-sm" data-select2-field>
-                                    <option value="">Unscheduled</option>
-                                    @foreach ($sprints as $sprint)
-                                        <option value="{{ $sprint }}" @selected(old('sprint') === $sprint)>{{ $sprint }}</option>
-                                    @endforeach
-                                </select>
-                                @error('sprint')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label small fw-semibold">Attachments (optional)</label>

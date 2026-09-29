@@ -29,10 +29,18 @@
     <h1>Requirements</h1>
     <p>Generated {{ now()->format('M d, Y g:i A') }}</p>
     <p class="filters">
-        Company: {{ $filters['search'] ?? 'All' }}
+        Company: {{ ! empty($filters['lead_id']) ? (App\Models\Lead::find($filters['lead_id'])?->company_name ?? 'All') : 'All' }}
+        @if (! empty($filters['search']))
+            &middot; Search: “{{ $filters['search'] }}”
+        @endif
         &middot; Status: {{ collect($statuses)->first(fn ($s) => $s->value === ($filters['status'] ?? null))?->label() ?? 'All' }}
         &middot; Priority: {{ collect($priorities)->first(fn ($p) => $p->value === ($filters['priority'] ?? null))?->label() ?? 'All' }}
-        &middot; Sprint: {{ $filters['sprint'] ?? 'All' }}
+        @if (! empty($filters['my_leads']))
+            &middot; My Leads only
+        @endif
+        @if (! empty($filters['view']))
+            &middot; {{ ucfirst($filters['view']) }} only
+        @endif
         &middot; {{ $requirements->count() }} {{ Str::plural('result', $requirements->count()) }}
     </p>
     <table>

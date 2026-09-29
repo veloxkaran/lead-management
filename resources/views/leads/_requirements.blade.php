@@ -44,7 +44,7 @@
                     <td><x-status-badge :status="$requirement->status" /></td>
                     <td class="small">
                         {{ $requirement->due_date?->format('M d, Y') ?? '—' }}
-                        @if ($requirement->due_date && $requirement->due_date->isPast() && $requirement->status->value !== 'completed')
+                        @if ($requirement->isOverdue())
                             <span class="badge bg-danger-subtle text-danger-emphasis">Overdue</span>
                         @endif
                     </td>

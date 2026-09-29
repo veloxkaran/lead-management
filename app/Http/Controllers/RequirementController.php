@@ -11,9 +11,10 @@ use App\Models\ActivityLogEntry;
 use App\Models\Lead;
 use App\Models\Requirement;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
 use App\Services\RequirementService;
+use App\Support\RequirementSummary;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -21,6 +22,11 @@ use Illuminate\View\View;
 
 class RequirementController extends Controller
 {
+    /**
+     * Query-string filters shared by the Requirements list and its PDF export.
+     */
+    private const LIST_FILTERS = ['search', 'lead_id', 'status', 'priority', 'my_leads', 'view'];
+
     public function __construct(protected RequirementService $requirementService)
     {
     }
@@ -29,16 +35,16 @@ class RequirementController extends Controller
     {
         $this->authorize('viewAny', Requirement::class);
 
-        $filters = $request->only(['search', 'status', 'priority', 'sprint']);
-
-        $companies = $this->requirementService->listGroupedByCompany($filters, 15);
+        $filters = $request->only(self::LIST_FILTERS);
+        $queryFilters = $this->queryFilters($filters, $request);
 
         return view('requirements.index', [
-            'companies' => $companies,
+            'requirements' => $this->requirementService->list($queryFilters, 25),
+            'summary' => $this->requirementService->summary($queryFilters),
             'statuses' => RequirementStatus::cases(),
             'priorities' => RequirementPriority::cases(),
-            'sprints' => Requirement::sprintOptions(),
             'filters' => $filters,
+            'companies' => Lead::whereHas('requirements')->orderBy('company_name')->get(['id', 'company_name']),
             'leads' => Lead::active()->orderBy('company_name')->get(),
             'users' => User::orderBy('name')->get(),
         ]);
@@ -48,18 +54,20 @@ class RequirementController extends Controller
     {
         $this->authorize('viewAny', Requirement::class);
 
+        $requirements = $this->requirementService->listForCompany($lead);
+
         return view('requirements.company', [
             'lead' => $lead,
-            'requirements' => $this->requirementService->listForCompany($lead),
+            'requirements' => $requirements,
+            'summary' => RequirementSummary::of($requirements),
             'statuses' => RequirementStatus::cases(),
             'priorities' => RequirementPriority::cases(),
-            'sprints' => Requirement::sprintOptions(),
             'users' => User::orderBy('name')->get(),
         ]);
     }
 
     /**
-     * Exports whatever the index's current search/status/priority/sprint
+     * Exports whatever the index's current search/company/status/priority
      * filters match — every matching row (not just the current page), so the
      * PDF reflects the exact same filtered set the user is looking at.
      */
@@ -67,9 +75,9 @@ class RequirementController extends Controller
     {
         $this->authorize('viewAny', Requirement::class);
 
-        $filters = $request->only(['search', 'status', 'priority', 'sprint']);
+        $filters = $request->only(self::LIST_FILTERS);
 
-        $requirements = $this->requirementService->listAllForExport($filters);
+        $requirements = $this->requirementService->listAllForExport($this->queryFilters($filters, $request));
 
         return Pdf::loadView('requirements.pdf', [
             'requirements' => $requirements,
@@ -86,7 +94,6 @@ class RequirementController extends Controller
         return view('requirements.create', [
             'leads' => Lead::orderBy('company_name')->get(),
             'priorities' => RequirementPriority::cases(),
-            'sprints' => Requirement::sprintOptions(),
             'users' => User::orderBy('name')->get(),
         ]);
     }
@@ -141,7 +148,6 @@ class RequirementController extends Controller
             'requirement' => $requirement,
             'priorities' => RequirementPriority::cases(),
             'statuses' => RequirementStatus::cases(),
-            'sprints' => Requirement::sprintOptions(),
             'users' => User::orderBy('name')->get(),
             'changeLog' => $this->changeLogFor($requirement),
         ]);
@@ -168,6 +174,19 @@ class RequirementController extends Controller
         $this->requirementService->delete($requirement);
 
         return back()->with('success', 'Requirement deleted successfully.');
+    }
+
+    /**
+     * "My Leads" is a checkbox in the URL; the repository needs the actual
+     * user id to match against each lead's assigned_user_id.
+     */
+    private function queryFilters(array $filters, Request $request): array
+    {
+        if (! empty($filters['my_leads'])) {
+            $filters['lead_assigned_user_id'] = $request->user()->id;
+        }
+
+        return $filters;
     }
 
     private function changeLogFor(Requirement $requirement): Collection
