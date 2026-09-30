@@ -11,6 +11,9 @@
                     <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-box-arrow-in-right"></i> Login as {{ $user->name }}</button>
                 </form>
             @endcan
+            @can('managePermissions', $user)
+                <a href="{{ route('users.permissions.edit', $user) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-shield-lock"></i> Permissions</a>
+            @endcan
             <a href="{{ route('users.edit', $user) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
         </x-slot:actions>
     </x-page-header>
@@ -21,6 +24,7 @@
                 <dt class="col-3 text-muted">Designation</dt><dd class="col-9">{{ $user->designation ?: '—' }}</dd>
                 <dt class="col-3 text-muted">Role</dt><dd class="col-9">{{ $user->role->label() }}</dd>
                 <dt class="col-3 text-muted">Status</dt><dd class="col-9"><x-status-badge :status="$user->status" /></dd>
+                <dt class="col-3 text-muted">Permissions</dt><dd class="col-9">{{ $user->isSuperAdmin() ? 'Full access (Super Admin)' : ($user->hasRestrictedPermissions() ? 'Restricted' : 'Full access') }}</dd>
             </dl>
         </div>
     </div>

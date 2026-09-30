@@ -55,10 +55,18 @@
                                 <div class="text-muted small">{{ $user->email }}</div>
                             </td>
                             <td class="small">{{ $user->designation ?? '—' }}</td>
-                            <td><span class="badge bg-primary-subtle text-primary-emphasis">{{ $user->role->label() }}</span></td>
+                            <td>
+                                <span class="badge bg-primary-subtle text-primary-emphasis">{{ $user->role->label() }}</span>
+                                @if ($user->hasRestrictedPermissions())
+                                    <span class="badge bg-warning-subtle text-warning-emphasis" title="Some component permissions are revoked"><i class="bi bi-shield-lock"></i> Restricted</span>
+                                @endif
+                            </td>
                             <td><x-status-badge :status="$user->status" /></td>
                             <td class="text-end">
                                 <a href="{{ route('users.edit', $user) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                                @can('managePermissions', $user)
+                                    <a href="{{ route('users.permissions.edit', $user) }}" class="btn btn-sm btn-outline-secondary" title="Permissions"><i class="bi bi-shield-lock"></i></a>
+                                @endcan
                                 @can('impersonate', $user)
                                     <form action="{{ route('users.impersonate', $user) }}" method="POST" class="d-inline">
                                         @csrf

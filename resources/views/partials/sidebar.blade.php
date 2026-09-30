@@ -10,41 +10,66 @@
         <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Dashboard" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-speedometer2"></i> <span class="nav-label">Dashboard</span>
         </a>
-        <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->routeIs('tasks.*') ? 'active' : '' }}" title="Tasks" data-bs-toggle="tooltip" data-bs-placement="right">
-            <i class="bi bi-list-task"></i> <span class="nav-label">Tasks</span>
-        </a>
+        @permitted('tasks')
+            <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->routeIs('tasks.*') ? 'active' : '' }}" title="Tasks" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-list-task"></i> <span class="nav-label">Tasks</span>
+            </a>
+        @endpermitted
 
-        @if ($user?->isBusinessDevelopment() || $user?->isManager() || $user?->isSuperAdmin())
+        @php
+            $bdModules = ['leads', 'raw_data', 'requirements', 'follow_ups'];
+            $showBd = ($user?->isBusinessDevelopment() || $user?->isManager() || $user?->isSuperAdmin())
+                && collect($bdModules)->contains(fn ($module) => $user->hasPermission($module));
+        @endphp
+        @if ($showBd)
             <div class="nav-section-title">Business Development</div>
-            <a href="{{ route('leads.index') }}" class="nav-link {{ request()->routeIs('leads.*') ? 'active' : '' }}" title="Lead Management" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-diagram-3"></i> <span class="nav-label">Lead Management</span>
-            </a>
-            <a href="{{ route('raw-data.index') }}" class="nav-link {{ request()->routeIs('raw-data.*') ? 'active' : '' }}" title="Raw Data" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-inbox"></i> <span class="nav-label">Raw Data</span>
-            </a>
-            <a href="{{ route('requirements.index') }}" class="nav-link {{ request()->routeIs('requirements.*') ? 'active' : '' }}" title="Requirements" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-list-check"></i> <span class="nav-label">Requirements</span>
-            </a>
-            <a href="{{ route('follow-ups.index') }}" class="nav-link {{ request()->routeIs('follow-ups.*') ? 'active' : '' }}" title="Follow Ups" data-bs-toggle="tooltip" data-bs-placement="right">
-                <i class="bi bi-bell"></i> <span class="nav-label">Follow Ups</span>
-            </a>
+            @permitted('leads')
+                <a href="{{ route('leads.index') }}" class="nav-link {{ request()->routeIs('leads.*') ? 'active' : '' }}" title="Lead Management" data-bs-toggle="tooltip" data-bs-placement="right">
+                    <i class="bi bi-diagram-3"></i> <span class="nav-label">Lead Management</span>
+                </a>
+            @endpermitted
+            @permitted('raw_data')
+                <a href="{{ route('raw-data.index') }}" class="nav-link {{ request()->routeIs('raw-data.*') ? 'active' : '' }}" title="Raw Data" data-bs-toggle="tooltip" data-bs-placement="right">
+                    <i class="bi bi-inbox"></i> <span class="nav-label">Raw Data</span>
+                </a>
+            @endpermitted
+            @permitted('requirements')
+                <a href="{{ route('requirements.index') }}" class="nav-link {{ request()->routeIs('requirements.*') ? 'active' : '' }}" title="Requirements" data-bs-toggle="tooltip" data-bs-placement="right">
+                    <i class="bi bi-list-check"></i> <span class="nav-label">Requirements</span>
+                </a>
+            @endpermitted
+            @permitted('follow_ups')
+                <a href="{{ route('follow-ups.index') }}" class="nav-link {{ request()->routeIs('follow-ups.*') ? 'active' : '' }}" title="Follow Ups" data-bs-toggle="tooltip" data-bs-placement="right">
+                    <i class="bi bi-bell"></i> <span class="nav-label">Follow Ups</span>
+                </a>
+            @endpermitted
         @endif
 
-        <div class="nav-section-title">Support</div>
-        <a href="{{ route('support-tickets.index') }}" class="nav-link {{ request()->routeIs('support-tickets.*') ? 'active' : '' }}" title="Support Tickets" data-bs-toggle="tooltip" data-bs-placement="right">
-            <i class="bi bi-life-preserver"></i> <span class="nav-label">Support Tickets</span>
-        </a>
+        @permitted('support_tickets')
+            <div class="nav-section-title">Support</div>
+            <a href="{{ route('support-tickets.index') }}" class="nav-link {{ request()->routeIs('support-tickets.*') ? 'active' : '' }}" title="Support Tickets" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-life-preserver"></i> <span class="nav-label">Support Tickets</span>
+            </a>
+        @endpermitted
 
-        <div class="nav-section-title">Knowledge</div>
-        <a href="{{ route('knowledge-base.index') }}" class="nav-link {{ request()->routeIs('knowledge-base.*') ? 'active' : '' }}" title="Knowledge Base" data-bs-toggle="tooltip" data-bs-placement="right">
-            <i class="bi bi-journal-richtext"></i> <span class="nav-label">Knowledge Base</span>
-        </a>
-        <a href="{{ route('release-notes.index') }}" class="nav-link {{ request()->routeIs('release-notes.*') ? 'active' : '' }}" title="Release Notes" data-bs-toggle="tooltip" data-bs-placement="right">
-            <i class="bi bi-megaphone"></i> <span class="nav-label">Release Notes</span>
-        </a>
-        <a href="{{ route('announcements.index') }}" class="nav-link {{ request()->routeIs('announcements.*') ? 'active' : '' }}" title="Announcements" data-bs-toggle="tooltip" data-bs-placement="right">
-            <i class="bi bi-broadcast"></i> <span class="nav-label">Announcements</span>
-        </a>
+        @if (collect(['knowledge_base', 'release_notes', 'announcements'])->contains(fn ($module) => $user?->hasPermission($module)))
+            <div class="nav-section-title">Knowledge</div>
+        @endif
+        @permitted('knowledge_base')
+            <a href="{{ route('knowledge-base.index') }}" class="nav-link {{ request()->routeIs('knowledge-base.*') ? 'active' : '' }}" title="Knowledge Base" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-journal-richtext"></i> <span class="nav-label">Knowledge Base</span>
+            </a>
+        @endpermitted
+        @permitted('release_notes')
+            <a href="{{ route('release-notes.index') }}" class="nav-link {{ request()->routeIs('release-notes.*') ? 'active' : '' }}" title="Release Notes" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-megaphone"></i> <span class="nav-label">Release Notes</span>
+            </a>
+        @endpermitted
+        @permitted('announcements')
+            <a href="{{ route('announcements.index') }}" class="nav-link {{ request()->routeIs('announcements.*') ? 'active' : '' }}" title="Announcements" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-broadcast"></i> <span class="nav-label">Announcements</span>
+            </a>
+        @endpermitted
 
         <div class="nav-section-title">Reporting</div>
         <a href="{{ route('team.activities') }}" class="nav-link {{ request()->routeIs('team.activities') ? 'active' : '' }}" title="Team Activities" data-bs-toggle="tooltip" data-bs-placement="right">

@@ -5,9 +5,11 @@
 @section('content')
     <x-page-header title="Team Meeting Room" icon="bi-people" subtitle="Raise agendas, discuss them, and track their progress with the whole team.">
         <x-slot:actions>
-            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newAgendaModal">
-                <i class="bi bi-plus-lg"></i> New Agenda
-            </button>
+            @can('create', App\Models\Agenda::class)
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newAgendaModal">
+                    <i class="bi bi-plus-lg"></i> New Agenda
+                </button>
+            @endcan
         </x-slot:actions>
     </x-page-header>
 
@@ -95,7 +97,7 @@
                         </div>
                     @endif
 
-                    @if ($activeAgenda->created_by === auth()->id() && $activeAgenda->isPending())
+                    @if (auth()->user()->can('update', $activeAgenda) && $activeAgenda->isPending())
                         <div class="card-body py-2 border-bottom d-flex gap-2">
                             <form method="POST" action="{{ route('meeting-room.status.update', $activeAgenda) }}"
                                   data-confirm-delete
@@ -121,7 +123,7 @@
                     @endif
 
                     <div class="card-body overflow-auto flex-grow-1"
-                         x-data="agendaThread({{ $activeAgenda->id }}, @json($initialComments), {{ $activeAgenda->isPending() ? 'true' : 'false' }})">
+                         x-data="agendaThread({{ $activeAgenda->id }}, @json($initialComments), {{ $activeAgenda->isPending() && auth()->user()->hasPermission('meeting_room', 'update') ? 'true' : 'false' }})">
                         <template x-for="comment in topLevel()" :key="comment.id">
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between align-items-baseline gap-2">
@@ -160,7 +162,11 @@
                             </form>
                         </div>
                         <div x-show="!pending" class="border-top pt-3 mt-2 text-muted small">
-                            This agenda is finalized — the discussion is preserved for reference but closed to new comments.
+                            @if ($activeAgenda->isPending())
+                                You have view-only access to the Meeting Room.
+                            @else
+                                This agenda is finalized — the discussion is preserved for reference but closed to new comments.
+                            @endif
                         </div>
                     </div>
                 @else

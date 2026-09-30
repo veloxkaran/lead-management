@@ -128,12 +128,14 @@
             <i class="bi bi-chat-left-text"></i> Comments ({{ $rawData->comments->count() }})
         </div>
         <div class="card-body">
-            <form method="POST" action="{{ route('raw-data.comments.store', $rawData) }}" class="mb-3">
-                @csrf
-                <textarea name="comment" rows="2" class="form-control form-control-sm" placeholder="Add a comment..." required></textarea>
-                @error('comment')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                <button type="submit" class="btn btn-sm btn-primary mt-2"><i class="bi bi-send"></i> Post Comment</button>
-            </form>
+            @permitted('raw_data', 'update')
+                <form method="POST" action="{{ route('raw-data.comments.store', $rawData) }}" class="mb-3">
+                    @csrf
+                    <textarea name="comment" rows="2" class="form-control form-control-sm" placeholder="Add a comment..." required></textarea>
+                    @error('comment')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    <button type="submit" class="btn btn-sm btn-primary mt-2"><i class="bi bi-send"></i> Post Comment</button>
+                </form>
+            @endpermitted
 
             @forelse ($rawData->comments as $comment)
                 <div class="border-bottom pb-2 mb-2">

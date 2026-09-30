@@ -47,6 +47,7 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ThemePreferenceController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserPermissionController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -82,99 +83,126 @@ Route::middleware('auth')->group(function () {
     // Bulk Upload hub — links out to each resource's own bulk-upload flow below.
     Route::get('bulk-upload', [BulkUploadController::class, 'index'])->name('bulk-upload.index');
 
-    // Leads
-    // Registered before the resource so /leads/bulk-upload isn't swallowed by the {lead} wildcard.
-    Route::get('leads/bulk-upload', [LeadBulkUploadController::class, 'create'])->name('leads.bulk-upload.create');
-    Route::get('leads/bulk-upload/template', [LeadBulkUploadController::class, 'template'])->name('leads.bulk-upload.template');
-    Route::post('leads/bulk-upload', [LeadBulkUploadController::class, 'store'])->name('leads.bulk-upload.store');
-    Route::get('leads/check-duplicate', [LeadController::class, 'checkDuplicate'])->name('leads.check-duplicate');
-    Route::resource('leads', LeadController::class);
-    Route::post('leads/{lead}/archive', [LeadController::class, 'archive'])->name('leads.archive');
-    Route::post('leads/{lead}/restore', [LeadController::class, 'restore'])->name('leads.restore');
-    Route::post('leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.status.update');
-    Route::post('leads/{lead}/close', [LeadController::class, 'close'])->name('leads.close');
-    Route::get('leads/{lead}/walkthrough', [LeadController::class, 'walkthrough'])->name('leads.walkthrough');
-    Route::get('leads/{lead}/export-pdf', [LeadController::class, 'exportPdf'])->name('leads.export-pdf');
-    Route::post('leads/{lead}/support-access', [LeadController::class, 'generateSupportAccess'])->name('leads.support-access.generate');
-    Route::delete('leads/{lead}/support-access', [LeadController::class, 'revokeSupportAccess'])->name('leads.support-access.revoke');
+    // Component routes below are gated per member by `permission:{module}`
+    // (see EnsureUserHasPermission / User::hasPermission()) — default is full
+    // access. A route-level `permission:{module},{action}` overrides the
+    // action the group would infer, e.g. comments/notes count as an edit.
 
-    Route::post('leads/{lead}/activities', [ActivityController::class, 'store'])->name('leads.activities.store');
-    Route::get('activities', [ActivityController::class, 'index'])->name('activities.index');
+    // Leads
+    Route::middleware('permission:leads')->group(function () {
+        // Registered before the resource so /leads/bulk-upload isn't swallowed by the {lead} wildcard.
+        Route::get('leads/bulk-upload', [LeadBulkUploadController::class, 'create'])->name('leads.bulk-upload.create');
+        Route::get('leads/bulk-upload/template', [LeadBulkUploadController::class, 'template'])->name('leads.bulk-upload.template');
+        Route::post('leads/bulk-upload', [LeadBulkUploadController::class, 'store'])->name('leads.bulk-upload.store');
+        Route::get('leads/check-duplicate', [LeadController::class, 'checkDuplicate'])->name('leads.check-duplicate');
+        Route::resource('leads', LeadController::class);
+        Route::post('leads/{lead}/archive', [LeadController::class, 'archive'])->name('leads.archive');
+        Route::post('leads/{lead}/restore', [LeadController::class, 'restore'])->name('leads.restore');
+        Route::post('leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.status.update');
+        Route::post('leads/{lead}/close', [LeadController::class, 'close'])->name('leads.close');
+        Route::get('leads/{lead}/walkthrough', [LeadController::class, 'walkthrough'])->name('leads.walkthrough');
+        Route::get('leads/{lead}/export-pdf', [LeadController::class, 'exportPdf'])->name('leads.export-pdf');
+        Route::post('leads/{lead}/support-access', [LeadController::class, 'generateSupportAccess'])->name('leads.support-access.generate');
+        Route::delete('leads/{lead}/support-access', [LeadController::class, 'revokeSupportAccess'])->name('leads.support-access.revoke');
+
+        Route::post('leads/{lead}/activities', [ActivityController::class, 'store'])->middleware('permission:leads,update')->name('leads.activities.store');
+        Route::get('activities', [ActivityController::class, 'index'])->name('activities.index');
+
+        Route::post('leads/{lead}/notes', [LeadNoteController::class, 'store'])->middleware('permission:leads,update')->name('leads.notes.store');
+        Route::delete('leads/{lead}/notes/{note}', [LeadNoteController::class, 'destroy'])->middleware('permission:leads,update')->name('leads.notes.destroy');
+        Route::get('lead-note-attachments/{attachment}/download', [LeadNoteAttachmentController::class, 'download'])->name('lead-note-attachments.download');
+    });
 
     // Raw Data — minimal contact records, later converted into full Leads.
-    // Registered before the resource so /raw-data/bulk-upload isn't swallowed by the {raw_data} wildcard.
-    Route::get('raw-data/bulk-upload', [RawDataBulkUploadController::class, 'create'])->name('raw-data.bulk-upload.create');
-    Route::get('raw-data/bulk-upload/template', [RawDataBulkUploadController::class, 'template'])->name('raw-data.bulk-upload.template');
-    Route::post('raw-data/bulk-upload', [RawDataBulkUploadController::class, 'store'])->name('raw-data.bulk-upload.store');
-    Route::post('raw-data/bulk-upload/paste', [RawDataBulkUploadController::class, 'storePasted'])->name('raw-data.bulk-upload.store-paste');
-    Route::get('raw-data/bulk-upload/batches/{batch}', [RawDataBulkUploadController::class, 'showBatch'])->name('raw-data.bulk-upload.batches.show');
-    Route::get('raw-data/bulk-upload/batches/{batch}/download', [RawDataBulkUploadController::class, 'downloadBatchRejections'])->name('raw-data.bulk-upload.batches.download');
-    Route::post('raw-data/delete-incomplete', [RawDataController::class, 'deleteIncomplete'])->name('raw-data.delete-incomplete');
-    Route::resource('raw-data', RawDataController::class)->parameters(['raw-data' => 'raw_data'])->except('edit', 'update');
-    Route::post('raw-data/{raw_data}/mark-not-valid', [RawDataController::class, 'markNotValid'])->name('raw-data.mark-not-valid');
-    Route::post('raw-data/{raw_data}/mark-hold', [RawDataController::class, 'markHold'])->name('raw-data.mark-hold');
-    Route::post('raw-data/{raw_data}/convert', [RawDataController::class, 'convert'])->name('raw-data.convert');
-    Route::post('raw-data/{raw_data}/assign', [RawDataController::class, 'assign'])->name('raw-data.assign');
-    Route::post('raw-data/{raw_data}/comments', [RawDataCommentController::class, 'store'])->name('raw-data.comments.store');
+    Route::middleware('permission:raw_data')->group(function () {
+        // Registered before the resource so /raw-data/bulk-upload isn't swallowed by the {raw_data} wildcard.
+        Route::get('raw-data/bulk-upload', [RawDataBulkUploadController::class, 'create'])->name('raw-data.bulk-upload.create');
+        Route::get('raw-data/bulk-upload/template', [RawDataBulkUploadController::class, 'template'])->name('raw-data.bulk-upload.template');
+        Route::post('raw-data/bulk-upload', [RawDataBulkUploadController::class, 'store'])->name('raw-data.bulk-upload.store');
+        Route::post('raw-data/bulk-upload/paste', [RawDataBulkUploadController::class, 'storePasted'])->name('raw-data.bulk-upload.store-paste');
+        Route::get('raw-data/bulk-upload/batches/{batch}', [RawDataBulkUploadController::class, 'showBatch'])->name('raw-data.bulk-upload.batches.show');
+        Route::get('raw-data/bulk-upload/batches/{batch}/download', [RawDataBulkUploadController::class, 'downloadBatchRejections'])->name('raw-data.bulk-upload.batches.download');
+        Route::post('raw-data/delete-incomplete', [RawDataController::class, 'deleteIncomplete'])->middleware('permission:raw_data,delete')->name('raw-data.delete-incomplete');
+        Route::resource('raw-data', RawDataController::class)->parameters(['raw-data' => 'raw_data'])->except('edit', 'update');
+        Route::post('raw-data/{raw_data}/mark-not-valid', [RawDataController::class, 'markNotValid'])->name('raw-data.mark-not-valid');
+        Route::post('raw-data/{raw_data}/mark-hold', [RawDataController::class, 'markHold'])->name('raw-data.mark-hold');
+        Route::post('raw-data/{raw_data}/convert', [RawDataController::class, 'convert'])->name('raw-data.convert');
+        Route::post('raw-data/{raw_data}/assign', [RawDataController::class, 'assign'])->name('raw-data.assign');
+        Route::post('raw-data/{raw_data}/comments', [RawDataCommentController::class, 'store'])->middleware('permission:raw_data,update')->name('raw-data.comments.store');
+    });
 
-    Route::post('leads/{lead}/notes', [LeadNoteController::class, 'store'])->name('leads.notes.store');
-    Route::delete('leads/{lead}/notes/{note}', [LeadNoteController::class, 'destroy'])->name('leads.notes.destroy');
-    Route::get('lead-note-attachments/{attachment}/download', [LeadNoteAttachmentController::class, 'download'])->name('lead-note-attachments.download');
+    Route::middleware('permission:follow_ups')->group(function () {
+        Route::resource('follow-ups', FollowUpController::class)->except('show');
+        Route::post('leads/{lead}/follow-ups', [FollowUpController::class, 'storeForLead'])->name('leads.follow-ups.store');
+    });
 
-    Route::resource('follow-ups', FollowUpController::class)->except('show');
-    Route::post('leads/{lead}/follow-ups', [FollowUpController::class, 'storeForLead'])->name('leads.follow-ups.store');
+    Route::middleware('permission:requirements')->group(function () {
+        // Registered before the resource so /requirements/export-pdf and /requirements/company/{lead} aren't swallowed by the {requirement} wildcard.
+        Route::get('requirements/export-pdf', [RequirementController::class, 'exportPdf'])->name('requirements.export-pdf');
+        Route::get('requirements/company/{lead}', [RequirementController::class, 'company'])->name('requirements.company');
+        Route::resource('requirements', RequirementController::class);
+        Route::post('leads/{lead}/requirements', [RequirementController::class, 'storeForLead'])->name('leads.requirements.store');
+        Route::post('requirements/{requirement}/comments', [RequirementCommentController::class, 'store'])->middleware('permission:requirements,update')->name('requirements.comments.store');
+        Route::patch('requirements/{requirement}/status', [RequirementStatusController::class, 'update'])->name('requirements.status.update');
+        Route::get('requirement-attachments/{attachment}/download', [RequirementAttachmentController::class, 'download'])->name('requirement-attachments.download');
+        Route::get('requirement-attachments/{attachment}/preview', [RequirementAttachmentController::class, 'preview'])->name('requirement-attachments.preview');
+    });
 
-    // Registered before the resource so /requirements/export-pdf and /requirements/company/{lead} aren't swallowed by the {requirement} wildcard.
-    Route::get('requirements/export-pdf', [RequirementController::class, 'exportPdf'])->name('requirements.export-pdf');
-    Route::get('requirements/company/{lead}', [RequirementController::class, 'company'])->name('requirements.company');
-    Route::resource('requirements', RequirementController::class);
-    Route::post('leads/{lead}/requirements', [RequirementController::class, 'storeForLead'])->name('leads.requirements.store');
-    Route::post('requirements/{requirement}/comments', [RequirementCommentController::class, 'store'])->name('requirements.comments.store');
-    Route::patch('requirements/{requirement}/status', [RequirementStatusController::class, 'update'])->name('requirements.status.update');
-    Route::get('requirement-attachments/{attachment}/download', [RequirementAttachmentController::class, 'download'])->name('requirement-attachments.download');
-    Route::get('requirement-attachments/{attachment}/preview', [RequirementAttachmentController::class, 'preview'])->name('requirement-attachments.preview');
-
-    // Registered before the resource so /goals/leaderboard isn't swallowed by the {goal} wildcard.
-    Route::get('goals/leaderboard', [GoalLeaderboardController::class, 'index'])->name('goals.leaderboard');
-    Route::resource('goals', GoalController::class);
+    Route::middleware('permission:goals')->group(function () {
+        // Registered before the resource so /goals/leaderboard isn't swallowed by the {goal} wildcard.
+        Route::get('goals/leaderboard', [GoalLeaderboardController::class, 'index'])->name('goals.leaderboard');
+        Route::resource('goals', GoalController::class);
+    });
 
     // Organization-wide task management, hierarchy-scoped.
-    Route::resource('tasks', TaskController::class);
-    Route::post('leads/{lead}/tasks', [TaskController::class, 'storeForLead'])->name('leads.tasks.store');
-    Route::post('tasks/{task}/checklist-items', [TaskChecklistItemController::class, 'store'])->name('tasks.checklist-items.store');
-    Route::patch('tasks/{task}/checklist-items/{checklistItem}', [TaskChecklistItemController::class, 'update'])->name('tasks.checklist-items.update');
-    Route::delete('tasks/{task}/checklist-items/{checklistItem}', [TaskChecklistItemController::class, 'destroy'])->name('tasks.checklist-items.destroy');
-    Route::post('tasks/{task}/comments', [TaskCommentController::class, 'store'])->name('tasks.comments.store');
-    Route::delete('tasks/{task}/comments/{comment}', [TaskCommentController::class, 'destroy'])->name('tasks.comments.destroy');
+    Route::middleware('permission:tasks')->group(function () {
+        Route::resource('tasks', TaskController::class);
+        Route::post('leads/{lead}/tasks', [TaskController::class, 'storeForLead'])->name('leads.tasks.store');
+        Route::post('tasks/{task}/checklist-items', [TaskChecklistItemController::class, 'store'])->middleware('permission:tasks,update')->name('tasks.checklist-items.store');
+        Route::patch('tasks/{task}/checklist-items/{checklistItem}', [TaskChecklistItemController::class, 'update'])->name('tasks.checklist-items.update');
+        Route::delete('tasks/{task}/checklist-items/{checklistItem}', [TaskChecklistItemController::class, 'destroy'])->middleware('permission:tasks,update')->name('tasks.checklist-items.destroy');
+        Route::post('tasks/{task}/comments', [TaskCommentController::class, 'store'])->middleware('permission:tasks,update')->name('tasks.comments.store');
+        Route::delete('tasks/{task}/comments/{comment}', [TaskCommentController::class, 'destroy'])->middleware('permission:tasks,update')->name('tasks.comments.destroy');
+    });
 
     // Lead progress tracking — managed by Customer Success/Management.
-    Route::resource('trainings', TrainingController::class)->except('show');
-    Route::get('leads/{lead}/trainings', [TrainingController::class, 'forLead'])->name('leads.trainings.index');
+    Route::middleware('permission:trainings')->group(function () {
+        Route::resource('trainings', TrainingController::class)->except('show');
+        Route::get('leads/{lead}/trainings', [TrainingController::class, 'forLead'])->name('leads.trainings.index');
+    });
 
     // Open to every role — see SupportTicketPolicy.
-    Route::resource('support-tickets', SupportTicketController::class);
-    Route::post('leads/{lead}/support-tickets', [SupportTicketController::class, 'storeForLead'])->name('leads.support-tickets.store');
-    Route::post('support-tickets/{support_ticket}/comments', [SupportTicketCommentController::class, 'store'])->name('support-tickets.comments.store');
-    Route::patch('support-tickets/{support_ticket}/comments/{comment}', [SupportTicketCommentController::class, 'update'])->name('support-tickets.comments.update');
-    Route::get('support-ticket-attachments/{attachment}/download', [SupportTicketAttachmentController::class, 'download'])->name('support-ticket-attachments.download');
-    Route::get('support-ticket-attachments/{attachment}/preview', [SupportTicketAttachmentController::class, 'preview'])->name('support-ticket-attachments.preview');
+    Route::middleware('permission:support_tickets')->group(function () {
+        Route::resource('support-tickets', SupportTicketController::class);
+        Route::post('leads/{lead}/support-tickets', [SupportTicketController::class, 'storeForLead'])->name('leads.support-tickets.store');
+        Route::post('support-tickets/{support_ticket}/comments', [SupportTicketCommentController::class, 'store'])->middleware('permission:support_tickets,update')->name('support-tickets.comments.store');
+        Route::patch('support-tickets/{support_ticket}/comments/{comment}', [SupportTicketCommentController::class, 'update'])->name('support-tickets.comments.update');
+        Route::get('support-ticket-attachments/{attachment}/download', [SupportTicketAttachmentController::class, 'download'])->name('support-ticket-attachments.download');
+        Route::get('support-ticket-attachments/{attachment}/preview', [SupportTicketAttachmentController::class, 'preview'])->name('support-ticket-attachments.preview');
+    });
 
-    Route::resource('daily-summaries', DailySummaryController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+    Route::resource('daily-summaries', DailySummaryController::class)->only(['index', 'create', 'store', 'edit', 'update'])->middleware('permission:daily_summaries');
 
-    Route::resource('release-notes', ReleaseNoteController::class);
+    Route::resource('release-notes', ReleaseNoteController::class)->middleware('permission:release_notes');
 
     // Everyone reads; only Super Admin creates — see AnnouncementPolicy.
-    Route::resource('announcements', AnnouncementController::class)->only(['index', 'create', 'store', 'show']);
-    Route::get('announcement-documents/{document}/download', [AnnouncementDocumentController::class, 'download'])->name('announcement-documents.download');
-    Route::get('announcement-documents/{document}/preview', [AnnouncementDocumentController::class, 'preview'])->name('announcement-documents.preview');
+    Route::middleware('permission:announcements')->group(function () {
+        Route::resource('announcements', AnnouncementController::class)->only(['index', 'create', 'store', 'show']);
+        Route::get('announcement-documents/{document}/download', [AnnouncementDocumentController::class, 'download'])->name('announcement-documents.download');
+        Route::get('announcement-documents/{document}/preview', [AnnouncementDocumentController::class, 'preview'])->name('announcement-documents.preview');
+    });
 
-    Route::resource('knowledge-base', KnowledgeBaseController::class);
-    Route::get('knowledge-base/{knowledge_base}/download', [KnowledgeBaseController::class, 'download'])->name('knowledge-base.download');
+    Route::middleware('permission:knowledge_base')->group(function () {
+        Route::resource('knowledge-base', KnowledgeBaseController::class);
+        Route::get('knowledge-base/{knowledge_base}/download', [KnowledgeBaseController::class, 'download'])->name('knowledge-base.download');
+    });
 
-    Route::resource('meetings', MeetingController::class)->except('show');
+    Route::resource('meetings', MeetingController::class)->except('show')->middleware('permission:meetings');
 
-    Route::get('common-reports/goal-vs-achievement', [CommonReportController::class, 'goalVsAchievement'])->name('common-reports.goal-vs-achievement');
-    Route::get('common-reports/my-contributions', [CommonReportController::class, 'myContributions'])->name('common-reports.my-contributions');
+    Route::middleware('permission:reports')->group(function () {
+        Route::get('common-reports/goal-vs-achievement', [CommonReportController::class, 'goalVsAchievement'])->name('common-reports.goal-vs-achievement');
+        Route::get('common-reports/my-contributions', [CommonReportController::class, 'myContributions'])->name('common-reports.my-contributions');
+    });
 
     // Available while impersonating (the active session is a regular user at this point).
     Route::post('impersonate/stop', [ImpersonationController::class, 'stop'])->name('impersonate.stop');
@@ -183,11 +211,13 @@ Route::middleware('auth')->group(function () {
     // (see AgendaPolicy). Selection/search/filter/sort all live in the
     // query string of one index route rather than a separate show route,
     // so switching the selected agenda never loses the current filters.
-    Route::get('meeting-room', [MeetingRoomController::class, 'index'])->name('meeting-room.index');
-    Route::post('meeting-room', [MeetingRoomController::class, 'store'])->name('meeting-room.store');
-    Route::patch('meeting-room/{agenda}/status', [MeetingRoomController::class, 'updateStatus'])->name('meeting-room.status.update');
-    Route::get('meeting-room/{agenda}/discussions', [MeetingRoomController::class, 'discussions'])->name('meeting-room.discussions');
-    Route::post('meeting-room/{agenda}/discussions', [MeetingRoomController::class, 'storeComment'])->name('meeting-room.discussions.store');
+    Route::middleware('permission:meeting_room')->group(function () {
+        Route::get('meeting-room', [MeetingRoomController::class, 'index'])->name('meeting-room.index');
+        Route::post('meeting-room', [MeetingRoomController::class, 'store'])->name('meeting-room.store');
+        Route::patch('meeting-room/{agenda}/status', [MeetingRoomController::class, 'updateStatus'])->name('meeting-room.status.update');
+        Route::get('meeting-room/{agenda}/discussions', [MeetingRoomController::class, 'discussions'])->name('meeting-room.discussions');
+        Route::post('meeting-room/{agenda}/discussions', [MeetingRoomController::class, 'storeComment'])->middleware('permission:meeting_room,update')->name('meeting-room.discussions.store');
+    });
 
     Route::get('notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
 
@@ -199,7 +229,7 @@ Route::middleware('auth')->group(function () {
     Route::get('org-tree', [OrgTreeController::class, 'index'])->name('org-tree.index');
 
     // Manager and Super Admin — full reporting suite, company-wide.
-    Route::middleware('overseer')->group(function () {
+    Route::middleware(['overseer', 'permission:reports'])->group(function () {
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('reports/daily', [ReportController::class, 'daily'])->name('reports.daily');
         Route::get('reports/monthly', [ReportController::class, 'monthly'])->name('reports.monthly');
@@ -221,6 +251,9 @@ Route::middleware('auth')->group(function () {
         Route::post('users/{user}/activate', [UserController::class, 'activate'])->name('users.activate');
         Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
         Route::post('users/{user}/impersonate', [ImpersonationController::class, 'start'])->name('users.impersonate');
+        Route::get('users/{user}/permissions', [UserPermissionController::class, 'edit'])->name('users.permissions.edit');
+        Route::put('users/{user}/permissions', [UserPermissionController::class, 'update'])->name('users.permissions.update');
+        Route::delete('users/{user}/permissions', [UserPermissionController::class, 'destroy'])->name('users.permissions.destroy');
 
         Route::resource('lead-statuses', LeadStatusController::class)->except('show');
         Route::post('lead-statuses/reorder', [LeadStatusController::class, 'reorder'])->name('lead-statuses.reorder');

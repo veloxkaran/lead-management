@@ -41,6 +41,15 @@ class UserPolicy
         return $user->isSuperAdmin();
     }
 
+    /**
+     * Super Admins always have full access (see User::hasPermission()), so
+     * there's nothing to manage on their accounts.
+     */
+    public function managePermissions(User $user, User $model): bool
+    {
+        return $user->isSuperAdmin() && ! $model->isSuperAdmin();
+    }
+
     public function impersonate(User $user, User $model): bool
     {
         return $user->isSuperAdmin()

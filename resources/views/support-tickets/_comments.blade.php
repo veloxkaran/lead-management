@@ -3,11 +3,13 @@
         <i class="bi bi-chat-left-text"></i> Comments ({{ $supportTicket->comments->count() }})
     </div>
     <div class="card-body">
-        <form method="POST" action="{{ route('support-tickets.comments.store', $supportTicket) }}" class="mb-3">
-            @csrf
-            <textarea name="comment" rows="2" class="form-control form-control-sm" placeholder="Add a comment..." required></textarea>
-            <button type="submit" class="btn btn-sm btn-primary mt-2"><i class="bi bi-send"></i> Post Comment</button>
-        </form>
+        @permitted('support_tickets', 'update')
+            <form method="POST" action="{{ route('support-tickets.comments.store', $supportTicket) }}" class="mb-3">
+                @csrf
+                <textarea name="comment" rows="2" class="form-control form-control-sm" placeholder="Add a comment..." required></textarea>
+                <button type="submit" class="btn btn-sm btn-primary mt-2"><i class="bi bi-send"></i> Post Comment</button>
+            </form>
+        @endpermitted
 
         @forelse ($supportTicket->comments as $comment)
             <div class="border-bottom pb-2 mb-2">

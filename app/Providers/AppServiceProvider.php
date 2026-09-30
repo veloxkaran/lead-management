@@ -2,12 +2,15 @@
 
 namespace App\Providers;
 
+use App\Enums\PermissionAction;
+use App\Enums\PermissionModule;
 use App\Models\ActivityLogEntry;
 use App\Models\User;
 use App\Policies\OrganizationHierarchyPolicy;
 use App\Support\ActivityModules\ActivityLoggingRegistration;
 use App\Support\ActivityModules\ActivityModuleRegistry;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -30,6 +33,32 @@ class AppServiceProvider extends ServiceProvider
 
         $this->registerActivityLogging();
         $this->registerOrganizationHierarchyGates();
+        $this->registerPermissionChecks();
+    }
+
+    /**
+     * Layers per-member component permissions (User::hasPermission()) over
+     * every existing policy without touching them: a missing permission
+     * denies outright, otherwise null falls through to the policy as before
+     * — so permissions can only take access away, never grant what a policy
+     * wouldn't. Because @can goes through the same Gate, buttons for denied
+     * actions disappear from views automatically. Routes are enforced
+     * separately by the `permission` middleware, since not every action
+     * calls authorize().
+     */
+    private function registerPermissionChecks(): void
+    {
+        Gate::before(function (User $user, string $ability, array $arguments) {
+            $module = PermissionModule::forSubject($arguments[0] ?? null);
+
+            if (! $module) {
+                return null;
+            }
+
+            return $user->hasPermission($module, PermissionAction::forAbility($ability)) ? null : false;
+        });
+
+        Blade::if('permitted', fn (string $module, string $action = 'view') => (bool) auth()->user()?->hasPermission($module, $action));
     }
 
     /**

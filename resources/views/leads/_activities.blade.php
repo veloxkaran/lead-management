@@ -1,25 +1,27 @@
-<form method="POST" action="{{ route('leads.activities.store', $lead) }}" class="row g-2 mb-3">
-    @csrf
-    <div class="col-md-3">
-        <select name="activity_type" class="form-select form-select-sm" required>
-            @foreach ($activityTypes as $type)
-                <option value="{{ $type->value }}">{{ $type->label() }}</option>
-            @endforeach
-        </select>
-    </div>
-    <div class="col-md-2">
-        <input type="date" name="activity_date" class="form-control form-control-sm" value="{{ now()->toDateString() }}" required>
-    </div>
-    <div class="col-md-2">
-        <input type="time" name="activity_time" class="form-control form-control-sm" value="{{ now()->format('H:i') }}" required>
-    </div>
-    <div class="col-md-4">
-        <input type="text" name="description" class="form-control form-control-sm" placeholder="Describe the activity" required>
-    </div>
-    <div class="col-md-1">
-        <button class="btn btn-sm btn-primary w-100"><i class="bi bi-plus-lg"></i></button>
-    </div>
-</form>
+@permitted('leads', 'update')
+    <form method="POST" action="{{ route('leads.activities.store', $lead) }}" class="row g-2 mb-3">
+        @csrf
+        <div class="col-md-3">
+            <select name="activity_type" class="form-select form-select-sm" required>
+                @foreach ($activityTypes as $type)
+                    <option value="{{ $type->value }}">{{ $type->label() }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="activity_date" class="form-control form-control-sm" value="{{ now()->toDateString() }}" required>
+        </div>
+        <div class="col-md-2">
+            <input type="time" name="activity_time" class="form-control form-control-sm" value="{{ now()->format('H:i') }}" required>
+        </div>
+        <div class="col-md-4">
+            <input type="text" name="description" class="form-control form-control-sm" placeholder="Describe the activity" required>
+        </div>
+        <div class="col-md-1">
+            <button class="btn btn-sm btn-primary w-100"><i class="bi bi-plus-lg"></i></button>
+        </div>
+    </form>
+@endpermitted
 
 <div class="timeline">
     @forelse ($lead->activities as $activity)

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\PermissionAction;
+use App\Enums\PermissionModule;
 use App\Enums\UiTheme;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
@@ -48,7 +50,41 @@ class User extends Authenticatable
             'role' => UserRole::class,
             'status' => UserStatus::class,
             'theme' => UiTheme::class,
+            'permissions' => 'array',
         ];
+    }
+
+    /**
+     * Component permissions, set per member by a Super Admin. Stored as
+     * module => list of allowed actions; a null column or a missing module
+     * key means full access, so everyone has everything until restricted
+     * (and components added later default to open). Super Admins can't be
+     * restricted — they'd be able to lock themselves out of the screen that
+     * grants access back. Without View, no other action on that component
+     * is allowed; actions a component doesn't have fall back to View.
+     * Deliberately not fillable — only UserPermissionController writes it.
+     */
+    public function hasPermission(PermissionModule|string $module, PermissionAction|string $action = PermissionAction::View): bool
+    {
+        $module = $module instanceof PermissionModule ? $module : PermissionModule::from($module);
+        $action = $action instanceof PermissionAction ? $action : PermissionAction::from($action);
+
+        if ($this->isSuperAdmin() || ! isset($this->permissions[$module->value])) {
+            return true;
+        }
+
+        $allowed = $this->permissions[$module->value];
+
+        if (! in_array(PermissionAction::View->value, $allowed, true)) {
+            return false;
+        }
+
+        return ! $module->supports($action) || in_array($action->value, $allowed, true);
+    }
+
+    public function hasRestrictedPermissions(): bool
+    {
+        return ! $this->isSuperAdmin() && ! empty($this->permissions);
     }
 
     /**
