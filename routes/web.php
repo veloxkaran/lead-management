@@ -117,7 +117,8 @@ Route::middleware('auth')->group(function () {
 
     // Raw Data — minimal contact records, later converted into full Leads.
     Route::middleware('permission:raw_data')->group(function () {
-        // Registered before the resource so /raw-data/bulk-upload isn't swallowed by the {raw_data} wildcard.
+        // Registered before the resource so /raw-data/similar-leads and /raw-data/bulk-upload aren't swallowed by the {raw_data} wildcard.
+        Route::get('raw-data/similar-leads', [RawDataController::class, 'similarLeads'])->name('raw-data.similar-leads');
         Route::get('raw-data/bulk-upload', [RawDataBulkUploadController::class, 'create'])->name('raw-data.bulk-upload.create');
         Route::get('raw-data/bulk-upload/template', [RawDataBulkUploadController::class, 'template'])->name('raw-data.bulk-upload.template');
         Route::post('raw-data/bulk-upload', [RawDataBulkUploadController::class, 'store'])->name('raw-data.bulk-upload.store');

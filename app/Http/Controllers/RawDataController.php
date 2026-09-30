@@ -9,6 +9,8 @@ use App\Models\Industry;
 use App\Models\RawData;
 use App\Models\User;
 use App\Services\RawDataService;
+use App\Support\SimilarLeadFinder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -31,21 +33,39 @@ class RawDataController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request, SimilarLeadFinder $similarLeads): View
     {
         $this->authorize('create', RawData::class);
 
-        return view('raw-data.create');
+        // After a submit held back by StoreRawDataRequest's similar-lead
+        // check, re-list the matches for the name the user entered.
+        return view('raw-data.create', [
+            'similarLeads' => SimilarLeadFinder::toPayload($similarLeads->find($request->old('company_name'))),
+        ]);
+    }
+
+    /**
+     * Live lookup behind the create form's "similar leads already exist"
+     * box — the same SimilarLeadFinder match that StoreRawDataRequest
+     * enforces on submit, so what's shown while typing is what's checked.
+     */
+    public function similarLeads(Request $request, SimilarLeadFinder $similarLeads): JsonResponse
+    {
+        $this->authorize('create', RawData::class);
+
+        return response()->json([
+            'matches' => SimilarLeadFinder::toPayload($similarLeads->find($request->query('company_name'))),
+        ]);
     }
 
     public function store(StoreRawDataRequest $request): RedirectResponse
     {
-        $rawData = $this->rawDataService->create($request->validated(), $request->user());
+        $rawData = $this->rawDataService->create($request->safe()->except('confirm_similar_leads'), $request->user());
 
         return redirect()->route('raw-data.show', $rawData)->with('success', 'Raw data entry created successfully.');
     }
 
-    public function show(RawData $rawData): View
+    public function show(RawData $rawData, SimilarLeadFinder $similarLeads): View
     {
         $this->authorize('view', $rawData);
 
@@ -55,6 +75,8 @@ class RawDataController extends Controller
             'rawData' => $rawData,
             'users' => User::orderBy('name')->get(),
             'industries' => Industry::ordered()->get(),
+            // Only worth flagging while the entry hasn't been converted yet.
+            'similarLeads' => $rawData->converted_lead_id === null ? $similarLeads->find($rawData->company_name) : collect(),
         ]);
     }
 

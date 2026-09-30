@@ -82,6 +82,22 @@
                         @endif
                     </div>
                 </div>
+                @if ($similarLeads->isNotEmpty())
+                    <div class="col-12">
+                        <div class="alert alert-warning small mb-0 py-2">
+                            <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle"></i> Similar existing leads — check before converting:</div>
+                            <ul class="mb-0 ps-3">
+                                @foreach ($similarLeads as $match)
+                                    <li class="text-break">
+                                        <a href="{{ route('leads.show', $match['lead']) }}" class="fw-semibold">{{ $match['lead']->company_name }}</a>
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ $match['similarity'] }}% match</span>
+                                        <span class="text-muted">{{ $match['lead']->contact_person }}@if ($match['lead']->status) · {{ $match['lead']->status->name }}@endif</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @endif
                 @if ($rawData->convertedLead)
                     <div class="col-12">
                         <div class="small text-muted">Converted Lead</div>
