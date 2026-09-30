@@ -113,6 +113,13 @@ class RequirementRepository extends BaseRepository
             $query->where('lead_id', $filters['lead_id']);
         }
 
+        // "_none" picks out requirements logged before modules existed.
+        if (($filters['system_module_id'] ?? null) === '_none') {
+            $query->whereNull('system_module_id');
+        } elseif (! empty($filters['system_module_id'])) {
+            $query->where('system_module_id', $filters['system_module_id']);
+        }
+
         if (! empty($filters['lead_assigned_user_id'])) {
             $query->whereHas('lead', fn ($q) => $q->where('assigned_user_id', $filters['lead_assigned_user_id']));
         }

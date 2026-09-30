@@ -41,6 +41,14 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
             $query->where('lead_status_id', $filters['status_id']);
         }
 
+        // "_none" picks out leads never given an industry (entered before
+        // the admin-managed list existed).
+        if (($filters['industry'] ?? null) === '_none') {
+            $query->where(fn ($q) => $q->whereNull('industry')->orWhere('industry', ''));
+        } elseif (! empty($filters['industry'])) {
+            $query->where('industry', $filters['industry']);
+        }
+
         if (! empty($filters['assigned_user_id'])) {
             $query->where('assigned_user_id', $filters['assigned_user_id']);
         }

@@ -365,4 +365,62 @@ class IndustryAndSystemModuleSetupTest extends TestCase
             ->assertOk()
             ->assertSeeInOrder(['Module:', 'Attendance', 'Payroll']);
     }
+
+    // --- List filters ----------------------------------------------------
+
+    public function test_leads_can_be_filtered_by_industry(): void
+    {
+        $user = User::factory()->create();
+        Industry::factory()->create(['name' => 'Finance']);
+        Industry::factory()->create(['name' => 'Healthcare']);
+        Lead::factory()->create(['company_name' => 'Money Co', 'industry' => 'Finance']);
+        Lead::factory()->create(['company_name' => 'Clinic Co', 'industry' => 'Healthcare']);
+        Lead::factory()->create(['company_name' => 'Blank Co', 'industry' => null]);
+
+        $this->actingAs($user)->get(route('leads.index', ['industry' => 'Finance']))
+            ->assertOk()
+            ->assertSee('Money Co')
+            ->assertDontSee('Clinic Co')
+            ->assertDontSee('Blank Co')
+            ->assertSee('<option value="Finance" selected', false);
+
+        $this->actingAs($user)->get(route('leads.index', ['industry' => '_none']))
+            ->assertOk()
+            ->assertSee('Blank Co')
+            ->assertDontSee('Money Co')
+            ->assertDontSee('Clinic Co');
+    }
+
+    public function test_requirements_can_be_filtered_by_module(): void
+    {
+        $user = User::factory()->create();
+        $attendance = SystemModule::factory()->create(['name' => 'Attendance']);
+        $payroll = SystemModule::factory()->create(['name' => 'Payroll']);
+        Requirement::factory()->create(['title' => 'Shift rosters', 'system_module_id' => $attendance->id]);
+        Requirement::factory()->create(['title' => 'Tax slabs', 'system_module_id' => $payroll->id]);
+        Requirement::factory()->create(['title' => 'Legacy ask', 'system_module_id' => null]);
+
+        $this->actingAs($user)->get(route('requirements.index', ['system_module_id' => $attendance->id]))
+            ->assertOk()
+            ->assertSee('Shift rosters')
+            ->assertDontSee('Tax slabs')
+            ->assertDontSee('Legacy ask');
+
+        $this->actingAs($user)->get(route('requirements.index', ['system_module_id' => '_none']))
+            ->assertOk()
+            ->assertSee('Legacy ask')
+            ->assertDontSee('Shift rosters')
+            ->assertDontSee('Tax slabs');
+    }
+
+    public function test_requirement_pdf_export_respects_the_module_filter(): void
+    {
+        $user = User::factory()->create();
+        $attendance = SystemModule::factory()->create(['name' => 'Attendance']);
+        Requirement::factory()->create(['title' => 'Shift rosters', 'system_module_id' => $attendance->id]);
+
+        $this->actingAs($user)->get(route('requirements.export-pdf', ['system_module_id' => $attendance->id]))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
 }

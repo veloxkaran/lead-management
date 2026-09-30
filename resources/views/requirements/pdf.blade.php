@@ -33,6 +33,11 @@
         @if (! empty($filters['search']))
             &middot; Search: “{{ $filters['search'] }}”
         @endif
+        &middot; Module: {{ match ($filters['system_module_id'] ?? null) {
+            null, '' => 'All',
+            '_none' => 'No module',
+            default => App\Models\SystemModule::find($filters['system_module_id'])?->name ?? 'All',
+        } }}
         &middot; Status: {{ collect($statuses)->first(fn ($s) => $s->value === ($filters['status'] ?? null))?->label() ?? 'All' }}
         &middot; Priority: {{ collect($priorities)->first(fn ($p) => $p->value === ($filters['priority'] ?? null))?->label() ?? 'All' }}
         @if (! empty($filters['my_leads']))

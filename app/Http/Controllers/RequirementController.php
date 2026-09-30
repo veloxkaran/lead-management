@@ -26,7 +26,7 @@ class RequirementController extends Controller
     /**
      * Query-string filters shared by the Requirements list and its PDF export.
      */
-    private const LIST_FILTERS = ['search', 'lead_id', 'status', 'priority', 'my_leads', 'view'];
+    private const LIST_FILTERS = ['search', 'lead_id', 'system_module_id', 'status', 'priority', 'my_leads', 'view'];
 
     public function __construct(protected RequirementService $requirementService)
     {

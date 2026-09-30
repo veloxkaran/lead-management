@@ -43,6 +43,16 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label class="form-label small">Industry</label>
+                    <select name="industry" class="form-select form-select-sm">
+                        <option value="">All industries</option>
+                        @foreach ($industries as $industry)
+                            <option value="{{ $industry->name }}" @selected(($filters['industry'] ?? null) === $industry->name)>{{ $industry->name }}</option>
+                        @endforeach
+                        <option value="_none" @selected(($filters['industry'] ?? null) === '_none')>No industry</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label class="form-label small">Assigned To</label>
                     <select name="assigned_user_id" class="form-select form-select-sm">
                         <option value="">Everyone</option>

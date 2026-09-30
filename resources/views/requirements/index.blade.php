@@ -42,6 +42,15 @@
                         @endforeach
                     </select>
                 </div>
+                <div style="flex: 0 1 170px; min-width: 140px;">
+                    <select name="system_module_id" class="form-select form-select-sm" data-select2-field aria-label="Module">
+                        <option value="">All modules</option>
+                        @foreach ($systemModules as $module)
+                            <option value="{{ $module->id }}" @selected(($filters['system_module_id'] ?? null) == $module->id)>{{ $module->name }}</option>
+                        @endforeach
+                        <option value="_none" @selected(($filters['system_module_id'] ?? null) === '_none')>No module</option>
+                    </select>
+                </div>
                 <div style="flex: 0 1 150px; min-width: 130px;">
                     <select name="status" class="form-select form-select-sm" data-select2-field aria-label="Status">
                         <option value="">All statuses</option>

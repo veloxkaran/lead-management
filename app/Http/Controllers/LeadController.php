@@ -33,7 +33,7 @@ class LeadController extends Controller
     {
         $this->authorize('viewAny', Lead::class);
 
-        $filters = $request->only(['search', 'company_name', 'status_id', 'assigned_user_id', 'created_by', 'source', 'archived', 'bs_year', 'bs_month']);
+        $filters = $request->only(['search', 'company_name', 'status_id', 'industry', 'assigned_user_id', 'created_by', 'source', 'archived', 'bs_year', 'bs_month']);
 
         $leads = $this->leadService->list($filters, 15, $request->user()->id);
 
@@ -42,6 +42,7 @@ class LeadController extends Controller
         return view('leads.index', [
             'leads' => $leads,
             'statuses' => LeadStatus::ordered()->get(),
+            'industries' => Industry::ordered()->get(),
             'users' => User::orderBy('name')->get(),
             'filters' => $filters,
             'bsMonths' => BsDate::MONTHS,
