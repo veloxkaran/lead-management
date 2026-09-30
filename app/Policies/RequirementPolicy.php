@@ -45,6 +45,16 @@ class RequirementPolicy
         return $requirement->isLockedFor($user) ? $this->lockedResponse() : true;
     }
 
+    /**
+     * "Assign to me" on the details page — anyone may pick up an open,
+     * unassigned requirement for themselves, unlike update(), which stays
+     * with the creator/assignee. Completed ones aren't claimable.
+     */
+    public function assignToSelf(User $user, Requirement $requirement): bool
+    {
+        return $requirement->assigned_to === null && ! $requirement->isCompleted();
+    }
+
     public function delete(User $user, Requirement $requirement): Response|bool
     {
         return $this->update($user, $requirement);

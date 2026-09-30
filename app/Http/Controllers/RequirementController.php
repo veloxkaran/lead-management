@@ -138,6 +138,17 @@ class RequirementController extends Controller
         ]);
     }
 
+    public function assignToMe(Request $request, Requirement $requirement): RedirectResponse
+    {
+        $this->authorize('assignToSelf', $requirement);
+
+        if (! $this->requirementService->assignToSelf($requirement, $request->user(), $request->ip(), $request->userAgent())) {
+            return back()->with('error', 'Someone else picked up this requirement first.');
+        }
+
+        return back()->with('success', 'Requirement assigned to you.');
+    }
+
     public function edit(Requirement $requirement): View
     {
         $this->authorize('update', $requirement);

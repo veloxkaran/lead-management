@@ -213,6 +213,31 @@ class RequirementService
         }
     }
 
+    /**
+     * Self-assignment from the details page. Conditional on assigned_to
+     * still being null in the same UPDATE, so two people clicking at once
+     * can't both win — false means someone else got there first. Logged
+     * like any other field change, but deliberately doesn't fire
+     * RequirementSaved: re-posting the whole requirement to Slack just
+     * because someone picked it up would be noise.
+     */
+    public function assignToSelf(Requirement $requirement, User $actor, ?string $ip, ?string $userAgent): bool
+    {
+        $claimed = Requirement::whereKey($requirement->getKey())
+            ->whereNull('assigned_to')
+            ->where('status', '!=', RequirementStatus::Completed->value)
+            ->update(['assigned_to' => $actor->id, 'updated_at' => now()]);
+
+        if (! $claimed) {
+            return false;
+        }
+
+        $requirement->refresh();
+        $this->logChange($requirement, $actor, $ip, $userAgent, ['assigned_to' => null], ['assigned_to' => $actor->id]);
+
+        return true;
+    }
+
     private function logChange(Requirement $requirement, User $actor, ?string $ip, ?string $userAgent, array $oldValues, array $newValues): void
     {
         ActivityLogEntry::create([

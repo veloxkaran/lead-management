@@ -43,6 +43,12 @@
                 <div class="col-md-3">
                     <div class="small text-muted">Assigned To</div>
                     <div class="small fw-semibold">{{ $supportTicket->assignee?->name ?? 'Unassigned' }}</div>
+                    @can('assignToSelf', $supportTicket)
+                        <form method="POST" action="{{ route('support-tickets.assign-to-me', $supportTicket) }}" class="mt-1">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-primary btn-sm py-0"><i class="bi bi-person-check"></i> Assign to me</button>
+                        </form>
+                    @endcan
                 </div>
                 <div class="col-12">
                     <div class="small text-muted">Details</div>

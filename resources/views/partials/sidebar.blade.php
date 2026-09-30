@@ -11,8 +11,9 @@
             <i class="bi bi-speedometer2"></i> <span class="nav-label">Dashboard</span>
         </a>
         @permitted('tasks')
-            <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->routeIs('tasks.*') ? 'active' : '' }}" title="Tasks" data-bs-toggle="tooltip" data-bs-placement="right">
+            <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->routeIs('tasks.*') ? 'active' : '' }} {{ isset($overdue['tasks']) ? 'nav-overdue' : '' }}" title="Tasks{{ isset($overdue['tasks']) ? ' · '.$overdue['tasks'].' overdue' : '' }}" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-list-task"></i> <span class="nav-label">Tasks</span>
+                @isset($overdue['tasks'])<span class="nav-overdue-flag">overdue</span>@endisset
             </a>
         @endpermitted
 
@@ -29,18 +30,21 @@
                 </a>
             @endpermitted
             @permitted('raw_data')
-                <a href="{{ route('raw-data.index') }}" class="nav-link {{ request()->routeIs('raw-data.*') ? 'active' : '' }}" title="Raw Data" data-bs-toggle="tooltip" data-bs-placement="right">
+                <a href="{{ route('raw-data.index') }}" class="nav-link {{ request()->routeIs('raw-data.*') ? 'active' : '' }} {{ isset($overdue['raw_data']) ? 'nav-overdue' : '' }}" title="Raw Data{{ isset($overdue['raw_data']) ? ' · '.$overdue['raw_data'].' overdue' : '' }}" data-bs-toggle="tooltip" data-bs-placement="right">
                     <i class="bi bi-inbox"></i> <span class="nav-label">Raw Data</span>
+                    @isset($overdue['raw_data'])<span class="nav-overdue-flag">overdue</span>@endisset
                 </a>
             @endpermitted
             @permitted('requirements')
-                <a href="{{ route('requirements.index') }}" class="nav-link {{ request()->routeIs('requirements.*') ? 'active' : '' }}" title="Requirements" data-bs-toggle="tooltip" data-bs-placement="right">
+                <a href="{{ route('requirements.index') }}" class="nav-link {{ request()->routeIs('requirements.*') ? 'active' : '' }} {{ isset($overdue['requirements']) ? 'nav-overdue' : '' }}" title="Requirements{{ isset($overdue['requirements']) ? ' · '.$overdue['requirements'].' overdue' : '' }}" data-bs-toggle="tooltip" data-bs-placement="right">
                     <i class="bi bi-list-check"></i> <span class="nav-label">Requirements</span>
+                    @isset($overdue['requirements'])<span class="nav-overdue-flag">overdue</span>@endisset
                 </a>
             @endpermitted
             @permitted('follow_ups')
-                <a href="{{ route('follow-ups.index') }}" class="nav-link {{ request()->routeIs('follow-ups.*') ? 'active' : '' }}" title="Follow Ups" data-bs-toggle="tooltip" data-bs-placement="right">
+                <a href="{{ route('follow-ups.index') }}" class="nav-link {{ request()->routeIs('follow-ups.*') ? 'active' : '' }} {{ isset($overdue['follow_ups']) ? 'nav-overdue' : '' }}" title="Follow Ups{{ isset($overdue['follow_ups']) ? ' · '.$overdue['follow_ups'].' overdue' : '' }}" data-bs-toggle="tooltip" data-bs-placement="right">
                     <i class="bi bi-bell"></i> <span class="nav-label">Follow Ups</span>
+                    @isset($overdue['follow_ups'])<span class="nav-overdue-flag">overdue</span>@endisset
                 </a>
             @endpermitted
         @endif

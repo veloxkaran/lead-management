@@ -285,6 +285,43 @@ body {
     }
 }
 
+// Menu items with something overdue (App\Services\OverdueScheduleService):
+// the icon and a small "overdue" flag blink together.
+@keyframes nav-overdue-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.app-sidebar .nav-link.nav-overdue {
+    position: relative;
+
+    i {
+        color: $danger;
+        animation: nav-overdue-blink 1.2s ease-in-out infinite;
+    }
+}
+
+.app-sidebar .nav-overdue-flag {
+    margin-left: auto;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.03em;
+    text-transform: lowercase;
+    color: #fff;
+    background: $danger;
+    animation: nav-overdue-blink 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-sidebar .nav-link.nav-overdue i,
+    .app-sidebar .nav-overdue-flag {
+        animation: none;
+    }
+}
+
 .app-sidebar .nav-section-title {
     text-transform: uppercase;
     font-size: 0.68rem;
@@ -418,6 +455,20 @@ body {
         justify-content: center;
         padding-inline: 0;
         gap: 0;
+    }
+
+    // No room for the word on the icon rail — shrink the flag to a dot on
+    // the icon's corner (the tooltip still says "N overdue").
+    html.sidebar-collapsed .app-sidebar .nav-overdue-flag {
+        position: absolute;
+        top: 3px;
+        right: calc(50% - 19px);
+        width: 9px;
+        height: 9px;
+        padding: 0;
+        margin: 0;
+        font-size: 0;
+        border: 2px solid var(--app-sidebar-bg);
     }
 }
 

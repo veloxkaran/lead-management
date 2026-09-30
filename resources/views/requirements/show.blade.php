@@ -51,6 +51,12 @@
                 <div class="col-md-3">
                     <div class="small text-muted">Assigned To</div>
                     <div class="small fw-semibold">{{ $requirement->assignee?->name ?? 'Unassigned' }}</div>
+                    @can('assignToSelf', $requirement)
+                        <form method="POST" action="{{ route('requirements.assign-to-me', $requirement) }}" class="mt-1">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-primary btn-sm py-0"><i class="bi bi-person-check"></i> Assign to me</button>
+                        </form>
+                    @endcan
                 </div>
                 @if ($requirement->isCompleted())
                     <div class="col-md-3">

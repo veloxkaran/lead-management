@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\RequirementStatus;
 use App\Models\SupportTicket;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
@@ -34,6 +35,15 @@ class SupportTicketPolicy
         }
 
         return true;
+    }
+
+    /**
+     * "Assign to me" on the details page — anyone may pick up an open,
+     * unassigned ticket for themselves. Completed ones aren't claimable.
+     */
+    public function assignToSelf(User $user, SupportTicket $ticket): bool
+    {
+        return $ticket->assigned_to === null && $ticket->status !== RequirementStatus::Completed;
     }
 
     public function delete(User $user, SupportTicket $ticket): bool

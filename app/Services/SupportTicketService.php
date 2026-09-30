@@ -221,6 +221,34 @@ class SupportTicketService
         return $ticket;
     }
 
+    /**
+     * Self-assignment from the details page. Conditional on assigned_to
+     * still being null in the same UPDATE, so two people clicking at once
+     * can't both win — false means someone else got there first. Logs the
+     * same Assigned entry assign() would.
+     */
+    public function assignToSelf(SupportTicket $ticket, User $actor): bool
+    {
+        $claimed = SupportTicket::whereKey($ticket->getKey())
+            ->whereNull('assigned_to')
+            ->where('status', '!=', RequirementStatus::Completed->value)
+            ->update(['assigned_to' => $actor->id, 'assigned_by' => $actor->id, 'assigned_at' => now(), 'updated_at' => now()]);
+
+        if (! $claimed) {
+            return false;
+        }
+
+        $ticket->assignmentLogs()->create([
+            'action' => SupportTicketAssignmentAction::Assigned,
+            'user_id' => $actor->id,
+            'performed_by' => $actor->id,
+        ]);
+
+        $ticket->refresh();
+
+        return true;
+    }
+
     public function addComment(SupportTicket $ticket, array $attributes, User $author): SupportTicketComment
     {
         return $ticket->comments()->create([

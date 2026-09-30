@@ -81,6 +81,17 @@ class SupportTicketController extends Controller
         ]);
     }
 
+    public function assignToMe(Request $request, SupportTicket $supportTicket): RedirectResponse
+    {
+        $this->authorize('assignToSelf', $supportTicket);
+
+        if (! $this->supportTickets->assignToSelf($supportTicket, $request->user())) {
+            return back()->with('error', 'Someone else picked up this ticket first.');
+        }
+
+        return back()->with('success', 'Support ticket assigned to you.');
+    }
+
     public function edit(SupportTicket $supportTicket): View
     {
         $this->authorize('update', $supportTicket);

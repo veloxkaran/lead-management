@@ -7,11 +7,13 @@ use App\Enums\PermissionModule;
 use App\Models\ActivityLogEntry;
 use App\Models\User;
 use App\Policies\OrganizationHierarchyPolicy;
+use App\Services\OverdueScheduleService;
 use App\Support\ActivityModules\ActivityLoggingRegistration;
 use App\Support\ActivityModules\ActivityModuleRegistry;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -34,6 +36,20 @@ class AppServiceProvider extends ServiceProvider
         $this->registerActivityLogging();
         $this->registerOrganizationHierarchyGates();
         $this->registerPermissionChecks();
+        $this->registerSidebarOverdueFlags();
+    }
+
+    /**
+     * Feeds the sidebar's blinking "overdue" flags — a handful of COUNT
+     * queries per page, only for the signed-in member's own items.
+     */
+    private function registerSidebarOverdueFlags(): void
+    {
+        View::composer('partials.sidebar', function ($view) {
+            $user = auth()->user();
+
+            $view->with('overdue', $user ? app(OverdueScheduleService::class)->countsFor($user) : []);
+        });
     }
 
     /**

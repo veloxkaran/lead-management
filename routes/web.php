@@ -144,6 +144,7 @@ Route::middleware('auth')->group(function () {
         Route::post('leads/{lead}/requirements', [RequirementController::class, 'storeForLead'])->name('leads.requirements.store');
         Route::post('requirements/{requirement}/comments', [RequirementCommentController::class, 'store'])->middleware('permission:requirements,update')->name('requirements.comments.store');
         Route::patch('requirements/{requirement}/status', [RequirementStatusController::class, 'update'])->name('requirements.status.update');
+        Route::post('requirements/{requirement}/assign-to-me', [RequirementController::class, 'assignToMe'])->name('requirements.assign-to-me');
         Route::get('requirement-attachments/{attachment}/download', [RequirementAttachmentController::class, 'download'])->name('requirement-attachments.download');
         Route::get('requirement-attachments/{attachment}/preview', [RequirementAttachmentController::class, 'preview'])->name('requirement-attachments.preview');
     });
@@ -177,6 +178,7 @@ Route::middleware('auth')->group(function () {
         Route::post('leads/{lead}/support-tickets', [SupportTicketController::class, 'storeForLead'])->name('leads.support-tickets.store');
         Route::post('support-tickets/{support_ticket}/comments', [SupportTicketCommentController::class, 'store'])->middleware('permission:support_tickets,update')->name('support-tickets.comments.store');
         Route::patch('support-tickets/{support_ticket}/comments/{comment}', [SupportTicketCommentController::class, 'update'])->name('support-tickets.comments.update');
+        Route::post('support-tickets/{support_ticket}/assign-to-me', [SupportTicketController::class, 'assignToMe'])->name('support-tickets.assign-to-me');
         Route::get('support-ticket-attachments/{attachment}/download', [SupportTicketAttachmentController::class, 'download'])->name('support-ticket-attachments.download');
         Route::get('support-ticket-attachments/{attachment}/preview', [SupportTicketAttachmentController::class, 'preview'])->name('support-ticket-attachments.preview');
     });
