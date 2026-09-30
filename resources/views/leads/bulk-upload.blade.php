@@ -21,8 +21,17 @@
                 <div class="card-body">
                     <h6 class="fw-semibold mb-2"><i class="bi bi-2-circle"></i> Upload your file</h6>
                     <p class="small text-muted mb-3">
-                        Required columns: <strong>Company Name</strong>, <strong>Contact Person</strong>.
-                        Optional: Email, Phone, Industry, Source. Accepted formats: .xlsx, .xls, .csv.
+                        Required columns: <strong>Company Name</strong>, <strong>Contact Person</strong>, <strong>Industry</strong>
+                        (must match an industry set by your administrator).
+                        Optional: Email, Phone, Source. Accepted formats: .xlsx, .xls, .csv.
+                    </p>
+                    <p class="small text-muted mb-3">
+                        Industries:
+                        @forelse ($industries as $industry)
+                            <span class="badge bg-light text-dark border">{{ $industry->name }}</span>
+                        @empty
+                            <span class="text-warning">none set up yet — ask an administrator to add them before importing.</span>
+                        @endforelse
                     </p>
                     <form method="POST" action="{{ route('leads.bulk-upload.store') }}" enctype="multipart/form-data">
                         @csrf

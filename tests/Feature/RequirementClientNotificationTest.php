@@ -9,6 +9,7 @@ use App\Models\EmailLog;
 use App\Models\Lead;
 use App\Models\Requirement;
 use App\Models\Setting;
+use App\Models\SystemModule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -27,6 +28,7 @@ class RequirementClientNotificationTest extends TestCase
         $lead = Lead::factory()->create(['email' => 'jordan@acme.test']);
 
         $this->actingAs($user)->post(route('leads.requirements.store', $lead), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'requirement' => 'Needs a custom integration',
             'priority' => 'high',
         ])->assertRedirect();
@@ -50,6 +52,7 @@ class RequirementClientNotificationTest extends TestCase
         $lead = Lead::factory()->create(['email' => 'client@example.test']);
 
         $this->actingAs($user)->post(route('leads.requirements.store', $lead), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'requirement' => '<p><span style="color:rgb(0,0,0);">Leave &amp; encashment gaps:</span></p>'
                 .'<ol><li><strong>Carry forward</strong> not supported</li><li>90-day limit lapses</li></ol>',
             'priority' => 'high',
@@ -84,6 +87,7 @@ class RequirementClientNotificationTest extends TestCase
 
         // Shape of what Quill's table module produces for a pasted table.
         $this->actingAs($user)->post(route('leads.requirements.store', $lead), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'requirement' => '<table><tbody>'
                 .'<tr><td data-row="r1">Requirement (Client)</td><td data-row="r1">Gap</td></tr>'
                 .'<tr><td data-row="r2"><strong>Substitute Leave</strong> encashed</td><td data-row="r2">❌ Not supported</td></tr>'
@@ -113,6 +117,7 @@ class RequirementClientNotificationTest extends TestCase
         $lead = Lead::factory()->create(['company_name' => 'Acme Corp', 'contact_person' => 'Jordan Smith', 'email' => 'jordan@acme.test']);
 
         $this->actingAs($user)->post(route('leads.requirements.store', $lead), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'requirement' => 'Needs a custom integration',
             'priority' => 'high',
         ])->assertRedirect();
@@ -170,6 +175,7 @@ class RequirementClientNotificationTest extends TestCase
         $requirement = Requirement::factory()->create(['lead_id' => $lead->id, 'status' => RequirementStatus::Pending]);
 
         $this->actingAs($superAdmin)->put(route('requirements.update', $requirement), [
+            'system_module_id' => $requirement->system_module_id,
             'requirement' => $requirement->requirement,
             'priority' => $requirement->priority->value,
             'status' => RequirementStatus::Pending->value,
@@ -187,6 +193,7 @@ class RequirementClientNotificationTest extends TestCase
         $lead = Lead::factory()->create(['email' => null]);
 
         $this->actingAs($user)->post(route('leads.requirements.store', $lead), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'requirement' => 'Some requirement',
             'priority' => 'medium',
         ])->assertRedirect();
@@ -204,6 +211,7 @@ class RequirementClientNotificationTest extends TestCase
         $lead = Lead::factory()->create(['email' => 'client@example.test']);
 
         $this->actingAs($user)->post(route('leads.requirements.store', $lead), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'requirement' => 'Some requirement',
             'priority' => 'medium',
         ])->assertRedirect();

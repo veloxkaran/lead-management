@@ -6,6 +6,7 @@ use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
 use App\Models\Lead;
 use App\Models\Requirement;
+use App\Models\SystemModule;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,6 +21,7 @@ class RequirementFactory extends Factory
     {
         return [
             'lead_id' => Lead::factory(),
+            'system_module_id' => SystemModule::factory(),
             'requirement' => fake()->sentence(12),
             'priority' => fake()->randomElement(RequirementPriority::cases())->value,
             // Open statuses only — a completed requirement records completed_at

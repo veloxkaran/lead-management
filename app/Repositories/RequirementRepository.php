@@ -43,7 +43,7 @@ class RequirementRepository extends BaseRepository
 
     private function orderedForDisplay($query)
     {
-        return $this->applyDisplayOrder($query->with(['assignee', 'creator'])->withCount('comments'));
+        return $this->applyDisplayOrder($query->with(['systemModule', 'assignee', 'creator'])->withCount('comments'));
     }
 
     /**
@@ -60,7 +60,7 @@ class RequirementRepository extends BaseRepository
 
     private function filteredQuery(array $filters): Builder
     {
-        $query = $this->query()->with(['lead', 'assignee', 'creator', 'attachments'])->withCount('comments');
+        $query = $this->query()->with(['lead', 'systemModule', 'assignee', 'creator', 'attachments'])->withCount('comments');
 
         return $this->applyDisplayOrder($this->applyFilters($query, $filters));
     }

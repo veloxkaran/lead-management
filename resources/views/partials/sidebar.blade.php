@@ -92,6 +92,12 @@
             <a href="{{ route('lead-statuses.index') }}" class="nav-link {{ request()->routeIs('lead-statuses.*') ? 'active' : '' }}" title="Lead Statuses" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-signpost-split"></i> <span class="nav-label">Lead Statuses</span>
             </a>
+            <a href="{{ route('industries.index') }}" class="nav-link {{ request()->routeIs('industries.*') ? 'active' : '' }}" title="Industries" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-buildings"></i> <span class="nav-label">Industries</span>
+            </a>
+            <a href="{{ route('system-modules.index') }}" class="nav-link {{ request()->routeIs('system-modules.*') ? 'active' : '' }}" title="System Modules" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-grid-3x3-gap"></i> <span class="nav-label">System Modules</span>
+            </a>
             <a href="{{ route('settings.edit') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" title="Settings" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-gear"></i> <span class="nav-label">Settings</span>
             </a>

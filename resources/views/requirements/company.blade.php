@@ -74,6 +74,9 @@
                                     <div>
                                         <a href="{{ route('requirements.show', $requirement) }}" class="text-decoration-none fw-semibold">{{ $requirement->summary(80) }}</a>
                                         <div class="text-muted">
+                                            @if ($requirement->systemModule)
+                                                <span class="me-2" title="Module"><i class="bi bi-grid-3x3-gap"></i> {{ $requirement->systemModule->name }}</span>
+                                            @endif
                                             @if ($requirement->comments_count)
                                                 <span class="me-2"><i class="bi bi-chat-left-text"></i> {{ $requirement->comments_count }}</span>
                                             @endif
@@ -207,6 +210,9 @@
                     </div>
                     <div class="modal-body">
                         <div class="row g-3">
+                            <div class="col-md-12">
+                                <x-system-module-select :modules="$systemModules" />
+                            </div>
                             <div class="col-md-12">
                                 <label class="form-label small fw-semibold">Title</label>
                                 <input type="text" name="title" class="form-control" value="{{ old('title') }}" maxlength="255">

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lead;
 use App\Models\Requirement;
+use App\Models\SystemModule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -46,6 +47,7 @@ class RequirementSprintRemovedTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)->post(route('requirements.store'), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'lead_id' => Lead::factory()->create()->id,
             'requirement' => 'Needs a custom dashboard',
             'priority' => 'medium',
@@ -61,6 +63,7 @@ class RequirementSprintRemovedTest extends TestCase
         $requirement = Requirement::factory()->create(['created_by' => $user->id, 'sprint' => 'Sprint 42']);
 
         $this->actingAs($user)->put(route('requirements.update', $requirement), [
+            'system_module_id' => $requirement->system_module_id,
             'requirement' => 'Updated text',
             'priority' => $requirement->priority->value,
             'status' => $requirement->status->value,

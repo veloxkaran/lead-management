@@ -116,6 +116,9 @@
                             <td>
                                 <a href="{{ route('requirements.show', $requirement) }}" class="text-decoration-none fw-semibold text-body">{{ $requirement->summary(90) }}</a>
                                 <div class="small text-muted d-flex flex-wrap gap-2">
+                                    @if ($requirement->systemModule)
+                                        <span title="Module"><i class="bi bi-grid-3x3-gap"></i> {{ $requirement->systemModule->name }}</span>
+                                    @endif
                                     @if ($requirement->lead)
                                         <a href="{{ route('requirements.company', $requirement->lead) }}" class="text-decoration-none text-muted" title="All requirements for {{ $requirement->lead->company_name }}">
                                             <i class="bi bi-building"></i> {{ $requirement->lead->company_name }}
@@ -198,6 +201,9 @@
                                     @endforeach
                                 </select>
                                 @error('lead_id')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-12">
+                                <x-system-module-select :modules="$systemModules" />
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label small fw-semibold">Title</label>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\RawData\AssignRawDataRequest;
 use App\Http\Requests\RawData\ConvertRawDataRequest;
 use App\Http\Requests\RawData\StoreRawDataRequest;
+use App\Models\Industry;
 use App\Models\RawData;
 use App\Models\User;
 use App\Services\RawDataService;
@@ -53,6 +54,7 @@ class RawDataController extends Controller
         return view('raw-data.show', [
             'rawData' => $rawData,
             'users' => User::orderBy('name')->get(),
+            'industries' => Industry::ordered()->get(),
         ]);
     }
 

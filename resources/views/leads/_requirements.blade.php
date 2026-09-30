@@ -1,6 +1,9 @@
 <form method="POST" action="{{ route('leads.requirements.store', $lead) }}" class="row g-2 mb-3">
     @csrf
-    <div class="col-md-5">
+    <div class="col-md-2">
+        <x-system-module-select :modules="$systemModules" :label="false" compact />
+    </div>
+    <div class="col-md-3">
         <textarea name="requirement" rows="1" class="form-control form-control-sm" placeholder="Describe the requirement" required style="resize: none; overflow: hidden;" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'"></textarea>
     </div>
     <div class="col-md-2">

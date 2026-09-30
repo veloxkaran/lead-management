@@ -32,6 +32,10 @@
                     <div class="requirement-rich-content">{!! $requirement->requirementHtml() !!}</div>
                 </div>
                 <div class="col-md-3">
+                    <div class="small text-muted">Module</div>
+                    <div class="small fw-semibold">{{ $requirement->systemModule?->name ?? '—' }}</div>
+                </div>
+                <div class="col-md-3">
                     <div class="small text-muted">Priority</div>
                     <x-status-badge :status="$requirement->priority" />
                 </div>

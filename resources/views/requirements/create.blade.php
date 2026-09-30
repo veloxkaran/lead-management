@@ -21,6 +21,9 @@
                         @error('lead_id')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-12">
+                        <x-system-module-select :modules="$systemModules" />
+                    </div>
+                    <div class="col-md-12">
                         <label class="form-label small fw-semibold">Title</label>
                         <input type="text" name="title" class="form-control" value="{{ old('title') }}" maxlength="255">
                         @error('title')<div class="text-danger small mt-1">{{ $message }}</div>@enderror

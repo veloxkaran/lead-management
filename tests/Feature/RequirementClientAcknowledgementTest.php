@@ -18,6 +18,7 @@ class RequirementClientAcknowledgementTest extends TestCase
         $requirement = Requirement::factory()->create(['created_by' => $user->id]);
 
         $this->actingAs($user)->put(route('requirements.update', $requirement), [
+            'system_module_id' => $requirement->system_module_id,
             'requirement' => $requirement->requirement,
             'priority' => $requirement->priority->value,
             'status' => $requirement->status->value,

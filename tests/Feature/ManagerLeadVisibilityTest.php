@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
+use App\Models\Industry;
 use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -42,6 +43,7 @@ class ManagerLeadVisibilityTest extends TestCase
         $this->actingAs($manager)->get(route('leads.show', $lead))->assertOk();
 
         $this->actingAs($manager)->put(route('leads.update', $lead), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Updated by Manager',
             'contact_person' => $lead->contact_person,
         ])->assertRedirect(route('leads.show', $lead));

@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Lead;
 
+use App\Models\Industry;
 use App\Rules\NotDuplicateLeadName;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateLeadRequest extends FormRequest
 {
@@ -21,7 +23,7 @@ class UpdateLeadRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string'],
             'website' => ['nullable', 'string', 'max:255'],
-            'industry' => ['nullable', 'string', 'max:255'],
+            'industry' => ['required', 'string', Rule::in(Industry::pluck('name')->all())],
             'number_of_employees' => ['nullable', 'integer', 'min:0'],
             'business_details' => ['nullable', 'string'],
             'about_client_business' => ['nullable', 'string'],
@@ -29,6 +31,13 @@ class UpdateLeadRequest extends FormRequest
             'opportunity_cost' => ['nullable', 'numeric', 'min:0'],
             'achieved_cost' => ['nullable', 'numeric', 'min:0'],
             'assigned_user_id' => ['nullable', 'exists:users,id'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'industry.in' => 'Choose an industry from the list set by your administrator.',
         ];
     }
 }

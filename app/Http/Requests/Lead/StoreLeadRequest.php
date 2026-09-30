@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Lead;
 
+use App\Models\Industry;
 use App\Rules\NotDuplicateLeadName;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreLeadRequest extends FormRequest
 {
@@ -21,7 +23,7 @@ class StoreLeadRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string'],
             'website' => ['nullable', 'string', 'max:255'],
-            'industry' => ['nullable', 'string', 'max:255'],
+            'industry' => ['required', 'string', Rule::in(Industry::pluck('name')->all())],
             'number_of_employees' => ['nullable', 'integer', 'min:0'],
             'business_details' => ['nullable', 'string'],
             'about_client_business' => ['nullable', 'string'],
@@ -30,6 +32,13 @@ class StoreLeadRequest extends FormRequest
             'achieved_cost' => ['nullable', 'numeric', 'min:0'],
             'assigned_user_id' => ['nullable', 'exists:users,id'],
             'lead_status_id' => ['nullable', 'exists:lead_statuses,id'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'industry.in' => 'Choose an industry from the list set by your administrator.',
         ];
     }
 }

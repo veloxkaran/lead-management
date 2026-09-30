@@ -10,6 +10,7 @@ use App\Http\Requests\Requirement\UpdateRequirementRequest;
 use App\Models\ActivityLogEntry;
 use App\Models\Lead;
 use App\Models\Requirement;
+use App\Models\SystemModule;
 use App\Models\User;
 use App\Services\RequirementService;
 use App\Support\RequirementSummary;
@@ -47,6 +48,7 @@ class RequirementController extends Controller
             'companies' => Lead::whereHas('requirements')->orderBy('company_name')->get(['id', 'company_name']),
             'leads' => Lead::active()->orderBy('company_name')->get(),
             'users' => User::orderBy('name')->get(),
+            'systemModules' => SystemModule::ordered()->get(),
         ]);
     }
 
@@ -63,6 +65,7 @@ class RequirementController extends Controller
             'statuses' => RequirementStatus::cases(),
             'priorities' => RequirementPriority::cases(),
             'users' => User::orderBy('name')->get(),
+            'systemModules' => SystemModule::ordered()->get(),
         ]);
     }
 
@@ -95,6 +98,7 @@ class RequirementController extends Controller
             'leads' => Lead::orderBy('company_name')->get(),
             'priorities' => RequirementPriority::cases(),
             'users' => User::orderBy('name')->get(),
+            'systemModules' => SystemModule::ordered()->get(),
         ]);
     }
 
@@ -130,7 +134,7 @@ class RequirementController extends Controller
     {
         $this->authorize('view', $requirement);
 
-        $requirement->load('lead', 'creator', 'assignee', 'comments.author', 'attachments');
+        $requirement->load('lead', 'systemModule', 'creator', 'assignee', 'comments.author', 'attachments');
 
         return view('requirements.show', [
             'requirement' => $requirement,
@@ -160,6 +164,7 @@ class RequirementController extends Controller
             'priorities' => RequirementPriority::cases(),
             'statuses' => RequirementStatus::cases(),
             'users' => User::orderBy('name')->get(),
+            'systemModules' => SystemModule::ordered()->get(),
             'changeLog' => $this->changeLogFor($requirement),
         ]);
     }

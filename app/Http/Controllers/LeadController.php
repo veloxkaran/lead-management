@@ -10,8 +10,10 @@ use App\Enums\TaskPriority;
 use App\Http\Requests\Lead\StoreLeadRequest;
 use App\Http\Requests\Lead\UpdateLeadRequest;
 use App\Models\ActivityLogEntry;
+use App\Models\Industry;
 use App\Models\Lead;
 use App\Models\LeadStatus;
+use App\Models\SystemModule;
 use App\Models\User;
 use App\Services\LeadService;
 use App\Support\BsDate;
@@ -54,6 +56,7 @@ class LeadController extends Controller
         return view('leads.create', [
             'statuses' => LeadStatus::ordered()->get(),
             'users' => User::orderBy('name')->get(),
+            'industries' => Industry::ordered()->get(),
         ]);
     }
 
@@ -126,6 +129,7 @@ class LeadController extends Controller
             'activityTypes' => array_values(array_filter(ActivityType::cases(), fn (ActivityType $type) => $type !== ActivityType::TrainingUpdate)),
             'reminderTypes' => ReminderType::cases(),
             'priorities' => RequirementPriority::cases(),
+            'systemModules' => SystemModule::ordered()->get(),
             'taskPriorities' => TaskPriority::cases(),
             'changeLog' => $changeLog,
         ]);
@@ -183,6 +187,7 @@ class LeadController extends Controller
         return view('leads.edit', [
             'lead' => $lead,
             'users' => User::orderBy('name')->get(),
+            'industries' => Industry::ordered()->get(),
         ]);
     }
 

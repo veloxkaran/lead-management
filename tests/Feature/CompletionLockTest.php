@@ -31,6 +31,7 @@ class CompletionLockTest extends TestCase
             'requirement' => $requirement->requirement,
             'priority' => $requirement->priority->value,
             'status' => $status->value,
+            'system_module_id' => $requirement->system_module_id,
         ];
     }
 

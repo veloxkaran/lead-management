@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
+use App\Models\Industry;
 use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,6 +35,7 @@ class LeadHierarchyVisibilityTest extends TestCase
         $this->actingAs($senior)->get(route('leads.show', $lead))->assertOk();
 
         $this->actingAs($senior)->put(route('leads.update', $lead), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Updated by Senior Rep',
             'contact_person' => $lead->contact_person,
         ])->assertRedirect(route('leads.show', $lead));

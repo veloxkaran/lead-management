@@ -1,6 +1,13 @@
 <div class="card border-0 shadow-sm mt-3">
     <div class="card-header bg-white fw-semibold"><i class="bi bi-clock-history"></i> Change Log</div>
     <div class="card-body">
+        @php
+            // Module changes are logged as ids — resolve them to names once.
+            $moduleNames = \App\Models\SystemModule::whereIn('id', $changeLog->flatMap(fn ($entry) => [
+                $entry->old_values['system_module_id'] ?? null,
+                $entry->new_values['system_module_id'] ?? null,
+            ])->filter()->unique())->pluck('name', 'id');
+        @endphp
         @forelse ($changeLog as $entry)
             <div class="border-bottom pb-2 mb-2 small">
                 <span class="fw-semibold">{{ $entry->user?->name ?? 'Unknown' }}</span>
@@ -10,6 +17,11 @@
                         @php
                             $oldDisplay = $entry->old_values[$field] ?? null;
                             $newDisplay = $newValue;
+                            if ($field === 'system_module_id') {
+                                $field = 'module';
+                                $oldDisplay = $oldDisplay !== null ? ($moduleNames[$oldDisplay] ?? "#{$oldDisplay} (deleted)") : null;
+                                $newDisplay = $newDisplay !== null ? ($moduleNames[$newDisplay] ?? "#{$newDisplay} (deleted)") : null;
+                            }
                             if ($field === 'requirement') {
                                 // Rich-text content — the diff shows a plain-text
                                 // snippet rather than raw HTML tags.

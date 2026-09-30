@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Industry;
 use App\Models\Lead;
 use App\Models\LeadStatus;
 use App\Models\User;
@@ -48,6 +49,7 @@ class LeadBulkUploadTest extends TestCase
     {
         $user = User::factory()->create();
         $status = LeadStatus::factory()->create(['is_default' => true]);
+        Industry::factory()->create(['name' => 'Retail']);
 
         $csv = "Company Name,Contact Person,Email,Phone,Industry,Source\n"
             ."Acme Test Co,John Doe,john@acme.test,1234567890,Retail,Referral\n";
@@ -73,10 +75,11 @@ class LeadBulkUploadTest extends TestCase
     {
         $user = User::factory()->create();
         LeadStatus::factory()->create(['is_default' => true]);
+        Industry::factory()->create(['name' => 'Retail']);
 
         $csv = "Company Name,Contact Person,Email,Phone,Industry,Source\n"
-            ."Good Co,Jane Doe,jane@good.test,,,\n"
-            .",Missing Company Name,x@x.test,,,\n";
+            ."Good Co,Jane Doe,jane@good.test,,Retail,\n"
+            .",Missing Company Name,x@x.test,,Retail,\n";
 
         $file = UploadedFile::fake()->createWithContent('leads.csv', $csv);
 
@@ -95,9 +98,10 @@ class LeadBulkUploadTest extends TestCase
         $user = User::factory()->create();
         LeadStatus::factory()->create(['is_default' => true]);
         Lead::factory()->create(['company_name' => 'Acme Corporation']);
+        Industry::factory()->create(['name' => 'Retail']);
 
         $csv = "Company Name,Contact Person,Email,Phone,Industry,Source\n"
-            ."Acme Corporation,John Doe,,,,\n";
+            ."Acme Corporation,John Doe,,,Retail,\n";
 
         $file = UploadedFile::fake()->createWithContent('leads.csv', $csv);
 
@@ -105,5 +109,39 @@ class LeadBulkUploadTest extends TestCase
 
         $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 1);
         $this->assertSame(1, Lead::where('company_name', 'Acme Corporation')->count());
+    }
+
+    public function test_industry_is_matched_case_insensitively_and_stored_as_listed(): void
+    {
+        $user = User::factory()->create();
+        LeadStatus::factory()->create(['is_default' => true]);
+        Industry::factory()->create(['name' => 'Retail']);
+
+        $csv = "Company Name,Contact Person,Email,Phone,Industry,Source\n"
+            ."Casing Co,Jane Doe,,,  retail ,\n";
+
+        $file = UploadedFile::fake()->createWithContent('leads.csv', $csv);
+
+        $this->actingAs($user)->post(route('leads.bulk-upload.store'), ['file' => $file]);
+
+        $this->assertSame('Retail', Lead::firstWhere('company_name', 'Casing Co')?->industry);
+    }
+
+    public function test_rows_with_a_missing_or_unlisted_industry_are_skipped(): void
+    {
+        $user = User::factory()->create();
+        LeadStatus::factory()->create(['is_default' => true]);
+        Industry::factory()->create(['name' => 'Retail']);
+
+        $csv = "Company Name,Contact Person,Email,Phone,Industry,Source\n"
+            ."Blank Industry Co,Jane Doe,,,,\n"
+            ."Unlisted Industry Co,John Doe,,,Aerospace,\n";
+
+        $file = UploadedFile::fake()->createWithContent('leads.csv', $csv);
+
+        $response = $this->actingAs($user)->post(route('leads.bulk-upload.store'), ['file' => $file]);
+
+        $response->assertSessionHas('importFailures', fn ($failures) => count($failures) === 2);
+        $this->assertSame(0, Lead::count());
     }
 }

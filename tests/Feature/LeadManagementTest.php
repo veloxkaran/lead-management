@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Industry;
 use App\Models\Lead;
 use App\Models\LeadStatus;
 use App\Models\User;
@@ -25,6 +26,7 @@ class LeadManagementTest extends TestCase
         $status = LeadStatus::factory()->create(['is_default' => true]);
 
         $response = $this->actingAs($user)->post(route('leads.store'), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Acme Corp',
             'contact_person' => 'Jane Doe',
             'email' => 'jane@acme.test',

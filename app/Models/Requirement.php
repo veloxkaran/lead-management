@@ -20,7 +20,7 @@ class Requirement extends Model
     use BelongsToCompany, HasFactory, LocksAfterCompletion, TracksResolutionTime;
 
     protected $fillable = [
-        'company_id', 'lead_id', 'title', 'requirement', 'priority', 'status', 'due_date',
+        'company_id', 'lead_id', 'system_module_id', 'title', 'requirement', 'priority', 'status', 'due_date',
         'client_acknowledged_at', 'assigned_to', 'created_by', 'completed_at',
     ];
 
@@ -115,6 +115,11 @@ class Requirement extends Model
     public function lead(): BelongsTo
     {
         return $this->belongsTo(Lead::class);
+    }
+
+    public function systemModule(): BelongsTo
+    {
+        return $this->belongsTo(SystemModule::class);
     }
 
     public function assignee(): BelongsTo

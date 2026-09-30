@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Industry;
 use App\Models\Lead;
 use App\Models\LeadStatus;
 use App\Models\User;
@@ -18,6 +19,7 @@ class LeadValidationAndAgeTest extends TestCase
         Lead::factory()->create(['company_name' => 'Acme Corporation Group']);
 
         $response = $this->actingAs($user)->post(route('leads.store'), [
+            'industry' => Industry::factory()->create()->name,
             // one char added to a long-enough name to clear the 90% match threshold (~97.8%)
             'company_name' => 'Acme Corporation Groups',
             'contact_person' => 'Jane Doe',
@@ -33,6 +35,7 @@ class LeadValidationAndAgeTest extends TestCase
         Lead::factory()->create(['company_name' => 'Acme Corporation']);
 
         $response = $this->actingAs($user)->post(route('leads.store'), [
+            'industry' => Industry::factory()->create()->name,
             // a transposed-letter typo — ~93.75% similar: below the old 97% threshold
             // (would have been accepted before) but above the new 90% one.
             'company_name' => 'Acme Corporatoin',
@@ -50,6 +53,7 @@ class LeadValidationAndAgeTest extends TestCase
         Lead::factory()->create(['company_name' => 'Acme Corporation']);
 
         $response = $this->actingAs($user)->post(route('leads.store'), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Globex Industries',
             'contact_person' => 'Jane Doe',
             'lead_status_id' => $status->id,
@@ -69,6 +73,7 @@ class LeadValidationAndAgeTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->put(route('leads.update', $lead), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Acme Corporation',
             'contact_person' => $lead->contact_person,
         ]);

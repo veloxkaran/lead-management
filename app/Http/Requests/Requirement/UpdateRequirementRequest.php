@@ -18,6 +18,7 @@ class UpdateRequirementRequest extends FormRequest
     {
         return [
             'title' => ['nullable', 'string', 'max:255'],
+            'system_module_id' => ['required', 'exists:system_modules,id'],
             'requirement' => ['required', 'string'],
             'priority' => ['required', new Enum(RequirementPriority::class)],
             'status' => ['required', new Enum(RequirementStatus::class)],

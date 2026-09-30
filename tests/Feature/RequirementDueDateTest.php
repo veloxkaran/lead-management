@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lead;
 use App\Models\Requirement;
+use App\Models\SystemModule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -18,6 +19,7 @@ class RequirementDueDateTest extends TestCase
         $lead = Lead::factory()->create();
 
         $this->actingAs($user)->from(route('leads.show', $lead))->post(route('leads.requirements.store', $lead), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'requirement' => 'Needs SSO integration',
             'priority' => 'high',
             'due_date' => '2026-08-15',
@@ -39,6 +41,7 @@ class RequirementDueDateTest extends TestCase
         ]);
 
         $this->actingAs($user)->put(route('requirements.update', $requirement), [
+            'system_module_id' => $requirement->system_module_id,
             'requirement' => $requirement->requirement,
             'priority' => $requirement->priority->value,
             'status' => $requirement->status->value,
@@ -73,6 +76,7 @@ class RequirementDueDateTest extends TestCase
         ]);
 
         $this->actingAs($user)->put(route('requirements.update', $requirement), [
+            'system_module_id' => $requirement->system_module_id,
             'requirement' => $requirement->requirement,
             'priority' => $requirement->priority->value,
             'status' => $requirement->status->value,

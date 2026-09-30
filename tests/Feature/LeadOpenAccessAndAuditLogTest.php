@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\UserRole;
 use App\Models\ActivityLogEntry;
+use App\Models\Industry;
 use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +24,7 @@ class LeadOpenAccessAndAuditLogTest extends TestCase
         $this->actingAs($stranger)->get(route('leads.show', $lead))->assertOk();
 
         $this->actingAs($stranger)->put(route('leads.update', $lead), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Renamed by stranger',
             'contact_person' => $lead->contact_person,
         ])->assertRedirect(route('leads.show', $lead));
@@ -36,6 +38,7 @@ class LeadOpenAccessAndAuditLogTest extends TestCase
         $lead = Lead::factory()->create(['company_name' => 'Original Co', 'contact_person' => 'Jane Doe']);
 
         $this->actingAs($actor)->put(route('leads.update', $lead), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Renamed Co',
             'contact_person' => 'Jane Doe',
         ])->assertRedirect();
@@ -59,6 +62,7 @@ class LeadOpenAccessAndAuditLogTest extends TestCase
         $lead = Lead::factory()->create(['company_name' => 'Original Co', 'contact_person' => 'Jane Doe']);
 
         $this->actingAs($actor)->put(route('leads.update', $lead), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Renamed Co',
             'contact_person' => 'Jane Doe',
         ]);
@@ -75,9 +79,11 @@ class LeadOpenAccessAndAuditLogTest extends TestCase
     public function test_a_no_op_update_does_not_create_a_log_entry(): void
     {
         $actor = User::factory()->create();
-        $lead = Lead::factory()->create(['company_name' => 'Same Co', 'contact_person' => 'Jane Doe']);
+        $industry = Industry::factory()->create();
+        $lead = Lead::factory()->create(['company_name' => 'Same Co', 'contact_person' => 'Jane Doe', 'industry' => $industry->name]);
 
         $this->actingAs($actor)->put(route('leads.update', $lead), [
+            'industry' => $industry->name,
             'company_name' => 'Same Co',
             'contact_person' => 'Jane Doe',
         ]);

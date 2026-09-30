@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\RawData;
 
+use App\Models\Industry;
 use App\Rules\NotDuplicateLeadName;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ConvertRawDataRequest extends FormRequest
 {
@@ -18,19 +20,28 @@ class ConvertRawDataRequest extends FormRequest
     }
 
     /**
-     * Company Name is the only field Raw Data doesn't already have that a
-     * Lead requires — Contact Person/Phone come pre-filled from the entry
-     * but stay editable here in case of a typo caught at conversion time.
+     * Company Name and Industry are the only fields Raw Data doesn't already
+     * have that a Lead requires — Contact Person/Phone come pre-filled from
+     * the entry but stay editable here in case of a typo caught at
+     * conversion time.
      */
     public function rules(): array
     {
         return [
             'company_name' => ['required', 'string', 'max:255', new NotDuplicateLeadName],
             'contact_person' => ['required', 'string', 'max:255'],
+            'industry' => ['required', 'string', Rule::in(Industry::pluck('name')->all())],
             'number_of_employees' => ['nullable', 'integer', 'min:0'],
             'phone' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
             'source' => ['nullable', 'string', 'max:20'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'industry.in' => 'Choose an industry from the list set by your administrator.',
         ];
     }
 }

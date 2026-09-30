@@ -169,6 +169,9 @@
                                 @error('company_name')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                             </div>
                             <div class="mb-3">
+                                <x-industry-select :industries="$industries" />
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label small fw-semibold">Number of Employees (optional)</label>
                                 <input type="number" min="0" name="number_of_employees" class="form-control" value="{{ old('number_of_employees', $rawData->number_of_employees) }}">
                                 @error('number_of_employees')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
@@ -201,6 +204,16 @@
                     </form>
                 </div>
             </div>
+
+            @if ($errors->hasAny(['company_name', 'contact_person', 'industry', 'number_of_employees', 'phone', 'email', 'source']))
+                @push('scripts')
+                    <script>
+                        document.addEventListener('DOMContentLoaded', () => {
+                            new bootstrap.Modal(document.getElementById('convertToLeadModal')).show();
+                        });
+                    </script>
+                @endpush
+            @endif
         @endif
     @endcan
 @endsection

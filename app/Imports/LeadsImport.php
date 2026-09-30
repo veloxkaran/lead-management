@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Models\Industry;
 use App\Models\User;
 use App\Rules\NotDuplicateLeadName;
 use App\Services\LeadService;
@@ -29,8 +30,19 @@ class LeadsImport implements ToCollection, WithHeadingRow, WithValidation, Skips
 
     private int $importedCount = 0;
 
+    /**
+     * Admin-managed industry names keyed by their lowercased form, so a
+     * spreadsheet's "finance" is accepted and stored as the list's "Finance".
+     *
+     * @var array<string, string>
+     */
+    private array $industries;
+
     public function __construct(private LeadService $leadService, private User $creator)
     {
+        $this->industries = Industry::pluck('name')
+            ->mapWithKeys(fn (string $name) => [mb_strtolower($name) => $name])
+            ->all();
     }
 
     /**
@@ -48,7 +60,11 @@ class LeadsImport implements ToCollection, WithHeadingRow, WithValidation, Skips
             'contact_person' => ['required', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'max:30'],
-            'industry' => ['nullable', 'max:255'],
+            'industry' => ['required', function (string $attribute, mixed $value, \Closure $fail) {
+                if ($this->canonicalIndustry($value) === null) {
+                    $fail('The industry must match one of the industries set by your administrator.');
+                }
+            }],
             'source' => ['nullable', 'max:255'],
         ];
     }
@@ -61,12 +77,17 @@ class LeadsImport implements ToCollection, WithHeadingRow, WithValidation, Skips
                 'contact_person' => $row['contact_person'],
                 'email' => $row['email'] ?? null,
                 'phone' => $row['phone'] ?? null,
-                'industry' => $row['industry'] ?? null,
+                'industry' => $this->canonicalIndustry($row['industry']),
                 'source' => $row['source'] ?? null,
             ], $this->creator);
 
             $this->importedCount++;
         }
+    }
+
+    private function canonicalIndustry(mixed $value): ?string
+    {
+        return $this->industries[mb_strtolower(trim((string) $value))] ?? null;
     }
 
     public function importedCount(): int

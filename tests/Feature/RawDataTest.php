@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\RawDataStatus;
+use App\Models\Industry;
 use App\Models\Lead;
 use App\Models\LeadStatus;
 use App\Models\RawData;
@@ -225,6 +226,7 @@ class RawDataTest extends TestCase
         $entry = RawData::factory()->create(['contact_person' => 'Jane Doe', 'phone' => '9800000000', 'status' => RawDataStatus::Hold]);
 
         $this->actingAs($user)->post(route('raw-data.convert', $entry), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Acme Corp',
             'contact_person' => 'Jane Doe',
             'phone' => '9800000000',
@@ -240,6 +242,7 @@ class RawDataTest extends TestCase
         $entry = RawData::factory()->create(['contact_person' => 'Jane Doe', 'phone' => '9800000000']);
 
         $response = $this->actingAs($user)->post(route('raw-data.convert', $entry), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Acme Corp',
             'contact_person' => 'Jane Doe',
             'phone' => '9800000000',
@@ -267,6 +270,7 @@ class RawDataTest extends TestCase
         $entry = RawData::factory()->create(['contact_person' => 'Jane Doe', 'phone' => '9800000000', 'number_of_employees' => 120]);
 
         $this->actingAs($user)->post(route('raw-data.convert', $entry), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Acme Corp',
             'contact_person' => 'Jane Doe',
             'phone' => '9800000000',
@@ -290,6 +294,7 @@ class RawDataTest extends TestCase
         ]);
 
         $this->actingAs($user)->post(route('raw-data.convert', $entry), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Another Co',
             'contact_person' => $entry->contact_person,
             'phone' => $entry->phone,
@@ -307,6 +312,7 @@ class RawDataTest extends TestCase
         $entry = RawData::factory()->create();
 
         $response = $this->actingAs($user)->post(route('raw-data.convert', $entry), [
+            'industry' => Industry::factory()->create()->name,
             'company_name' => 'Acme Corporation',
             'contact_person' => $entry->contact_person,
             'phone' => $entry->phone,

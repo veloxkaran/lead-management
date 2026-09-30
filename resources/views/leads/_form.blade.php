@@ -42,8 +42,7 @@
         <input type="text" name="address" value="{{ old('address', $lead->address ?? '') }}" class="form-control">
     </div>
     <div class="col-md-4">
-        <label class="form-label small fw-semibold">Industry</label>
-        <input type="text" name="industry" value="{{ old('industry', $lead->industry ?? '') }}" class="form-control">
+        <x-industry-select :industries="$industries" :selected="$lead->industry ?? null" />
     </div>
     <div class="col-md-4">
         <label class="form-label small fw-semibold">Number of Employees</label>

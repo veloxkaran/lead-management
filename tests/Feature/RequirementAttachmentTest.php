@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lead;
 use App\Models\Requirement;
+use App\Models\SystemModule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -22,6 +23,7 @@ class RequirementAttachmentTest extends TestCase
         $lead = Lead::factory()->create();
 
         $this->actingAs($user)->post(route('requirements.store'), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'lead_id' => $lead->id,
             'requirement' => 'Needs a custom onboarding flow',
             'priority' => 'high',
@@ -48,6 +50,7 @@ class RequirementAttachmentTest extends TestCase
         $lead = Lead::factory()->create();
 
         $this->actingAs($user)->post(route('requirements.store'), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'lead_id' => $lead->id,
             'requirement' => 'Needs a custom export',
             'priority' => 'medium',
@@ -67,6 +70,7 @@ class RequirementAttachmentTest extends TestCase
         ]);
 
         $this->actingAs($user)->put(route('requirements.update', $requirement), [
+            'system_module_id' => $requirement->system_module_id,
             'requirement' => $requirement->requirement,
             'priority' => $requirement->priority->value,
             'status' => $requirement->status->value,
@@ -138,6 +142,7 @@ class RequirementAttachmentTest extends TestCase
         $lead = Lead::factory()->create();
 
         $this->actingAs($user)->post(route('leads.requirements.store', $lead), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'requirement' => 'Needs a data migration',
             'priority' => 'medium',
             'attachments' => [UploadedFile::fake()->create('doc.csv', 60)],

@@ -211,6 +211,7 @@ class DashboardPerformanceSnapshotTest extends TestCase
             'completed_at' => now(),
         ]);
         $this->actingAs($superAdmin)->put(route('requirements.update', $requirement), [
+            'system_module_id' => $requirement->system_module_id,
             'requirement' => $requirement->requirement,
             'priority' => $requirement->priority->value,
             'status' => \App\Enums\RequirementStatus::InProgress->value,

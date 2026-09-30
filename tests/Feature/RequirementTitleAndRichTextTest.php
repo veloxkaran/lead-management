@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lead;
 use App\Models\Requirement;
+use App\Models\SystemModule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -18,6 +19,7 @@ class RequirementTitleAndRichTextTest extends TestCase
         $lead = Lead::factory()->create();
 
         $this->actingAs($user)->post(route('requirements.store'), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'lead_id' => $lead->id,
             'title' => 'Needs SSO support',
             'requirement' => 'Full requirement details go here.',
@@ -35,6 +37,7 @@ class RequirementTitleAndRichTextTest extends TestCase
         $lead = Lead::factory()->create();
 
         $this->actingAs($user)->post(route('requirements.store'), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'lead_id' => $lead->id,
             'requirement' => 'No title on this one.',
             'priority' => 'medium',
@@ -52,6 +55,7 @@ class RequirementTitleAndRichTextTest extends TestCase
         $lead = Lead::factory()->create();
 
         $this->actingAs($user)->post(route('requirements.store'), [
+            'system_module_id' => SystemModule::factory()->create()->id,
             'lead_id' => $lead->id,
             'requirement' => '<p>Bold text: <strong>urgent</strong></p><script>alert(1)</script>',
             'priority' => 'high',
@@ -85,6 +89,7 @@ class RequirementTitleAndRichTextTest extends TestCase
         $requirement = Requirement::factory()->create(['created_by' => $user->id]);
 
         $this->actingAs($user)->put(route('requirements.update', $requirement), [
+            'system_module_id' => $requirement->system_module_id,
             'title' => 'Updated title',
             'requirement' => '<p>Updated</p><img src=x onerror=alert(1)>',
             'priority' => $requirement->priority->value,

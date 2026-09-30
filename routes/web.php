@@ -15,6 +15,7 @@ use App\Http\Controllers\FollowUpController;
 use App\Http\Controllers\GoalController;
 use App\Http\Controllers\GoalLeaderboardController;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\KnowledgeBaseCategoryController;
 use App\Http\Controllers\KnowledgeBaseController;
 use App\Http\Controllers\LeadBulkUploadController;
@@ -40,6 +41,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupportTicketAttachmentController;
 use App\Http\Controllers\SupportTicketCommentController;
 use App\Http\Controllers\SupportTicketController;
+use App\Http\Controllers\SystemModuleController;
 use App\Http\Controllers\TaskChecklistItemController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
@@ -261,6 +263,9 @@ Route::middleware('auth')->group(function () {
         Route::post('lead-statuses/reorder', [LeadStatusController::class, 'reorder'])->name('lead-statuses.reorder');
 
         Route::resource('knowledge-base-categories', KnowledgeBaseCategoryController::class)->except('show');
+
+        Route::resource('industries', IndustryController::class)->except('show');
+        Route::resource('system-modules', SystemModuleController::class)->except('show');
 
         Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');

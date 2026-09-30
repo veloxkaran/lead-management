@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\GenericTableExport;
 use App\Imports\LeadsImport;
+use App\Models\Industry;
 use App\Models\Lead;
 use App\Services\LeadService;
 use Illuminate\Http\RedirectResponse;
@@ -29,7 +30,9 @@ class LeadBulkUploadController extends Controller
     {
         $this->authorize('create', Lead::class);
 
-        return view('leads.bulk-upload');
+        return view('leads.bulk-upload', [
+            'industries' => Industry::ordered()->get(),
+        ]);
     }
 
     public function template(): BinaryFileResponse
