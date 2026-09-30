@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\RequirementStatus;
 use App\Models\Lead;
 use App\Models\Requirement;
 use App\Models\SupportTicket;
@@ -35,7 +36,7 @@ class DashboardPerformanceSnapshotTest extends TestCase
 
         $requirementsLead = Lead::factory()->create(['created_at' => now()->subDays(3)]);
         Requirement::factory()->create(['lead_id' => $requirementsLead->id, 'created_at' => now()]);
-        Requirement::factory()->create(['lead_id' => $requirementsLead->id, 'created_at' => now(), 'completed_at' => now()]);
+        Requirement::factory()->create(['lead_id' => $requirementsLead->id, 'status' => RequirementStatus::Completed, 'created_at' => now(), 'completed_at' => now()]);
         Requirement::factory()->create(['lead_id' => $requirementsLead->id, 'created_at' => now()->subDays(3)]);
 
         Lead::factory()->create(['created_at' => now()]);
@@ -148,7 +149,7 @@ class DashboardPerformanceSnapshotTest extends TestCase
         SupportTicket::factory()->create(['resolved_at' => null]);
 
         $lead = Lead::factory()->create();
-        Requirement::factory()->create(['lead_id' => $lead->id, 'completed_at' => now()]);
+        Requirement::factory()->create(['lead_id' => $lead->id, 'status' => RequirementStatus::Completed, 'completed_at' => now()]);
         Requirement::factory()->create(['lead_id' => $lead->id, 'completed_at' => null]);
 
         Lead::factory()->create(['achieved_at' => now()]);

@@ -8,6 +8,7 @@ use App\Models\Requirement;
 use App\Models\SupportTicket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CompletionLockTest extends TestCase
@@ -100,7 +101,9 @@ class CompletionLockTest extends TestCase
     {
         $owner = User::factory()->create();
         $requirement = $this->completedRequirement($owner, null);
-        $requirement->forceFill(['updated_at' => now()->subHours(5)])->saveQuietly();
+        // Legacy rows predate completed_at being recorded on save, so write
+        // one directly rather than through the model (which now fills it in).
+        DB::table('requirements')->where('id', $requirement->id)->update(['completed_at' => null, 'updated_at' => now()->subHours(5)]);
 
         $this->assertTrue($requirement->fresh()->isLocked());
     }

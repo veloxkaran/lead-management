@@ -4,17 +4,42 @@
 @endphp
 <header class="app-topbar">
     <div class="d-flex align-items-center gap-2">
-        <button id="sidebarToggle" class="btn btn-sm btn-outline-secondary d-lg-none" type="button">
+        <button id="sidebarToggle" class="btn btn-sm btn-light d-lg-none" type="button" aria-label="Open menu">
             <i class="bi bi-list"></i>
         </button>
-        <button id="sidebarCollapseToggle" class="btn btn-sm btn-outline-secondary d-none d-lg-inline-flex" type="button" title="Toggle sidebar">
+        <button id="sidebarCollapseToggle" class="btn btn-sm btn-light d-none d-lg-inline-flex" type="button" title="Toggle sidebar" aria-label="Toggle sidebar">
             <i class="bi bi-layout-sidebar-inset"></i>
         </button>
-        <h2 class="h6 mb-0 text-muted">@yield('title')</h2>
+        <h2 class="h6 mb-0 text-muted fw-normal">@yield('title')</h2>
     </div>
-    <div class="d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center gap-2">
+        @php
+            $currentTheme = $user?->uiTheme() ?? App\Enums\UiTheme::DEFAULT;
+        @endphp
         <div class="dropdown">
-            <button class="btn btn-sm btn-light position-relative" type="button" data-bs-toggle="dropdown">
+            <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown" aria-label="Theme" title="Theme">
+                <i class="bi bi-palette"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end" style="min-width: 200px;">
+                <h6 class="dropdown-header">Theme</h6>
+                @foreach (App\Enums\UiTheme::cases() as $theme)
+                    <form method="POST" action="{{ route('preferences.theme.update') }}">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="theme" value="{{ $theme->value }}">
+                        <button type="submit" @class(['dropdown-item d-flex align-items-center gap-2', 'active' => $currentTheme === $theme]) @if ($currentTheme === $theme) aria-current="true" @endif>
+                            <span class="theme-swatch" style="background: {{ $theme->swatch() }};"></span>
+                            <span class="flex-grow-1">{{ $theme->label() }}</span>
+                            @if ($currentTheme === $theme)
+                                <i class="bi bi-check2"></i>
+                            @endif
+                        </button>
+                    </form>
+                @endforeach
+            </div>
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-light position-relative" type="button" data-bs-toggle="dropdown" aria-label="Notifications">
                 <i class="bi bi-bell"></i>
                 @if ($unreadCount > 0)
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">

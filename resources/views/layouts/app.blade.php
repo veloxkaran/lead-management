@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+@php
+    $uiTheme = auth()->user()?->uiTheme() ?? App\Enums\UiTheme::DEFAULT;
+@endphp
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-app-theme="{{ $uiTheme->value }}" data-bs-theme="{{ $uiTheme->colorMode() }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

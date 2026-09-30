@@ -106,7 +106,7 @@
                         <th>Status</th>
                         <th>Due Date</th>
                         <th>Assigned To</th>
-                        <th>Generated / Solved</th>
+                        <th>Generated Time</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -138,16 +138,20 @@
                                 @endif
                             </td>
                             <td class="small">{{ $requirement->assignee?->name ?? '—' }}</td>
-                            <td>@include('requirements._timing')</td>
+                            {{-- Same as the Support Tickets list's Generated Time column. --}}
+                            <td class="small">
+                                @if ($requirement->isCompleted())
+                                    <span class="text-success fw-semibold">Solved in {{ $requirement->solvedInFormatted() ?? '—' }}</span>
+                                @else
+                                    <span x-data="ticketElapsed('{{ $requirement->created_at->toIso8601String() }}')" x-text="text">{{ $requirement->elapsedFormatted() }}</span>
+                                @endif
+                            </td>
                             <td class="text-end text-nowrap">
                                 <a href="{{ route('requirements.show', $requirement) }}" class="btn btn-sm btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
                                 @can('changeStatus', $requirement)
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#statusModal-{{ $requirement->id }}" title="Change status &amp; add note">
                                         <i class="bi bi-chat-square-text"></i>
                                     </button>
-                                @endcan
-                                @can('update', $requirement)
-                                    <a href="{{ route('requirements.edit', $requirement) }}" class="btn btn-sm btn-outline-secondary" title="Edit"><i class="bi bi-pencil"></i></a>
                                 @endcan
                             </td>
                         </tr>

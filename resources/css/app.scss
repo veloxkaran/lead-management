@@ -1,20 +1,47 @@
 // Corporate theme overrides — swap these to re-brand the whole admin UI.
+// Clean, low-contrast neutrals: white surfaces, one hairline border colour,
+// no heavy shadows, so content (not chrome) carries the page.
 $primary: #2456a6;
 $secondary: #64748b;
-$success: #198754;
-$info: #0dcaf0;
-$warning: #f0ad4e;
-$danger: #dc3545;
-$light: #f4f6f9;
+$success: #16a34a;
+$info: #0891b2;
+$warning: #d97706;
+$danger: #dc2626;
+$light: #f6f7f9;
 $dark: #1b2430;
 
-$font-family-sans-serif: 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
-$body-bg: #f4f6f9;
+$font-family-sans-serif: 'Inter', 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+$font-size-base: 0.9375rem;
+$body-bg: #fff; // surfaces (cards, tables, inputs); the page colour is --app-bg per theme
+$body-color: #1f2937;
+$border-color: #e5e7eb;
 $border-radius: 0.5rem;
 $border-radius-sm: 0.375rem;
 $border-radius-lg: 0.75rem;
-$box-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+$box-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+$box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 $enable-shadows: false;
+$headings-font-weight: 600;
+$headings-color: #111827;
+$link-decoration: none;
+$input-border-color: #d1d5db;
+$input-focus-border-color: rgba($primary, 0.6);
+$input-btn-focus-width: 0.2rem;
+$input-btn-focus-color-opacity: 0.15;
+$btn-font-weight: 500;
+$table-cell-padding-y: 0.7rem;
+$table-cell-padding-x: 0.9rem;
+$table-cell-padding-y-sm: 0.45rem;
+$table-cell-padding-x-sm: 0.6rem;
+$table-border-color: #eef0f3;
+$table-hover-bg-factor: 0.025;
+$card-border-color: $border-color;
+$card-cap-bg: #fff;
+$dropdown-border-color: $border-color;
+$dropdown-box-shadow: $box-shadow;
+$modal-content-border-color: transparent;
+$modal-header-border-color: $border-color;
+$pagination-border-color: $border-color;
 
 @import 'bootstrap/scss/bootstrap';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
@@ -22,6 +49,133 @@ $enable-shadows: false;
 @import 'select2-bootstrap-5-theme/dist/select2-bootstrap-5-theme.min.css';
 @import 'datatables.net-bs5/css/dataTables.bootstrap5.min.css';
 @import 'sweetalert2/dist/sweetalert2.min.css';
+
+// ---- Themes (App\Enums\UiTheme) — <html data-app-theme="…">, picked
+// from the top bar. Each theme is just a set of these variables; every
+// app-level rule below reads them instead of fixed colours.
+:root,
+[data-app-theme='light-blue'] {
+    --app-accent: #{$primary};
+    --app-accent-soft: #{rgba($primary, 0.1)};
+    --app-bg: #f1f6fd;
+    --app-surface: #fff;
+    --app-surface-muted: #f6f9fe;
+    --app-border: #dfe7f2;
+    --app-border-strong: #cbd6e6;
+    --app-divider: #e8eef7;
+    --app-hover: #edf3fc;
+    --app-active: #e1eafa;
+    --app-text: #1e293b;
+    --app-text-strong: #0f172a;
+    --app-text-secondary: #334155;
+    --app-text-muted: #64748b;
+    --app-text-soft: #94a3b8;
+    --app-topbar-bg: rgba(255, 255, 255, 0.88);
+    --app-sidebar-bg: #e8f1fd;
+    --app-sidebar-border: #d6e4f7;
+    --app-sidebar-text: #1e293b;
+    --app-sidebar-icon: #5b7aa6;
+    --app-sidebar-icon-bg: transparent;
+    --app-sidebar-title: #5b7aa6;
+    --app-sidebar-hover-bg: #d9e7fb;
+    --app-sidebar-hover-text: #0f172a;
+    --app-sidebar-active-bg: #fff;
+    --app-sidebar-active-text: #{$primary};
+    --app-sidebar-active-icon: #{$primary};
+    --app-sidebar-active-icon-bg: transparent;
+    --app-sidebar-active-shadow: 0 1px 3px rgba(36, 86, 166, 0.15);
+    --app-sidebar-divider: #d6e4f7;
+    --app-sidebar-brand-text: #0f172a;
+    --app-sidebar-brand-tile-bg: transparent;
+    --app-sidebar-brand-tile-color: #{$primary};
+}
+
+[data-app-theme='light'] {
+    --app-bg: #f6f7f9;
+    --app-surface: #fff;
+    --app-surface-muted: #f9fafb;
+    --app-border: #e5e7eb;
+    --app-border-strong: #d1d5db;
+    --app-divider: #eef0f3;
+    --app-hover: #f3f4f6;
+    --app-active: #e5e7eb;
+    --app-text: #1f2937;
+    --app-text-strong: #111827;
+    --app-text-secondary: #374151;
+    --app-text-muted: #6b7280;
+    --app-text-soft: #9ca3af;
+    --app-topbar-bg: rgba(255, 255, 255, 0.9);
+    --app-sidebar-bg: #fff;
+    --app-sidebar-border: #e5e7eb;
+    --app-sidebar-text: #1f2937;
+    --app-sidebar-icon: #6b7280;
+    --app-sidebar-icon-bg: transparent;
+    --app-sidebar-title: #6b7280;
+    --app-sidebar-hover-bg: #f3f4f6;
+    --app-sidebar-hover-text: #111827;
+    --app-sidebar-active-bg: #{rgba($primary, 0.08)};
+    --app-sidebar-active-text: #{$primary};
+    --app-sidebar-active-icon: #{$primary};
+    --app-sidebar-active-icon-bg: transparent;
+    --app-sidebar-active-shadow: none;
+    --app-sidebar-divider: #e5e7eb;
+    --app-sidebar-brand-text: #111827;
+    --app-sidebar-brand-tile-bg: transparent;
+    --app-sidebar-brand-tile-color: #{$primary};
+}
+
+[data-app-theme='dark'] {
+    --app-accent: #7aa7ec;
+    --app-accent-soft: rgba(122, 167, 236, 0.14);
+    --app-bg: #0e1520;
+    --app-surface: #151e2c;
+    --app-surface-muted: #1a2434;
+    --app-border: #263245;
+    --app-border-strong: #33415a;
+    --app-divider: #222d3f;
+    --app-hover: #1e2a3c;
+    --app-active: #253349;
+    --app-text: #d7dfea;
+    --app-text-strong: #f1f5fb;
+    --app-text-secondary: #b8c4d4;
+    --app-text-muted: #8a99ad;
+    --app-text-soft: #66768c;
+    --app-topbar-bg: rgba(21, 30, 44, 0.9);
+    --app-sidebar-bg: #111a27;
+    --app-sidebar-border: #223047;
+    --app-sidebar-text: #d7dfea;
+    --app-sidebar-icon: #8a99ad;
+    --app-sidebar-icon-bg: transparent;
+    --app-sidebar-title: #8a99ad;
+    --app-sidebar-hover-bg: #1a2536;
+    --app-sidebar-hover-text: #fff;
+    --app-sidebar-active-bg: rgba(122, 167, 236, 0.14);
+    --app-sidebar-active-text: #7aa7ec;
+    --app-sidebar-active-icon: #7aa7ec;
+    --app-sidebar-active-icon-bg: transparent;
+    --app-sidebar-active-shadow: none;
+    --app-sidebar-divider: #223047;
+    --app-sidebar-brand-text: #fff;
+    --app-sidebar-brand-tile-bg: transparent;
+    --app-sidebar-brand-tile-color: #7aa7ec;
+
+    // Bootstrap's dark mode, re-tinted to match the app surfaces.
+    --bs-body-bg: var(--app-surface);
+    --bs-body-color: var(--app-text);
+    --bs-emphasis-color: var(--app-text-strong);
+    --bs-secondary-color: var(--app-text-muted);
+    --bs-tertiary-bg: var(--app-surface-muted);
+    --bs-border-color: var(--app-border);
+    --bs-heading-color: var(--app-text-strong);
+    --bs-link-color: var(--app-accent);
+    --bs-link-hover-color: #a3c2f2;
+    --bs-link-color-rgb: 122, 167, 236;
+}
+
+body {
+    background-color: var(--app-bg);
+    color: var(--app-text);
+}
 
 // ---- Application shell ----
 :root {
@@ -42,8 +196,9 @@ body {
 .app-sidebar {
     width: var(--sidebar-width);
     flex-shrink: 0;
-    background: $dark;
-    color: rgba(255, 255, 255, 0.85);
+    background: var(--app-sidebar-bg);
+    color: var(--app-sidebar-text);
+    border-right: 1px solid var(--app-sidebar-border);
     position: fixed;
     inset-block: 0;
     left: 0;
@@ -57,44 +212,86 @@ body {
     height: var(--topbar-height);
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    padding-inline: 1.25rem;
-    color: #fff;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    gap: 0.7rem;
+    padding-inline: 1.1rem;
+    color: var(--app-sidebar-brand-text);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    border-bottom: 1px solid var(--app-sidebar-divider);
     white-space: nowrap;
+
+    i {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 1.15rem !important;
+        background: var(--app-sidebar-brand-tile-bg);
+        color: var(--app-sidebar-brand-tile-color);
+    }
+}
+
+.app-sidebar .nav {
+    padding: 0.5rem 0.7rem 1.25rem;
 }
 
 .app-sidebar .nav-link {
-    color: rgba(255, 255, 255, 0.7);
-    padding: 0.6rem 1.25rem;
+    color: var(--app-sidebar-text);
+    padding: 0.4rem 0.6rem;
+    margin-bottom: 2px;
     display: flex;
     align-items: center;
-    gap: 0.65rem;
-    font-size: 0.92rem;
-    border-left: 3px solid transparent;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 10px;
     white-space: nowrap;
-    transition: padding 0.2s ease-in-out, justify-content 0.2s ease-in-out;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+
+    // Every menu icon sits in its own rounded tile.
+    i {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.98rem;
+        color: var(--app-sidebar-icon);
+        background: var(--app-sidebar-icon-bg);
+        transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+    }
 }
 
 .app-sidebar .nav-link:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.06);
+    color: var(--app-sidebar-hover-text);
+    background: var(--app-sidebar-hover-bg);
 }
 
 .app-sidebar .nav-link.active {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.1);
-    border-left-color: $primary;
+    color: var(--app-sidebar-active-text);
+    background: var(--app-sidebar-active-bg);
+    font-weight: 700;
+    box-shadow: var(--app-sidebar-active-shadow);
+
+    i {
+        color: var(--app-sidebar-active-icon);
+        background: var(--app-sidebar-active-icon-bg);
+    }
 }
 
 .app-sidebar .nav-section-title {
     text-transform: uppercase;
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
-    color: rgba(255, 255, 255, 0.4);
-    padding: 1rem 1.25rem 0.35rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--app-sidebar-title);
+    padding: 1.2rem 0.7rem 0.4rem;
 }
 
 .app-main {
@@ -108,37 +305,42 @@ body {
 
 .app-topbar {
     height: var(--topbar-height);
-    background: #fff;
-    border-bottom: 1px solid $border-color;
+    background: var(--app-topbar-bg);
+    backdrop-filter: saturate(180%) blur(8px);
+    border-bottom: 1px solid var(--app-border);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-inline: 1.25rem;
+    padding-inline: 1.5rem;
     position: sticky;
     top: 0;
     z-index: 1020;
 }
 
 .app-content {
-    padding: 1.5rem;
+    padding: 1.75rem 1.75rem 2.5rem;
     flex: 1;
+    width: 100%;
+    max-width: 1600px;
+    margin-inline: auto;
 }
 
 .stat-card {
-    border: 1px solid $border-color;
+    border: 1px solid var(--app-border);
     border-radius: $border-radius-lg;
-    background: #fff;
-    padding: 1.1rem 1.25rem;
+    background: var(--app-surface);
+    padding: 1rem 1.15rem;
 }
 
 .stat-card .stat-icon {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     border-radius: $border-radius;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+    flex-shrink: 0;
 }
 
 .timeline {
@@ -153,7 +355,7 @@ body {
     top: 0.35rem;
     bottom: 0.35rem;
     width: 2px;
-    background: $border-color;
+    background: var(--app-border);
 }
 
 .timeline-item {
@@ -169,9 +371,9 @@ body {
     width: 0.65rem;
     height: 0.65rem;
     border-radius: 50%;
-    background: $primary;
-    border: 2px solid #fff;
-    box-shadow: 0 0 0 2px $primary;
+    background: var(--app-accent);
+    border: 2px solid var(--app-surface);
+    box-shadow: 0 0 0 2px var(--app-accent);
 }
 
 @media (max-width: 991.98px) {
@@ -513,3 +715,474 @@ body {
     }
 }
 
+
+// ---- Clean UI: one consistent surface language across every page ----
+// Views mostly write `card border-0 shadow-sm`; rather than edit each one,
+// every card gets the same hairline border and no drop shadow here.
+.card,
+.card.border-0 {
+    border: 1px solid var(--app-border) !important;
+    border-radius: $border-radius-lg;
+}
+
+.card.shadow-sm,
+.card.shadow {
+    box-shadow: none !important;
+}
+
+.card > .card-header {
+    background: var(--app-surface);
+    border-bottom: 1px solid var(--app-border);
+    padding: 0.8rem 1.15rem;
+}
+
+.card > .card-header:first-child {
+    border-radius: $border-radius-lg $border-radius-lg 0 0;
+}
+
+.card > .card-footer {
+    background: var(--app-surface);
+    border-top: 1px solid var(--app-border);
+}
+
+.card > .table-responsive:last-child,
+.card > .table-responsive:last-child .table {
+    border-bottom-left-radius: $border-radius-lg;
+    border-bottom-right-radius: $border-radius-lg;
+}
+
+// Tables: quiet uppercase headers, airy rows, hairline dividers.
+.table {
+    --bs-table-hover-bg: var(--app-surface-muted);
+    --bs-table-border-color: var(--app-divider);
+    margin-bottom: 0;
+}
+
+.table > thead > tr > th,
+.table > thead.table-light > tr > th {
+    background: var(--app-surface-muted);
+    color: var(--app-text-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--app-border);
+    white-space: nowrap;
+}
+
+.table > tbody > tr:last-child > td {
+    border-bottom: 0;
+}
+
+.table .btn-sm {
+    --bs-btn-padding-y: 0.2rem;
+    --bs-btn-padding-x: 0.45rem;
+}
+
+// Buttons: neutral outline instead of grey-on-grey.
+.btn {
+    border-radius: $border-radius;
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--app-text-secondary);
+    --bs-btn-border-color: var(--app-border-strong);
+    --bs-btn-hover-color: var(--app-text-strong);
+    --bs-btn-hover-bg: var(--app-hover);
+    --bs-btn-hover-border-color: var(--app-border-strong);
+    --bs-btn-active-color: var(--app-text-strong);
+    --bs-btn-active-bg: var(--app-active);
+    --bs-btn-active-border-color: var(--app-border-strong);
+    --bs-btn-disabled-color: var(--app-text-soft);
+    --bs-btn-disabled-border-color: var(--app-active);
+    background: var(--app-surface);
+}
+
+.btn-light {
+    --bs-btn-bg: var(--app-surface);
+    --bs-btn-border-color: var(--app-active);
+    --bs-btn-hover-bg: var(--app-hover);
+    --bs-btn-hover-border-color: var(--app-active);
+}
+
+// Badges: soft pills so status reads at a glance without shouting.
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    padding: 0.35em 0.6em;
+    border-radius: 999px;
+}
+
+// Forms
+.form-label {
+    font-weight: 500;
+    color: var(--app-text-secondary);
+    margin-bottom: 0.3rem;
+}
+
+.form-control,
+.form-select,
+.input-group-text {
+    border-color: var(--app-border-strong);
+}
+
+.input-group-text {
+    background: var(--app-surface-muted);
+    color: var(--app-text-muted);
+}
+
+.form-control::placeholder {
+    color: var(--app-text-soft);
+}
+
+// Alerts: light tint with a coloured edge instead of a full coloured block.
+.alert {
+    border: 1px solid var(--app-border);
+    border-left-width: 4px;
+    background: var(--app-surface);
+    color: var(--app-text);
+}
+
+@each $name in (success, danger, warning, info, primary, secondary) {
+    .alert-#{$name} {
+        border-left-color: var(--bs-#{$name});
+        background: var(--bs-#{$name}-bg-subtle);
+    }
+}
+
+// Menus, dialogs, pagination
+.dropdown-menu {
+    --bs-dropdown-border-color: var(--app-border);
+    border-radius: $border-radius-lg;
+    padding: 0.35rem;
+}
+
+.dropdown-item {
+    border-radius: $border-radius-sm;
+    padding: 0.4rem 0.7rem;
+}
+
+.modal-content {
+    border-radius: $border-radius-lg;
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+}
+
+.modal-header,
+.modal-footer {
+    padding: 0.9rem 1.25rem;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--app-border);
+    background: var(--app-surface-muted);
+    border-bottom-left-radius: $border-radius-lg;
+    border-bottom-right-radius: $border-radius-lg;
+}
+
+.pagination {
+    --bs-pagination-border-color: var(--app-border);
+    --bs-pagination-disabled-border-color: var(--app-border);
+    margin-bottom: 0;
+    gap: 0.2rem;
+    --bs-pagination-font-size: 0.85rem;
+}
+
+.page-link {
+    border-radius: $border-radius-sm !important;
+}
+
+.nav-pills .nav-link {
+    border-radius: 999px;
+}
+
+// Page header + empty state (x-page-header / x-empty-state)
+.page-header-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: $border-radius;
+    background: var(--app-accent-soft);
+    color: var(--app-accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.empty-state-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--app-hover);
+    color: var(--app-text-soft);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+// select2 fields match native inputs' border colour.
+.select2-container--bootstrap-5 .select2-selection {
+    border-color: var(--app-border-strong);
+}
+
+.min-w-0 {
+    min-width: 0;
+}
+
+.theme-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid var(--app-border-strong);
+    flex-shrink: 0;
+}
+
+// ---- Dark theme: utility classes Bootstrap keeps light in every mode ----
+// Views use bg-white / bg-light / table-light / btn-light for "surface"; in
+// the dark theme those map onto the dark surfaces instead of glowing white.
+[data-app-theme='dark'] {
+    .bg-white {
+        background-color: var(--app-surface) !important;
+    }
+
+    .bg-light {
+        background-color: var(--app-surface-muted) !important;
+    }
+
+    .text-dark {
+        color: var(--app-text-strong) !important;
+    }
+
+    .table-light {
+        --bs-table-bg: var(--app-surface-muted);
+        --bs-table-color: var(--app-text);
+        --bs-table-border-color: var(--app-border);
+    }
+
+    .table-active {
+        --bs-table-bg-state: var(--app-hover);
+    }
+
+    .btn-light {
+        --bs-btn-bg: var(--app-surface);
+        --bs-btn-color: var(--app-text);
+        --bs-btn-border-color: var(--app-border);
+        --bs-btn-hover-bg: var(--app-hover);
+        --bs-btn-hover-color: var(--app-text-strong);
+        --bs-btn-hover-border-color: var(--app-border-strong);
+        --bs-btn-active-bg: var(--app-active);
+        --bs-btn-active-color: var(--app-text-strong);
+    }
+
+    .btn-outline-secondary {
+        background: transparent;
+    }
+
+    .badge.bg-white {
+        background-color: var(--app-text-strong) !important;
+    }
+
+    .modal-content {
+        background: var(--app-surface);
+    }
+
+    .select2-container--bootstrap-5 .select2-selection,
+    .select2-container--bootstrap-5 .select2-dropdown,
+    .select2-container--bootstrap-5 .select2-dropdown .select2-search .select2-search__field {
+        background-color: var(--app-surface);
+        color: var(--app-text);
+        border-color: var(--app-border-strong);
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+        color: var(--app-text);
+    }
+
+    .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option.select2-results__option--highlighted {
+        background-color: var(--app-hover);
+        color: var(--app-text-strong);
+    }
+
+    .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option.select2-results__option--selected {
+        background-color: var(--app-accent-soft);
+        color: var(--app-text-strong);
+    }
+}
+
+// ---- Lead details page (resources/views/leads/show.blade.php) ----
+.lead-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: var(--app-accent-soft);
+    color: var(--app-accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+}
+
+.lead-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--app-border);
+    border-radius: 999px;
+    background: var(--app-surface-muted);
+    color: var(--app-text-secondary);
+    font-size: 0.82rem;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, color 0.15s ease-in-out;
+
+    i {
+        color: var(--app-text-muted);
+    }
+}
+
+a.lead-chip:hover {
+    background: var(--app-accent-soft);
+    border-color: transparent;
+    color: var(--app-accent);
+
+    i {
+        color: var(--app-accent);
+    }
+}
+
+.lead-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    border-top: 1px solid var(--app-border);
+}
+
+.lead-kpi {
+    padding: 0.9rem 1.5rem;
+    border-right: 1px solid var(--app-divider);
+
+    &:last-child {
+        border-right: 0;
+    }
+}
+
+.lead-kpi-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--app-text-muted);
+    margin-bottom: 0.2rem;
+}
+
+.lead-kpi-value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--app-text-strong);
+}
+
+.lead-kpi-sub {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--app-text-muted);
+}
+
+.lead-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--app-text-muted);
+    margin-bottom: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.lead-detail-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.875rem;
+
+    li {
+        display: grid;
+        grid-template-columns: 20px 96px 1fr;
+        align-items: start;
+        gap: 0.5rem;
+        padding: 0.45rem 0;
+        border-bottom: 1px solid var(--app-divider);
+
+        &:last-child {
+            border-bottom: 0;
+        }
+    }
+
+    i {
+        color: var(--app-text-soft);
+        line-height: 1.5;
+    }
+}
+
+.lead-detail-label {
+    color: var(--app-text-muted);
+}
+
+.lead-detail-value {
+    color: var(--app-text);
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.lead-deal-card {
+    background: var(--bs-success-bg-subtle);
+    border-color: var(--bs-success-border-subtle) !important;
+}
+
+.lead-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 1.25rem;
+
+    .nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.85rem 0.1rem;
+        color: var(--app-text-muted);
+        font-size: 0.875rem;
+        font-weight: 600;
+        white-space: nowrap;
+
+        &:hover {
+            color: var(--app-text-strong);
+        }
+
+        &.active {
+            color: var(--app-accent);
+            border-bottom-color: var(--app-accent);
+        }
+    }
+}
+
+.lead-tab-count {
+    min-width: 1.35rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    background: var(--app-hover);
+    color: var(--app-text-secondary);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+
+    .active & {
+        background: var(--app-accent-soft);
+        color: var(--app-accent);
+    }
+}

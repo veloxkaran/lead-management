@@ -127,9 +127,6 @@
                             <td class="small text-muted">{{ $lead->created_at->format('M d, Y') }}</td>
                             <td class="text-end">
                                 <a href="{{ route('leads.show', $lead) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
-                                @can('update', $lead)
-                                    <a href="{{ route('leads.edit', $lead) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
-                                @endcan
                                 @can('archive', $lead)
                                     <form action="{{ route(!empty($filters['archived']) ? 'leads.restore' : 'leads.archive', $lead) }}" method="POST" class="d-inline"
                                         @if (empty($filters['archived']))

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UiTheme;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Services\OrganizationHierarchyService;
@@ -46,7 +47,16 @@ class User extends Authenticatable
             'password' => 'hashed',
             'role' => UserRole::class,
             'status' => UserStatus::class,
+            'theme' => UiTheme::class,
         ];
+    }
+
+    /**
+     * The theme to render the app in — the user's pick, or the default.
+     */
+    public function uiTheme(): UiTheme
+    {
+        return $this->theme ?? UiTheme::DEFAULT;
     }
 
     public function isSuperAdmin(): bool

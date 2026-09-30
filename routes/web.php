@@ -44,6 +44,7 @@ use App\Http\Controllers\TaskChecklistItemController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\ThemePreferenceController;
 use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -70,6 +71,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/preferences/theme', [ThemePreferenceController::class, 'update'])->name('preferences.theme.update');
 
     // Personal email account configuration — each user manages only their own.
     Route::resource('email-accounts', EmailAccountController::class)->except('show');

@@ -29,7 +29,29 @@ class RequirementListTest extends TestCase
         $response->assertSee('Acme login page');
         $response->assertSee('Globex reports');
         $response->assertSee(route('requirements.company', $acme), false);
-        $response->assertSee('Generated / Solved');
+        $response->assertSee('Generated Time');
+        $response->assertDontSee('Generated:');
+    }
+
+    public function test_generated_time_column_matches_support_tickets(): void
+    {
+        $user = User::factory()->create();
+        $lead = Lead::factory()->create();
+        Requirement::factory()->create([
+            'lead_id' => $lead->id,
+            'status' => RequirementStatus::Completed,
+            'created_at' => '2026-09-01 09:00:00',
+            'completed_at' => '2026-09-02 11:30:00',
+        ]);
+        $open = Requirement::factory()->create(['lead_id' => $lead->id, 'status' => RequirementStatus::Pending]);
+
+        $response = $this->actingAs($user)->get(route('requirements.index'));
+
+        $response->assertSee('Generated Time');
+        $response->assertSee('Solved in 1 days, 2 hour and 30 min');
+        $response->assertSee("ticketElapsed('".$open->created_at->toIso8601String()."')", false);
+        $response->assertDontSee('Open for');
+        $response->assertDontSee('Solved:');
     }
 
     public function test_index_can_be_filtered_by_company(): void

@@ -103,9 +103,6 @@
                             </td>
                             <td class="text-end">
                                 <a href="{{ route('support-tickets.show', $ticket) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
-                                @can('update', $ticket)
-                                    <a href="{{ route('support-tickets.edit', $ticket) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
-                                @endcan
                                 @can('delete', $ticket)
                                     <form method="POST" action="{{ route('support-tickets.destroy', $ticket) }}" class="d-inline" data-confirm-delete data-confirm-title="Delete this ticket?">
                                         @csrf @method('DELETE')

@@ -24,6 +24,26 @@ class Requirement extends Model
         'client_acknowledged_at', 'assigned_to', 'created_by', 'completed_at',
     ];
 
+    /**
+     * completed_at records when the requirement was solved, however it got
+     * there (created as completed, edited, or a status change). Reopening
+     * clears it — otherwise it keeps counting as "closed" (and skewing the
+     * average solving time) on the dashboard's Performance Snapshot even
+     * though it's active again.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Requirement $requirement) {
+            $isCompleted = $requirement->status === RequirementStatus::Completed;
+
+            if ($isCompleted && $requirement->completed_at === null) {
+                $requirement->completed_at = now();
+            } elseif (! $isCompleted && $requirement->completed_at !== null) {
+                $requirement->completed_at = null;
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [
@@ -43,6 +63,20 @@ class Requirement extends Model
         return $this->due_date !== null
             && $this->due_date->isPast()
             && $this->status !== RequirementStatus::Completed;
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->status === RequirementStatus::Completed;
+    }
+
+    /**
+     * How long it took to solve (created → completed), e.g. "1 days, 2 hour
+     * and 30 min". Null while the requirement is still open.
+     */
+    public function solvedInFormatted(): ?string
+    {
+        return $this->isCompleted() && $this->completed_at ? $this->elapsedFormatted() : null;
     }
 
     public function isAcknowledgedByClient(): bool

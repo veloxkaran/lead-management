@@ -22,7 +22,9 @@ class RequirementFactory extends Factory
             'lead_id' => Lead::factory(),
             'requirement' => fake()->sentence(12),
             'priority' => fake()->randomElement(RequirementPriority::cases())->value,
-            'status' => fake()->randomElement(RequirementStatus::cases())->value,
+            // Open statuses only — a completed requirement records completed_at
+            // on save, so tests that need one ask for it explicitly.
+            'status' => fake()->randomElement(array_filter(RequirementStatus::cases(), fn ($s) => $s !== RequirementStatus::Completed))->value,
             'assigned_to' => null,
             'created_by' => User::factory(),
         ];

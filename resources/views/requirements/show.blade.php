@@ -52,6 +52,16 @@
                     <div class="small text-muted">Assigned To</div>
                     <div class="small fw-semibold">{{ $requirement->assignee?->name ?? 'Unassigned' }}</div>
                 </div>
+                @if ($requirement->isCompleted())
+                    <div class="col-md-3">
+                        <div class="small text-muted">Completed</div>
+                        <div class="small fw-semibold">{{ $requirement->completed_at?->format('M d, Y g:i A') ?? '—' }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="small text-muted">Solved In</div>
+                        <div class="small fw-semibold text-success"><i class="bi bi-check-circle-fill"></i> {{ $requirement->solvedInFormatted() ?? '—' }}</div>
+                    </div>
+                @endif
                 <div class="col-md-6">
                     <div class="small text-muted">Client Acknowledged</div>
                     <div class="small fw-semibold">
