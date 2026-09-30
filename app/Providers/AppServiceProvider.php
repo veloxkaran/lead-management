@@ -40,8 +40,8 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Feeds the sidebar's blinking "overdue" flags — a handful of COUNT
-     * queries per page, only for the signed-in member's own items.
+     * Feeds the sidebar's blinking "overdue" flags — a handful of
+     * company-wide COUNT queries per page.
      */
     private function registerSidebarOverdueFlags(): void
     {

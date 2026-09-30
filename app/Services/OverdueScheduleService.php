@@ -13,13 +13,14 @@ use App\Models\Task;
 use App\Models\User;
 
 /**
- * Drives the blinking "overdue" flag on sidebar menu items: how many of the
- * member's own scheduled items are past due, per component. "Own" means
- * what they're on the hook for — assigned to them (or, for follow-ups, the
- * lead's follow-up they scheduled or own) — not everything they can see, so
- * an overseer's menu doesn't blink for the whole team's backlog. Each rule
- * mirrors the component's existing overdue definition (FollowUp::due(),
- * Task/Requirement::isOverdue(), the Raw Data assignment countdown).
+ * Drives the blinking "overdue" flag on sidebar menu items: how many items
+ * in each component are past due across the whole company (BelongsToCompany
+ * scopes every query) — not just the viewer's own, so the whole team sees
+ * the menu blink until someone deals with it. Each rule mirrors the
+ * component's existing overdue definition (FollowUp::due(),
+ * Task/Requirement::isOverdue(), the Raw Data assignment countdown). The
+ * viewer only matters for permissions: no flag on a component they can't
+ * view.
  */
 class OverdueScheduleService
 {
@@ -31,10 +32,10 @@ class OverdueScheduleService
     public function countsFor(User $user): array
     {
         $counters = [
-            PermissionModule::FollowUps->value => fn () => $this->followUps($user),
-            PermissionModule::Tasks->value => fn () => $this->tasks($user),
-            PermissionModule::Requirements->value => fn () => $this->requirements($user),
-            PermissionModule::RawData->value => fn () => $this->rawData($user),
+            PermissionModule::FollowUps->value => fn () => FollowUp::due()->count(),
+            PermissionModule::Tasks->value => fn () => $this->tasks(),
+            PermissionModule::Requirements->value => fn () => $this->requirements(),
+            PermissionModule::RawData->value => fn () => $this->rawData(),
         ];
 
         $counts = [];
@@ -48,37 +49,25 @@ class OverdueScheduleService
         return $counts;
     }
 
-    private function followUps(User $user): int
+    private function tasks(): int
     {
-        return FollowUp::due()
-            ->where(function ($query) use ($user) {
-                $query->where('created_by', $user->id)
-                    ->orWhereHas('lead', fn ($lead) => $lead->where('assigned_user_id', $user->id));
-            })
-            ->count();
-    }
-
-    private function tasks(User $user): int
-    {
-        return Task::where('assigned_to', $user->id)
-            ->whereNotIn('status', [TaskStatus::Completed->value, TaskStatus::Cancelled->value])
+        return Task::whereNotIn('status', [TaskStatus::Completed->value, TaskStatus::Cancelled->value])
             ->whereNotNull('due_date')
             ->whereDate('due_date', '<=', today())
             ->count();
     }
 
-    private function requirements(User $user): int
+    private function requirements(): int
     {
-        return Requirement::where('assigned_to', $user->id)
-            ->where('status', '!=', RequirementStatus::Completed->value)
+        return Requirement::where('status', '!=', RequirementStatus::Completed->value)
             ->whereNotNull('due_date')
             ->whereDate('due_date', '<=', today())
             ->count();
     }
 
-    private function rawData(User $user): int
+    private function rawData(): int
     {
-        return RawData::where('assigned_to', $user->id)
+        return RawData::whereNotNull('assigned_to')
             ->whereNotIn('status', [RawDataStatus::NotValid->value, RawDataStatus::ConvertedToLead->value])
             ->where('assigned_at', '<=', now()->subHours(RawData::ASSIGNMENT_RESPONSE_HOURS))
             ->count();
