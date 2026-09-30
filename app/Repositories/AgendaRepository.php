@@ -15,8 +15,8 @@ class AgendaRepository extends BaseRepository
 
     /**
      * The Team Meeting Room has no visibility scoping (every user sees
-     * every agenda) — unlike TaskRepository::filter(), there's no
-     * hierarchy/assignment `where` gating the base query, only the
+     * every agenda) — there's no hierarchy/assignment `where` gating
+     * the base query, only the
      * search/status/sort filters below.
      */
     public function filter(array $filters, User $viewer, int $perPage = 20): LengthAwarePaginator

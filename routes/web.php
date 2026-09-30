@@ -40,9 +40,6 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupportTicketAttachmentController;
 use App\Http\Controllers\SupportTicketCommentController;
 use App\Http\Controllers\SupportTicketController;
-use App\Http\Controllers\TaskChecklistItemController;
-use App\Http\Controllers\TaskCommentController;
-use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ThemePreferenceController;
 use App\Http\Controllers\TrainingController;
@@ -155,16 +152,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('goals', GoalController::class);
     });
 
-    // Organization-wide task management, hierarchy-scoped.
-    Route::middleware('permission:tasks')->group(function () {
-        Route::resource('tasks', TaskController::class);
-        Route::post('leads/{lead}/tasks', [TaskController::class, 'storeForLead'])->name('leads.tasks.store');
-        Route::post('tasks/{task}/checklist-items', [TaskChecklistItemController::class, 'store'])->middleware('permission:tasks,update')->name('tasks.checklist-items.store');
-        Route::patch('tasks/{task}/checklist-items/{checklistItem}', [TaskChecklistItemController::class, 'update'])->name('tasks.checklist-items.update');
-        Route::delete('tasks/{task}/checklist-items/{checklistItem}', [TaskChecklistItemController::class, 'destroy'])->middleware('permission:tasks,update')->name('tasks.checklist-items.destroy');
-        Route::post('tasks/{task}/comments', [TaskCommentController::class, 'store'])->middleware('permission:tasks,update')->name('tasks.comments.store');
-        Route::delete('tasks/{task}/comments/{comment}', [TaskCommentController::class, 'destroy'])->middleware('permission:tasks,update')->name('tasks.comments.destroy');
-    });
 
     // Lead progress tracking — managed by Customer Success/Management.
     Route::middleware('permission:trainings')->group(function () {

@@ -7,7 +7,6 @@ use App\Enums\PermissionModule;
 use App\Enums\UserRole;
 use App\Models\Lead;
 use App\Models\Requirement;
-use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -120,21 +119,21 @@ class UserPermissionTest extends TestCase
 
     public function test_delete_can_be_revoked_on_its_own(): void
     {
-        $user = $this->memberWith(['tasks' => ['view', 'create', 'update']]);
-        $task = Task::factory()->create(['created_by' => $user->id, 'assigned_by' => $user->id, 'assigned_to' => $user->id]);
+        $user = $this->memberWith(['requirements' => ['view', 'create', 'update']]);
+        $requirement = Requirement::factory()->create(['created_by' => $user->id]);
 
-        $this->actingAs($user)->get(route('tasks.show', $task))->assertOk();
-        $this->actingAs($user)->delete(route('tasks.destroy', $task))->assertForbidden();
+        $this->actingAs($user)->get(route('requirements.show', $requirement))->assertOk();
+        $this->actingAs($user)->delete(route('requirements.destroy', $requirement))->assertForbidden();
 
-        $this->assertNotSoftDeleted('tasks', ['id' => $task->id]);
+        $this->assertModelExists($requirement);
     }
 
     public function test_other_actions_require_view(): void
     {
-        $user = $this->memberWith(['tasks' => ['create', 'update', 'delete']]);
+        $user = $this->memberWith(['requirements' => ['create', 'update', 'delete']]);
 
-        $this->assertFalse($user->hasPermission(PermissionModule::Tasks, PermissionAction::Create));
-        $this->actingAs($user)->get(route('tasks.create'))->assertForbidden();
+        $this->assertFalse($user->hasPermission(PermissionModule::Requirements, PermissionAction::Create));
+        $this->actingAs($user)->get(route('requirements.create'))->assertForbidden();
     }
 
     public function test_super_admins_cannot_be_restricted(): void

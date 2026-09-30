@@ -53,7 +53,7 @@ class LeadService
     /**
      * Now open to every user (see LeadPolicy::update()), so every field
      * change is diff-logged with who/when — same getRawOriginal()-before
-     * getDirty()-after pattern as TaskService/RequirementService::update(),
+     * getDirty()-after pattern as RequirementService::update(),
      * so the log stays correct regardless of anything downstream touching
      * the model afterward.
      */

@@ -120,11 +120,6 @@ class Lead extends Model
         return $this->hasMany(SupportTicket::class);
     }
 
-    public function tasks(): HasMany
-    {
-        return $this->hasMany(Task::class);
-    }
-
     public function scopeArchived($query)
     {
         return $query->whereNotNull('archived_at');

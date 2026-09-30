@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\FollowUpStatus;
 use App\Enums\RequirementStatus;
-use App\Enums\TaskStatus;
 use App\Enums\UserStatus;
 use App\Models\Announcement;
 use App\Models\DailySummary;
@@ -18,7 +17,6 @@ use App\Models\ReleaseNote;
 use App\Models\Requirement;
 use App\Models\RolePlaybook;
 use App\Models\SupportTicket;
-use App\Models\Task;
 use App\Models\User;
 use App\Support\BsDate;
 use App\Support\MotivationQuote;
@@ -261,7 +259,6 @@ class DashboardController extends Controller
         return view('dashboard.super-admin', $this->greeting($user) + [
             'totalLeads' => Lead::active()->count(),
             'totalUsers' => User::count(),
-            'openTasks' => Task::whereNotIn('status', [TaskStatus::Completed, TaskStatus::Cancelled])->count(),
             'openRequirements' => Requirement::whereNotIn('status', [RequirementStatus::Completed])->count(),
             'dealStats' => [
                 'count' => DealClosure::count(),

@@ -11,8 +11,8 @@ class UpdateAgendaStatusRequest extends FormRequest
     /**
      * Only the creator may finalize an agenda — enforced here (who), while
      * AgendaService::changeStatus() enforces the transition matrix (what
-     * transitions are legal), matching TaskPolicy/TaskService's separation
-     * of authorization from business-rule validity.
+     * transitions are legal) — authorization kept separate from
+     * business-rule validity.
      */
     public function authorize(): bool
     {

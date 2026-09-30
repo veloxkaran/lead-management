@@ -13,7 +13,6 @@ enum ActivityModule: string
     case Goal = 'goal';
     case KnowledgeBase = 'knowledge_base';
     case Meeting = 'meeting';
-    case Task = 'task';
     case Email = 'email';
     case Note = 'note';
     case Agenda = 'agenda';

@@ -6,7 +6,6 @@ use App\Enums\ActivityModule;
 use App\Enums\ActivityType;
 use App\Enums\ReminderType;
 use App\Enums\RequirementPriority;
-use App\Enums\TaskPriority;
 use App\Http\Requests\Lead\StoreLeadRequest;
 use App\Http\Requests\Lead\UpdateLeadRequest;
 use App\Models\ActivityLogEntry;
@@ -108,7 +107,6 @@ class LeadController extends Controller
             'statusHistories.fromStatus', 'statusHistories.toStatus', 'statusHistories.changedBy',
             'latestTraining.conductor',
             'supportTickets.assignee', 'supportTickets.attachments',
-            'tasks.assignee',
         ]);
 
         $changeLog = ActivityLogEntry::where('module', ActivityModule::Lead)
@@ -126,7 +124,6 @@ class LeadController extends Controller
             'activityTypes' => array_values(array_filter(ActivityType::cases(), fn (ActivityType $type) => $type !== ActivityType::TrainingUpdate)),
             'reminderTypes' => ReminderType::cases(),
             'priorities' => RequirementPriority::cases(),
-            'taskPriorities' => TaskPriority::cases(),
             'changeLog' => $changeLog,
         ]);
     }
@@ -168,7 +165,6 @@ class LeadController extends Controller
             'statusHistories.fromStatus', 'statusHistories.toStatus', 'statusHistories.changedBy',
             'trainings.conductor',
             'supportTickets.raiser', 'supportTickets.assignee', 'supportTickets.comments.author', 'supportTickets.attachments',
-            'tasks.creator', 'tasks.assignee', 'tasks.comments.author',
         ]);
 
         $filename = str($lead->company_name)->slug()."-full-history.pdf";

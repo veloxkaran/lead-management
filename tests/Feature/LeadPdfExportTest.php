@@ -6,7 +6,6 @@ use App\Enums\UserRole;
 use App\Models\Lead;
 use App\Models\Requirement;
 use App\Models\SupportTicket;
-use App\Models\Task;
 use App\Models\Training;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,7 +23,6 @@ class LeadPdfExportTest extends TestCase
         Requirement::factory()->create(['lead_id' => $lead->id]);
         $ticket = SupportTicket::factory()->create(['lead_id' => $lead->id]);
         $ticket->comments()->create(['comment' => 'Working on it', 'author_id' => $superAdmin->id]);
-        Task::factory()->create(['lead_id' => $lead->id]);
         Training::factory()->create(['lead_id' => $lead->id]);
 
         $response = $this->actingAs($superAdmin)->get(route('leads.export-pdf', $lead));

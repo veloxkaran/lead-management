@@ -18,7 +18,6 @@
             'followups' => ['Follow Ups', 'bi-bell', $lead->followUps->count()],
             'requirements' => ['Requirements', 'bi-list-check', $lead->requirements->count()],
             'support-tickets' => ['Support Tickets', 'bi-life-preserver', $lead->supportTickets->count()],
-            'tasks' => ['Tasks', 'bi-list-task', $lead->tasks->count()],
             'history' => ['Status History', 'bi-signpost-split', $lead->statusHistories->count()],
             'change-log' => ['Change Log', 'bi-journal-text', $changeLog->count()],
         ];
@@ -237,9 +236,6 @@
                     </div>
                     <div class="tab-pane fade" id="support-tickets" role="tabpanel">
                         @include('leads._support_tickets')
-                    </div>
-                    <div class="tab-pane fade" id="tasks" role="tabpanel">
-                        @include('leads._tasks')
                     </div>
                     <div class="tab-pane fade" id="history" role="tabpanel">
                         @include('leads._status_history')

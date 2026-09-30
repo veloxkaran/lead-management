@@ -107,7 +107,7 @@ class LeadPolicy
 
     /**
      * The full-history PDF pulls together every module's records for this
-     * lead (requirements, support tickets + comments, tasks + comments,
+     * lead (requirements, support tickets + comments,
      * account handoffs, etc.) into one document — restricted to Super Admin
      * only, unlike view()/update() which are open to everyone, since this
      * bypasses each module's own per-record visibility rules to compile

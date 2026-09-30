@@ -44,8 +44,7 @@ class Agenda extends Model
     /**
      * Every comment, top-level or reply — used for the "Total Discussion
      * Count" and the "Most Discussed" sort. Chronological (oldest first)
-     * since the thread reads top-to-bottom like a discussion, unlike
-     * TaskComment::comments()'s newest-first activity log style.
+     * since the thread reads top-to-bottom like a discussion.
      */
     public function comments(): HasMany
     {

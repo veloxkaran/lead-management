@@ -209,40 +209,6 @@
         <p class="empty">No support tickets recorded.</p>
     @endforelse
 
-    <h2>Tasks</h2>
-    @forelse ($lead->tasks as $task)
-        <table>
-            <thead><tr><th>Title</th><th>Priority</th><th>Status</th><th>Assigned</th><th>Due</th></tr></thead>
-            <tbody>
-                <tr>
-                    <td>{{ $task->title }}</td>
-                    <td>{{ $task->priority->label() }}</td>
-                    <td>{{ $task->status->label() }}</td>
-                    <td>{{ $task->assignee?->name ?? '—' }}</td>
-                    <td>{{ $task->due_date?->format('M d, Y') ?? '—' }}</td>
-                </tr>
-                @if ($task->description)
-                    <tr><td colspan="5"><strong>Description:</strong> {{ $task->description }}</td></tr>
-                @endif
-                <tr>
-                    <td colspan="5">
-                        <strong>Comments:</strong>
-                        @forelse ($task->comments as $comment)
-                            <div>
-                                <span class="muted">{{ $comment->created_at->format('M d, Y g:i A') }} &middot; {{ $comment->author?->name ?? '—' }}:</span>
-                                {{ $comment->comment }}
-                            </div>
-                        @empty
-                            <span class="empty">No comments.</span>
-                        @endforelse
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    @empty
-        <p class="empty">No tasks recorded.</p>
-    @endforelse
-
     <h2>Trainings</h2>
     <table>
         <thead><tr><th>Date</th><th>Status</th><th>Trainer</th><th>Attendees</th><th>Progress</th></tr></thead>

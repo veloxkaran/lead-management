@@ -72,9 +72,7 @@
                     <div class="d-flex justify-content-between mb-2"><span>Due Today</span><span class="badge bg-warning text-dark">{{ $reminderSummary['today'] }}</span></div>
                     <div class="d-flex justify-content-between mb-2"><span>Overdue</span><span class="badge bg-danger">{{ $reminderSummary['overdue'] }}</span></div>
                     <hr>
-                    <div class="d-flex justify-content-between mb-2"><span>Daily Summaries Submitted Today</span><span class="badge bg-success">{{ $productivity['submitted'] }}/{{ $productivity['total'] }}</span></div>
-                    <hr>
-                    <div class="d-flex justify-content-between"><span>Open Tasks</span><span class="badge bg-primary">{{ $openTasks }}</span></div>
+                    <div class="d-flex justify-content-between"><span>Daily Summaries Submitted Today</span><span class="badge bg-success">{{ $productivity['submitted'] }}/{{ $productivity['total'] }}</span></div>
                 </div>
             </div>
         </div>

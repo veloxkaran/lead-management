@@ -49,7 +49,7 @@ class EmailAccountService
         // getDirty() (after fill(), before save()) vs getRawOriginal() keeps
         // the diff correct regardless of what happens after save(), and keeps
         // old/new symmetric (both raw storage values) — same pattern as
-        // TaskService::update().
+        // RequirementService::update().
         $originalRaw = collect(array_keys($attributes))
             ->mapWithKeys(fn ($key) => [$key => $account->getRawOriginal($key)])
             ->all();

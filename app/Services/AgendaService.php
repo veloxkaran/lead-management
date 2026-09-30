@@ -44,8 +44,7 @@ class AgendaService
     /**
      * Enforces the transition matrix (Pending -> Closed/Dismissed only,
      * permanent thereafter) as a business rule here, separate from
-     * AgendaPolicy::update()'s "are you the creator" authorization check —
-     * same split TaskPolicy/TaskService use for who vs. what's valid.
+     * AgendaPolicy::update()'s "are you the creator" authorization check.
      */
     public function changeStatus(Agenda $agenda, AgendaStatus $target, User $actor): Agenda
     {
@@ -91,7 +90,7 @@ class AgendaService
     /**
      * "Notify all users" per the spec — every active user except whoever
      * just performed the action. No hierarchy/assignment scoping here,
-     * unlike Task/Lead notifications, since the Team Meeting Room is a
+     * unlike Lead notifications, since the Team Meeting Room is a
      * single shared space every user participates in.
      */
     private function notifyOthers(Agenda $agenda, User $actor, $notification): void

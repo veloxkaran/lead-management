@@ -14,7 +14,6 @@ use App\Models\RawData;
 use App\Models\ReleaseNote;
 use App\Models\Requirement;
 use App\Models\SupportTicket;
-use App\Models\Task;
 use App\Models\Training;
 
 /**
@@ -29,7 +28,6 @@ enum PermissionModule: string
     case RawData = 'raw_data';
     case Requirements = 'requirements';
     case FollowUps = 'follow_ups';
-    case Tasks = 'tasks';
     case SupportTickets = 'support_tickets';
     case Goals = 'goals';
     case Trainings = 'trainings';
@@ -48,7 +46,6 @@ enum PermissionModule: string
             self::RawData => 'Raw Data',
             self::Requirements => 'Requirements',
             self::FollowUps => 'Follow Ups',
-            self::Tasks => 'Tasks',
             self::SupportTickets => 'Support Tickets',
             self::Goals => 'Goals',
             self::Trainings => 'Trainings',
@@ -69,7 +66,6 @@ enum PermissionModule: string
             self::RawData => 'bi-inbox',
             self::Requirements => 'bi-list-check',
             self::FollowUps => 'bi-bell',
-            self::Tasks => 'bi-list-task',
             self::SupportTickets => 'bi-life-preserver',
             self::Goals => 'bi-bullseye',
             self::Trainings => 'bi-mortarboard',
@@ -117,7 +113,6 @@ enum PermissionModule: string
             RawData::class => self::RawData,
             Requirement::class => self::Requirements,
             FollowUp::class => self::FollowUps,
-            Task::class => self::Tasks,
             SupportTicket::class => self::SupportTickets,
             Goal::class => self::Goals,
             Training::class => self::Trainings,

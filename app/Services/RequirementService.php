@@ -96,7 +96,7 @@ class RequirementService
     /**
      * Diffs before fill()+save() (getDirty(), not getChanges()) so the log
      * is correct regardless of anything downstream touching the model
-     * afterward — same reasoning as TaskService::update(). Every field
+     * afterward. Every field
      * change is logged, not just due_date, since there's no reason a
      * priority/status/assignment change should be any less auditable.
      */

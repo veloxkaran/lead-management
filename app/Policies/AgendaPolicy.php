@@ -9,8 +9,7 @@ use App\Models\User;
  * The Team Meeting Room is shared by every user — visibility is never
  * restricted, so viewAny/view/create all stay wide open. Only finalizing
  * (closing/dismissing) an agenda is creator-restricted; that action reuses
- * update() rather than a bespoke ability name, matching TaskPolicy's
- * delegation pattern.
+ * update() rather than a bespoke ability name.
  */
 class AgendaPolicy
 {
