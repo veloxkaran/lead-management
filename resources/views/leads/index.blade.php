@@ -25,15 +25,15 @@
                 @if (!empty($filters['archived']))
                     <input type="hidden" name="archived" value="1">
                 @endif
-                <div class="col-md-3">
+                <div class="col-12 col-md-8 col-lg-3">
                     <label class="form-label small">Search</label>
                     <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control form-control-sm" placeholder="Company, contact, email" x-data x-on:input.debounce.500ms="$el.form.requestSubmit()">
                 </div>
-                <div class="col-md-2">
+                <div class="col-12 col-md-4 col-lg-2">
                     <label class="form-label small">Company Name</label>
                     <input type="text" name="company_name" value="{{ $filters['company_name'] ?? '' }}" class="form-control form-control-sm" placeholder="Company name">
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-4 col-lg-2">
                     <label class="form-label small">Status</label>
                     <select name="status_id" class="form-select form-select-sm">
                         <option value="">All statuses</option>
@@ -42,7 +42,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-4 col-lg-2">
                     <label class="form-label small">Industry</label>
                     <select name="industry" class="form-select form-select-sm">
                         <option value="">All industries</option>
@@ -52,7 +52,7 @@
                         <option value="_none" @selected(($filters['industry'] ?? null) === '_none')>No industry</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-4 col-lg-2">
                     <label class="form-label small">Assigned To</label>
                     <select name="assigned_user_id" class="form-select form-select-sm">
                         <option value="">Everyone</option>
@@ -61,7 +61,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-4 col-lg-2">
                     <label class="form-label small">Created By</label>
                     <select name="created_by" class="form-select form-select-sm">
                         <option value="">Everyone</option>
@@ -70,7 +70,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-4 col-lg-2">
                     <label class="form-label small">Created (BS Year)</label>
                     <select name="bs_year" class="form-select form-select-sm">
                         <option value="">Any year</option>
@@ -79,7 +79,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-6 col-md-4 col-lg-2">
                     <label class="form-label small">Created (BS Month)</label>
                     <select name="bs_month" class="form-select form-select-sm">
                         <option value="">Any month</option>
@@ -88,7 +88,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3 d-flex gap-2">
+                <div class="col-12 col-md-4 col-lg-3 d-flex gap-2">
                     <button type="submit" class="btn btn-sm btn-primary flex-fill"><i class="bi bi-funnel"></i> Filter</button>
                     <a href="{{ route('leads.index') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
                 </div>

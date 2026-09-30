@@ -34,7 +34,7 @@
                         <input type="search" name="search" class="form-control" placeholder="Search requirement or company" value="{{ $filters['search'] ?? '' }}">
                     </div>
                 </div>
-                <div style="flex: 0 1 200px; min-width: 160px;">
+                <div class="filter-bar-item" style="--filter-basis: 200px; --filter-min: 160px;">
                     <select name="lead_id" class="form-select form-select-sm" data-select2-field aria-label="Company">
                         <option value="">All companies</option>
                         @foreach ($companies as $company)
@@ -42,7 +42,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div style="flex: 0 1 170px; min-width: 140px;">
+                <div class="filter-bar-item" style="--filter-basis: 170px; --filter-min: 140px;">
                     <select name="system_module_id" class="form-select form-select-sm" data-select2-field aria-label="Module">
                         <option value="">All modules</option>
                         @foreach ($systemModules as $module)
@@ -51,7 +51,7 @@
                         <option value="_none" @selected(($filters['system_module_id'] ?? null) === '_none')>No module</option>
                     </select>
                 </div>
-                <div style="flex: 0 1 150px; min-width: 130px;">
+                <div class="filter-bar-item" style="--filter-basis: 150px; --filter-min: 130px;">
                     <select name="status" class="form-select form-select-sm" data-select2-field aria-label="Status">
                         <option value="">All statuses</option>
                         @foreach ($statuses as $status)
@@ -59,7 +59,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div style="flex: 0 1 130px; min-width: 115px;">
+                <div class="filter-bar-item" style="--filter-basis: 130px; --filter-min: 115px;">
                     <select name="priority" class="form-select form-select-sm" data-select2-field aria-label="Priority">
                         <option value="">All priorities</option>
                         @foreach ($priorities as $priority)

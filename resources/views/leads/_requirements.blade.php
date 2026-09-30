@@ -1,22 +1,23 @@
+{{-- Two rows (module + text, then details): the tab panel is too narrow for one line even on wide screens. --}}
 <form method="POST" action="{{ route('leads.requirements.store', $lead) }}" class="row g-2 mb-3">
     @csrf
-    <div class="col-md-2">
+    <div class="col-12 col-sm-5">
         <x-system-module-select :modules="$systemModules" :label="false" compact />
     </div>
-    <div class="col-md-3">
+    <div class="col-12 col-sm-7">
         <textarea name="requirement" rows="1" class="form-control form-control-sm" placeholder="Describe the requirement" required style="resize: none; overflow: hidden;" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'"></textarea>
     </div>
-    <div class="col-md-2">
+    <div class="col-6 col-sm-3">
         <select name="priority" class="form-select form-select-sm">
             @foreach ($priorities as $priority)
                 <option value="{{ $priority->value }}" @selected($priority->value === 'medium')>{{ $priority->label() }}</option>
             @endforeach
         </select>
     </div>
-    <div class="col-md-2">
+    <div class="col-6 col-sm-3">
         <input type="date" name="due_date" class="form-control form-control-sm" title="Due date">
     </div>
-    <div class="col-md-2">
+    <div class="col-9 col-sm-4">
         <select name="assigned_to" class="form-select form-select-sm">
             <option value="">Unassigned</option>
             @foreach ($users as $u)
@@ -24,8 +25,8 @@
             @endforeach
         </select>
     </div>
-    <div class="col-md-1">
-        <button class="btn btn-sm btn-primary w-100"><i class="bi bi-plus-lg"></i></button>
+    <div class="col-3 col-sm-2">
+        <button class="btn btn-sm btn-primary w-100" title="Add requirement" aria-label="Add requirement"><i class="bi bi-plus-lg"></i></button>
     </div>
 </form>
 

@@ -28,9 +28,9 @@
     <div class="card border-0 shadow-sm" x-data="requirementList(@js($listItems))">
         @if ($requirements->isNotEmpty())
             <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2">
-                <div class="btn-group btn-group-sm" role="group" aria-label="Filter requirements">
+                <div class="d-flex flex-wrap gap-1" role="group" aria-label="Filter requirements">
                     @foreach (['all' => ['All', $summary->total], 'open' => ['Open', $summary->open], 'overdue' => ['Overdue', $summary->overdue], 'completed' => ['Completed', $summary->completed]] as $key => [$label, $count])
-                        <button type="button" class="btn" :class="view === '{{ $key }}' ? 'btn-primary' : 'btn-outline-secondary'" @click="view = '{{ $key }}'">
+                        <button type="button" class="btn btn-sm" :class="view === '{{ $key }}' ? 'btn-primary' : 'btn-outline-secondary'" @click="view = '{{ $key }}'">
                             {{ $label }} <span class="badge rounded-pill ms-1" :class="view === '{{ $key }}' ? 'bg-white text-primary' : 'bg-secondary-subtle text-secondary-emphasis'">{{ $count }}</span>
                         </button>
                     @endforeach
@@ -39,7 +39,7 @@
                     <span class="input-group-text"><i class="bi bi-search"></i></span>
                     <input type="search" class="form-control" placeholder="Search requirements or assignee" x-model.debounce.150ms="q">
                 </div>
-                <div class="d-flex align-items-center gap-3 small text-muted">
+                <div class="d-flex flex-wrap align-items-center column-gap-3 row-gap-1 small text-muted">
                     @include('requirements._progress', ['summary' => $summary])
                     <span title="Average time from generated to solved" class="text-nowrap"><i class="bi bi-stopwatch"></i> {{ $summary->avgSolvingTime ?? 'No completed yet' }}</span>
                 </div>

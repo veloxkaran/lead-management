@@ -1237,3 +1237,31 @@ a.lead-chip:hover {
         color: var(--app-accent);
     }
 }
+
+// ---- Requirements list filter bar: fixed-basis items (set per item via
+// --filter-basis/--filter-min) keep the bar's shape stable on wide screens;
+// on phones they pair up two per row and fill the width instead of leaving
+// a ragged column of differently-sized dropdowns.
+.filter-bar-item {
+    flex: 0 1 var(--filter-basis, 150px);
+    min-width: var(--filter-min, 120px);
+}
+
+@media (max-width: 575.98px) {
+    .filter-bar-item {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-width: 0;
+    }
+}
+
+// ---- Touch devices: iOS Safari zooms the whole page when a focused field's
+// text is under 16px (and every *-sm control here is 14px), leaving the user
+// pinch-zooming back out after each tap. 16px on touch screens only, so
+// desktop density is unchanged.
+@media (hover: none) and (pointer: coarse) {
+    .form-control,
+    .form-select,
+    .select2-container--bootstrap-5 .select2-search__field {
+        font-size: 16px !important;
+    }
+}
