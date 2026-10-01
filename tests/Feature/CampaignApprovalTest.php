@@ -31,7 +31,7 @@ class CampaignApprovalTest extends TestCase
 
     private function submit(User $creator, array $overrides = []): Campaign
     {
-        $this->actingAs($creator)->post(route('campaigns.store'), [
+        $this->actingAs($creator)->postCampaign([
             'name' => 'Dashain offer',
             'channel' => 'email',
             'subject' => 'Offer for {{company_name}}',
@@ -105,7 +105,11 @@ class CampaignApprovalTest extends TestCase
             ->assertSee('A Super Admin needs to approve this')
             ->assertDontSee('Approve &amp; send', false);
         $this->actingAs($creator)->get(route('campaigns.email-preview', $campaign))->assertOk();
-        $this->actingAs($this->user(UserRole::BusinessDevelopment))->get(route('campaigns.email-preview', $campaign))->assertForbidden();
+        // Anyone allowed to view campaigns can see it; not someone without that permission.
+        $this->actingAs($this->user(UserRole::BusinessDevelopment))->get(route('campaigns.email-preview', $campaign))->assertOk();
+        $noView = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
+        $noView->forceFill(['permissions' => ['campaigns' => []]])->save();
+        $this->actingAs($noView)->get(route('campaigns.email-preview', $campaign))->assertForbidden();
     }
 
     public function test_approving_sends_it_and_tells_the_creator(): void

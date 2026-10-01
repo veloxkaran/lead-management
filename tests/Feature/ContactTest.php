@@ -228,7 +228,7 @@ class ContactTest extends TestCase
             ->assertOk()->assertJson(['total' => 2, 'from_contacts' => 2]);
 
         // The lead and the contact share an email — sent once, as the lead.
-        $this->actingAs($user)->post(route('campaigns.store'), [
+        $this->actingAs($user)->postCampaign([
             'name' => 'To contacts', 'channel' => 'email', 'subject' => 'Hi {{name}}', 'message' => 'Hello {{company_name}}',
             'audience' => 'all_leads', 'all_contacts' => '1', 'contact_ids' => [$ram->id],
         ])->assertSessionHasNoErrors();

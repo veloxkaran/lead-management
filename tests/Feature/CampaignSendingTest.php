@@ -69,7 +69,7 @@ class CampaignSendingTest extends TestCase
         $user = User::factory()->superAdmin()->create();
         Lead::factory()->count(3)->sequence(fn ($s) => ['email' => "lead{$s->index}@example.com"])->create();
 
-        $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload())
+        $this->actingAs($user)->postCampaign($this->emailCampaignPayload())
             ->assertRedirect()
             ->assertSessionHas('success');
 
@@ -91,7 +91,7 @@ class CampaignSendingTest extends TestCase
         $user = User::factory()->superAdmin()->create();
         Lead::factory()->create(['company_name' => 'Acme', 'contact_person' => 'Ram', 'email' => 'ram@acme.test']);
 
-        $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload());
+        $this->actingAs($user)->postCampaign($this->emailCampaignPayload());
 
         $recipient = CampaignRecipient::firstOrFail();
         $this->assertSame(CampaignRecipientStatus::Sent, $recipient->status);
@@ -133,7 +133,7 @@ class CampaignSendingTest extends TestCase
         $user = User::factory()->superAdmin()->create();
         config(['campaigns.mail' => ['host' => '127.0.0.1', 'port' => 1, 'username' => 'campaigns@example.com', 'password' => 'x', 'encryption' => 'none', 'from_address' => 'campaigns@example.com', 'from_name' => null, 'reply_to' => null]]);
 
-        $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload([
+        $this->actingAs($user)->postCampaign($this->emailCampaignPayload([
             'audience' => 'none',
             'extra_contacts' => 'someone@example.com',
         ]));
@@ -151,7 +151,7 @@ class CampaignSendingTest extends TestCase
         $user = User::factory()->superAdmin()->create();
         Lead::factory()->create(['contact_person' => 'Sita', 'phone' => '+977 9800000001']);
 
-        $this->actingAs($user)->post(route('campaigns.store'), [
+        $this->actingAs($user)->postCampaign([
             'name' => 'SMS blast',
             'channel' => 'sms',
             'message' => 'Namaste {{name}}',
@@ -175,7 +175,7 @@ class CampaignSendingTest extends TestCase
         Http::fake(['sms.test/*' => Http::response(['response_code' => 200])]);
         $user = User::factory()->superAdmin()->create();
 
-        $this->actingAs($user)->post(route('campaigns.store'), [
+        $this->actingAs($user)->postCampaign([
             'name' => 'SMS', 'channel' => 'sms', 'message' => 'Hi', 'audience' => 'none', 'extra_contacts' => '9800000001',
         ]);
 
@@ -191,7 +191,7 @@ class CampaignSendingTest extends TestCase
         Http::fake(['sms.test/*' => Http::response(['response_code' => 1002, 'response' => 'Invalid token'])]);
         $user = User::factory()->superAdmin()->create();
 
-        $this->actingAs($user)->post(route('campaigns.store'), [
+        $this->actingAs($user)->postCampaign([
             'name' => 'SMS', 'channel' => 'sms', 'message' => 'Hi', 'audience' => 'none', 'extra_contacts' => '9800000001',
         ]);
 
@@ -205,7 +205,7 @@ class CampaignSendingTest extends TestCase
         Http::fake();
         $user = User::factory()->superAdmin()->create();
 
-        $this->actingAs($user)->post(route('campaigns.store'), [
+        $this->actingAs($user)->postCampaign([
             'name' => 'SMS', 'channel' => 'sms', 'message' => 'Hi', 'audience' => 'none', 'extra_contacts' => '9800000001',
         ]);
 
@@ -246,7 +246,7 @@ class CampaignSendingTest extends TestCase
         $user = User::factory()->superAdmin()->create();
         Lead::factory()->create(['email' => 'a@example.com']);
 
-        $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload([
+        $this->actingAs($user)->postCampaign($this->emailCampaignPayload([
             'scheduled_at' => now()->addHour()->format('Y-m-d\TH:i'),
         ]))->assertSessionHasNoErrors();
 
@@ -270,7 +270,7 @@ class CampaignSendingTest extends TestCase
         $user = User::factory()->superAdmin()->create();
         Lead::factory()->create(['email' => 'a@example.com']);
 
-        $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload());
+        $this->actingAs($user)->postCampaign($this->emailCampaignPayload());
         $campaign = Campaign::firstOrFail();
 
         app(CampaignService::class)->dispatch($campaign);
@@ -286,7 +286,7 @@ class CampaignSendingTest extends TestCase
         $user = User::factory()->superAdmin()->create();
         Lead::factory()->count(2)->sequence(fn ($s) => ['email' => "l{$s->index}@example.com"])->create();
 
-        $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload());
+        $this->actingAs($user)->postCampaign($this->emailCampaignPayload());
         $campaign = Campaign::firstOrFail();
 
         $this->actingAs($user)->post(route('campaigns.cancel', $campaign))->assertSessionHas('success');
@@ -306,20 +306,63 @@ class CampaignSendingTest extends TestCase
         $user = User::factory()->superAdmin()->create();
         Lead::factory()->create(['email' => null]);
 
-        $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload())
-            ->assertSessionHasErrors('recipients');
+        // The preview step catches it, so it never gets as far as saving.
+        $this->actingAs($user)->postJson(route('campaigns.compose-preview'), $this->emailCampaignPayload())
+            ->assertStatus(422)->assertJsonValidationErrors('recipients');
+        $this->actingAs($user)->postCampaign($this->emailCampaignPayload())->assertSessionHasErrors('preview_token');
 
         $this->assertSame(0, Campaign::count());
+    }
+
+    public function test_a_campaign_must_be_previewed_exactly_as_it_is_sent(): void
+    {
+        $user = User::factory()->superAdmin()->create();
+        Lead::factory()->create(['company_name' => 'Acme', 'contact_person' => 'Ram', 'email' => 'ram@acme.test']);
+        $payload = $this->emailCampaignPayload();
+
+        // No preview → refused.
+        $this->actingAs($user)->post(route('campaigns.store'), $payload)->assertSessionHasErrors(['preview_token' => 'Preview the campaign before sending it.']);
+
+        $preview = $this->actingAs($user)->postJson(route('campaigns.compose-preview'), $payload)->assertOk();
+        $preview->assertJson([
+            'channel' => 'email',
+            'subject' => 'Offer for Acme',
+            'to' => 'Ram <ram@acme.test>',
+            'requires_approval' => false,
+            'summary' => ['total' => 1, 'from_leads' => 1, 'batches' => 1, 'when' => "As soon as it's sent"],
+        ]);
+        $this->assertStringContainsString('Hi Ram,', $preview->json('html'));
+
+        // Edited after previewing → refused.
+        $this->actingAs($user)->post(route('campaigns.store'), [...$payload, 'message' => 'Changed!', 'preview_token' => $preview->json('token')])
+            ->assertSessionHasErrors(['preview_token' => 'The campaign changed after it was previewed — preview it again before sending.']);
+        $this->assertSame(0, Campaign::count());
+
+        // Renaming is fine; the previewed campaign goes out.
+        $this->actingAs($user)->post(route('campaigns.store'), [...$payload, 'name' => 'Renamed', 'preview_token' => $preview->json('token')])
+            ->assertSessionHasNoErrors();
+        $this->assertSame('Renamed', Campaign::firstOrFail()->name);
+
+        // Someone else can't reuse another user's preview.
+        $other = User::factory()->superAdmin()->create();
+        $this->actingAs($other)->post(route('campaigns.store'), [...$payload, 'preview_token' => $preview->json('token')])->assertSessionHasErrors('preview_token');
+
+        // A non-Super-Admin's preview says it goes for approval.
+        $this->actingAs(User::factory()->create())->postJson(route('campaigns.compose-preview'), $payload)
+            ->assertOk()->assertJson(['requires_approval' => true, 'summary' => ['when' => 'As soon as a Super Admin approves it']]);
+
+        $this->actingAs($user)->get(route('campaigns.create'))->assertOk()->assertSee('Preview &amp; Send', false);
+        $this->actingAs(User::factory()->create())->get(route('campaigns.create'))->assertSee('Preview &amp; Submit for Approval', false);
     }
 
     public function test_campaign_validation(): void
     {
         $user = User::factory()->superAdmin()->create();
 
-        $this->actingAs($user)->post(route('campaigns.store'), ['channel' => 'email', 'audience' => 'all_leads'])
+        $this->actingAs($user)->postCampaign(['channel' => 'email', 'audience' => 'all_leads'])
             ->assertSessionHasErrors(['name', 'subject', 'message']);
 
-        $this->actingAs($user)->post(route('campaigns.store'), [
+        $this->actingAs($user)->postCampaign([
             'name' => 'x', 'channel' => 'sms', 'audience' => 'all_leads',
             'message' => str_repeat('a', 919),
             'scheduled_at' => now()->subHour()->format('Y-m-d\TH:i'),

@@ -53,7 +53,7 @@ class CampaignBatchingTest extends TestCase
 
     private function createCampaign(User $user, int $contacts, array $overrides = []): Campaign
     {
-        $this->actingAs($user)->post(route('campaigns.store'), [
+        $this->actingAs($user)->postCampaign([
             'name' => 'Big send',
             'channel' => 'email',
             'subject' => 'Hello {{name}}',
@@ -382,8 +382,9 @@ class CampaignBatchingTest extends TestCase
         $this->assertStringStartsWith('Batch,Email,Name,Company,Source,Status,Error,"Queued at","Sent at","Opened at","Unsubscribed at"', $lines[0]);
         $this->assertStringContainsString('3,person5@example.com', $csv);
 
-        $other = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
-        $this->actingAs($other)->get(route('campaigns.export', $campaign))->assertForbidden();
+        $noView = User::factory()->create(['role' => UserRole::BusinessDevelopment]);
+        $noView->forceFill(['permissions' => ['campaigns' => []]])->save();
+        $this->actingAs($noView)->get(route('campaigns.export', $campaign))->assertForbidden();
     }
 
     public function test_messages_stuck_in_the_queue_are_flagged(): void

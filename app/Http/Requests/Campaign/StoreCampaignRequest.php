@@ -6,8 +6,10 @@ use App\Enums\CampaignAudience;
 use App\Enums\CampaignChannel;
 use App\Models\Campaign;
 use App\Models\Industry;
+use App\Support\CampaignPreviewToken;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreCampaignRequest extends FormRequest
 {
@@ -32,6 +34,22 @@ class StoreCampaignRequest extends FormRequest
             'message' => ['required', 'string', 'max:'.($isEmail ? self::EMAIL_MAX : self::SMS_MAX)],
             'scheduled_at' => ['nullable', 'date', 'after:now'],
             'include_signature' => ['nullable', 'boolean'],
+            'preview_token' => ['required', 'string'],
+        ];
+    }
+
+    /**
+     * The campaign must have been previewed exactly as submitted — see
+     * CampaignPreviewToken.
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator) {
+                if ($this->filled('preview_token') && ! CampaignPreviewToken::matches($this, $this->input('preview_token'))) {
+                    $validator->errors()->add('preview_token', 'The campaign changed after it was previewed — preview it again before sending.');
+                }
+            },
         ];
     }
 
@@ -61,6 +79,7 @@ class StoreCampaignRequest extends FormRequest
     {
         return [
             'scheduled_at.after' => 'Pick a time in the future, or leave it blank to send now.',
+            'preview_token.required' => 'Preview the campaign before sending it.',
             'lead_status_ids.required_if' => 'Choose at least one lead status.',
             'industries.required_if' => 'Choose at least one industry.',
         ];

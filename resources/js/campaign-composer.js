@@ -48,7 +48,7 @@ window.campaignSendingPlan = function (count, { batch_size, per_minute, pause_mi
     return { batches, size, minutes, duration: formatMinutes(minutes), perHour: perHour.toLocaleString() };
 };
 
-window.campaignComposer = function ({ channel, audience, subject = '', message = '', scheduledAt = '', previewUrl, sendOptions = {} }) {
+window.campaignComposer = function ({ channel, audience, subject = '', message = '', scheduledAt = '', previewUrl, composePreviewUrl, sendOptions = {} }) {
     return {
         channel,
         audience,
@@ -62,8 +62,18 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
         timer: null,
         request: 0,
         submitting: false,
+        // The required preview step: the server's rendering of the campaign
+        // and the token proving it was seen (see CampaignPreviewToken).
+        review: null,
+        reviewing: false,
+        reviewErrors: [],
+        confirmed: false,
 
         init() {
+            // Any edit after previewing means previewing again.
+            this.$el.addEventListener('input', (event) => {
+                if (!event.target.closest('.modal')) this.review = null;
+            });
             // select2 fires jQuery events, which native/Alpine listeners don't see.
             if (window.jQuery) {
                 window.jQuery(this.$el).on('change', 'select[data-select2-field]', () => this.schedulePreview());
@@ -120,6 +130,48 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
             }
 
             return warnings;
+        },
+
+        /**
+         * The form never submits straight from the main button: it opens
+         * the preview, and only "Send" / "Submit for approval" in there
+         * actually submits.
+         */
+        onSubmit(event) {
+            if (!this.confirmed) {
+                event.preventDefault();
+                this.openPreview();
+
+                return;
+            }
+
+            this.submitting = true;
+        },
+
+        openPreview() {
+            const data = new FormData(this.$el);
+            data.delete('preview_token');
+
+            this.reviewing = true;
+            this.reviewErrors = [];
+
+            axios.post(composePreviewUrl, data)
+                .then(({ data: review }) => {
+                    this.review = review;
+                    window.bootstrap.Modal.getOrCreateInstance(this.$refs.reviewModal).show();
+                })
+                .catch((error) => {
+                    const errors = error.response?.data?.errors;
+                    this.reviewErrors = errors ? Object.values(errors).flat() : ['Could not build the preview — try again.'];
+                })
+                .finally(() => {
+                    this.reviewing = false;
+                });
+        },
+
+        confirmSend() {
+            this.confirmed = true;
+            this.$nextTick(() => this.$el.requestSubmit());
         },
 
         schedulePreview(delay = 500) {

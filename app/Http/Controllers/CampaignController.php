@@ -6,6 +6,7 @@ use App\Enums\CampaignAudience;
 use App\Enums\CampaignChannel;
 use App\Enums\CampaignRecipientStatus;
 use App\Enums\CampaignStatus;
+use App\Http\Requests\Campaign\ComposePreviewRequest;
 use App\Http\Requests\Campaign\PreviewCampaignRecipientsRequest;
 use App\Http\Requests\Campaign\StoreCampaignRequest;
 use App\Models\Campaign;
@@ -13,16 +14,16 @@ use App\Models\Contact;
 use App\Models\Industry;
 use App\Models\Lead;
 use App\Models\LeadStatus;
-use App\Policies\CampaignPolicy;
 use App\Services\CampaignMailer;
 use App\Services\CampaignService;
+use App\Support\CampaignPreviewToken;
 use App\Support\CampaignSettings;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -40,7 +41,7 @@ class CampaignController extends Controller
         $status = CampaignStatus::tryFrom((string) $request->query('status'));
 
         return view('campaigns.index', [
-            'campaigns' => $this->visibleTo($request)
+            'campaigns' => Campaign::query()
                 ->with('creator')
                 ->withCount(Campaign::statusCounts())
                 ->when($status, fn ($q, $status) => $q->where('status', $status))
@@ -50,7 +51,7 @@ class CampaignController extends Controller
                 ->paginate(20)
                 ->withQueryString(),
             'currentStatus' => $status,
-            'awaitingCount' => $this->visibleTo($request)->where('status', CampaignStatus::AwaitingApproval)->count(),
+            'awaitingCount' => Campaign::query()->where('status', CampaignStatus::AwaitingApproval)->count(),
         ]);
     }
 
@@ -93,6 +94,75 @@ class CampaignController extends Controller
     public function preview(PreviewCampaignRecipientsRequest $request): JsonResponse
     {
         return response()->json($this->campaigns->recipientList($request->validated())->summary());
+    }
+
+    /**
+     * The required preview before sending: the message exactly as the
+     * first recipient gets it (for email, the full rendered email), plus
+     * who it reaches and how long sending takes. Returns the token the
+     * form must send back with the campaign (CampaignPreviewToken).
+     */
+    public function composePreview(ComposePreviewRequest $request, CampaignMailer $mailer, CampaignSettings $settings): JsonResponse
+    {
+        $input = $request->validated();
+        $channel = CampaignChannel::from($input['channel']);
+        $list = $this->campaigns->recipientList($input);
+
+        if ($list->count() === 0) {
+            return response()->json(['message' => 'No one to send to.', 'errors' => [
+                'recipients' => ['No one to send to — choose leads or contacts, or add contacts with a valid '.($channel === CampaignChannel::Email ? 'email address.' : 'phone number.')],
+            ]], 422);
+        }
+
+        $first = $list->recipients[0];
+        $options = $settings->sendOptions($channel);
+        $options['include_signature'] = $options['include_signature'] && (bool) ($input['include_signature'] ?? true);
+
+        // An unsaved campaign, just to reuse the batch/duration arithmetic.
+        $draft = new Campaign(['channel' => $channel, 'recipient_count' => $list->count(), 'send_options' => $options]);
+        $minutes = $draft->estimatedDurationMinutes();
+        $scheduledAt = ! empty($input['scheduled_at']) ? Carbon::parse($input['scheduled_at']) : null;
+
+        $preview = [
+            'token' => CampaignPreviewToken::for($request),
+            'channel' => $channel->value,
+            'to' => trim(($first['name'] ? $first['name'].' ' : '').'<'.$first['address'].'>'),
+            'requires_approval' => Campaign::requiresApproval($request->user()),
+            'summary' => [
+                ...$list->summary(0),
+                'batches' => (int) ceil($list->count() / $options['batch_size']),
+                'batch_size' => $options['batch_size'],
+                'per_minute' => $options['per_minute'],
+                'pause_minutes' => $options['pause_minutes'],
+                'duration' => $minutes < 60 ? "{$minutes} min" : intdiv($minutes, 60).'h'.($minutes % 60 ? ' '.($minutes % 60).'m' : ''),
+                'when' => $scheduledAt ? 'Scheduled for '.$scheduledAt->format('M d, Y g:i A') : 'As soon as it\'s sent',
+                'include_signature' => $options['include_signature'],
+                'track_opens' => $options['track_opens'],
+            ],
+        ];
+
+        if ($channel === CampaignChannel::Email) {
+            $mail = $mailer->compose(
+                CampaignService::personalize((string) $input['subject'], $first),
+                CampaignService::personalize($input['message'], $first),
+                null,
+                $options['include_signature'],
+                false,
+            );
+            $mail->unsubscribeUrl = '#unsubscribe';
+
+            $preview += ['from' => $mailer->senderDescription(), 'subject' => $mail->renderedSubject, 'html' => $mail->render()];
+        } else {
+            $preview += ['text' => CampaignService::personalize($input['message'], $first)];
+        }
+
+        if ($scheduledAt) {
+            $preview['summary']['when'] .= Campaign::requiresApproval($request->user()) ? ' (once approved)' : '';
+        } elseif (Campaign::requiresApproval($request->user())) {
+            $preview['summary']['when'] = 'As soon as a Super Admin approves it';
+        }
+
+        return response()->json($preview);
     }
 
     public function store(StoreCampaignRequest $request): RedirectResponse
@@ -322,12 +392,5 @@ class CampaignController extends Controller
             ->whereNotNull('queued_at')
             ->where('queued_at', '<', now()->subMinutes($spread + (int) config('campaigns.stuck_after_minutes')))
             ->count();
-    }
-
-    private function visibleTo(Request $request): Builder
-    {
-        $user = $request->user();
-
-        return Campaign::query()->when(! CampaignPolicy::seesAllCampaigns($user), fn ($q) => $q->where('created_by', $user->id));
     }
 }

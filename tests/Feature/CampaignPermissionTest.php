@@ -53,35 +53,52 @@ class CampaignPermissionTest extends TestCase
 
         $this->actingAs($user)->get(route('campaigns.index'))->assertOk()->assertSee(route('campaigns.create'));
         $this->actingAs($user)->get(route('campaigns.create'))->assertOk();
-        $this->actingAs($user)->post(route('campaigns.store'), $this->payload())->assertRedirect();
+        $this->actingAs($user)->postCampaign($this->payload())->assertRedirect();
         $this->actingAs($user)->get(route('dashboard'))->assertSee(route('campaigns.index'));
 
         $this->assertSame(1, Campaign::count());
     }
 
     #[DataProvider('otherRoles')]
-    public function test_other_roles_cannot_reach_campaigns_at_all(UserRole $role): void
+    public function test_other_roles_can_view_campaigns_but_not_create_them(UserRole $role): void
     {
         $user = $this->user($role);
+        $campaign = Campaign::factory()->create(['name' => 'Team Campaign']);
+
+        $this->actingAs($user)->get(route('campaigns.index'))->assertOk()->assertSee('Team Campaign')->assertDontSee(route('campaigns.create'));
+        $this->actingAs($user)->get(route('campaigns.show', $campaign))->assertOk();
+        $this->actingAs($user)->get(route('dashboard'))->assertSee(route('campaigns.index'));
+        $this->actingAs($user)->get(route('campaigns.create'))->assertForbidden();
+        $this->actingAs($user)->postCampaign($this->payload())->assertForbidden();
+        $this->actingAs($user)->postJson(route('campaigns.preview'), $this->payload())->assertForbidden();
+    }
+
+    public function test_everyone_permitted_to_view_sees_every_campaign_but_only_manages_their_own(): void
+    {
+        $me = $this->user(UserRole::BusinessDevelopment);
+        $mine = Campaign::factory()->create(['name' => 'My Campaign', 'created_by' => $me->id, 'status' => CampaignStatus::Sending]);
+        $theirs = Campaign::factory()->create(['name' => 'Someone Else Campaign', 'status' => CampaignStatus::Sending]);
+
+        $this->actingAs($me)->get(route('campaigns.index'))->assertSee('My Campaign')->assertSee('Someone Else Campaign');
+        $this->actingAs($me)->get(route('campaigns.show', $theirs))->assertOk()->assertDontSee('Cancel Campaign')->assertDontSee(route('campaigns.pause', $theirs));
+        $this->actingAs($me)->get(route('campaigns.export', $theirs))->assertOk();
+        $this->actingAs($me)->post(route('campaigns.pause', $theirs))->assertForbidden();
+        $this->actingAs($me)->post(route('campaigns.cancel', $theirs))->assertForbidden();
+
+        $this->actingAs($me)->get(route('campaigns.show', $mine))->assertOk()->assertSee('Cancel Campaign');
+        $this->actingAs($me)->post(route('campaigns.pause', $mine))->assertSessionHas('success');
+    }
+
+    public function test_members_without_the_view_permission_cannot_see_campaigns(): void
+    {
+        $user = $this->user(UserRole::Finance, ['campaigns' => []]);
         $campaign = Campaign::factory()->create();
 
         $this->actingAs($user)->get(route('campaigns.index'))->assertForbidden();
-        $this->actingAs($user)->get(route('campaigns.create'))->assertForbidden();
-        $this->actingAs($user)->post(route('campaigns.store'), $this->payload())->assertForbidden();
-        $this->actingAs($user)->postJson(route('campaigns.preview'), $this->payload())->assertForbidden();
         $this->actingAs($user)->get(route('campaigns.show', $campaign))->assertForbidden();
+        $this->actingAs($user)->get(route('campaigns.export', $campaign))->assertForbidden();
+        $this->actingAs($user)->get(route('campaigns.email-preview', $campaign))->assertForbidden();
         $this->actingAs($user)->get(route('dashboard'))->assertDontSee(route('campaigns.index'));
-    }
-
-    public function test_business_development_only_sees_their_own_campaigns(): void
-    {
-        $me = $this->user(UserRole::BusinessDevelopment);
-        $mine = Campaign::factory()->create(['name' => 'My Campaign', 'created_by' => $me->id]);
-        $theirs = Campaign::factory()->create(['name' => 'Someone Else Campaign']);
-
-        $this->actingAs($me)->get(route('campaigns.index'))->assertSee('My Campaign')->assertDontSee('Someone Else Campaign');
-        $this->actingAs($me)->get(route('campaigns.show', $mine))->assertOk();
-        $this->actingAs($me)->get(route('campaigns.show', $theirs))->assertForbidden();
     }
 
     public function test_managers_and_super_admins_see_every_campaign(): void
@@ -101,7 +118,7 @@ class CampaignPermissionTest extends TestCase
 
         $this->actingAs($user)->get(route('campaigns.index'))->assertOk()->assertDontSee(route('campaigns.create'));
         $this->actingAs($user)->get(route('campaigns.create'))->assertForbidden();
-        $this->actingAs($user)->post(route('campaigns.store'), $this->payload())->assertForbidden();
+        $this->actingAs($user)->postCampaign($this->payload())->assertForbidden();
         $this->actingAs($user)->postJson(route('campaigns.preview'), $this->payload())->assertForbidden();
 
         $this->assertSame(0, Campaign::count());

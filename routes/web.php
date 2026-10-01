@@ -232,6 +232,7 @@ Route::middleware('auth')->group(function () {
     // Super Admin, Manager and Business Development — see CampaignPolicy.
     Route::middleware('permission:campaigns')->group(function () {
         Route::post('campaigns/preview', [CampaignController::class, 'preview'])->middleware('permission:campaigns,create')->name('campaigns.preview');
+        Route::post('campaigns/compose-preview', [CampaignController::class, 'composePreview'])->middleware('permission:campaigns,create')->name('campaigns.compose-preview');
         Route::resource('campaigns', CampaignController::class)->only(['index', 'create', 'store', 'show']);
         Route::post('campaigns/{campaign}/cancel', [CampaignController::class, 'cancel'])->name('campaigns.cancel');
         Route::post('campaigns/{campaign}/pause', [CampaignController::class, 'pause'])->name('campaigns.pause');

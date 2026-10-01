@@ -14,6 +14,9 @@
     @error('recipients')
         <div class="alert alert-danger small"><i class="bi bi-exclamation-triangle"></i> {{ $message }}</div>
     @enderror
+    @error('preview_token')
+        <div class="alert alert-warning small"><i class="bi bi-eye"></i> {{ $message }}</div>
+    @enderror
 
     <form method="POST" action="{{ route('campaigns.store') }}"
           x-data="campaignComposer({
@@ -23,12 +26,14 @@
               message: @js(old('message', '')),
               scheduledAt: @js(old('scheduled_at', '')),
               previewUrl: @js(route('campaigns.preview')),
+              composePreviewUrl: @js(route('campaigns.compose-preview')),
               sendOptions: @js($sendOptions),
           })"
           @input.debounce.600ms="if (['extra_contacts'].includes($event.target.name)) schedulePreview(0)"
           @change="if (! ['name', 'subject', 'message', 'scheduled_at'].includes($event.target.name)) schedulePreview()"
-          @submit="submitting = true">
+          @submit="onSubmit($event)">
         @csrf
+        <input type="hidden" name="preview_token" :value="review ? review.token : ''">
 
         <div class="row g-3">
             <div class="col-lg-7">
@@ -256,12 +261,101 @@
                         @if (App\Models\Campaign::requiresApproval(auth()->user()))
                             <div class="small text-muted mb-2"><i class="bi bi-shield-check"></i> A Super Admin reviews it first — nothing is sent until it's approved.</div>
                         @endif
-                        <button type="submit" class="btn btn-primary w-100" :disabled="submitting || (preview && preview.total === 0)">
-                            @if (App\Models\Campaign::requiresApproval(auth()->user()))
-                                <span x-show="!submitting"><i class="bi bi-send-check"></i> Submit for Approval</span>
-                            @else
-                                <span x-show="!submitting"><i class="bi bi-send"></i> <span x-text="scheduledAt ? 'Schedule Campaign' : 'Send Campaign'">Send Campaign</span></span>
-                            @endif
+                        <div class="alert alert-danger small py-2" x-show="reviewErrors.length" x-cloak>
+                            <div class="fw-semibold">Fix these before previewing:</div>
+                            <ul class="mb-0 ps-3"><template x-for="error in reviewErrors" :key="error"><li x-text="error"></li></template></ul>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" :disabled="submitting || reviewing || (preview && preview.total === 0)">
+                            <span x-show="!reviewing && !submitting"><i class="bi bi-eye"></i>
+                                {{ App\Models\Campaign::requiresApproval(auth()->user()) ? 'Preview & Submit for Approval' : 'Preview & Send' }}
+                            </span>
+                            <span x-show="reviewing" x-cloak><span class="spinner-border spinner-border-sm"></span> Building preview…</span>
+                            <span x-show="submitting" x-cloak><span class="spinner-border spinner-border-sm"></span> Saving…</span>
+                        </button>
+                        <div class="form-text text-center">You'll see exactly what goes out, and to how many, before anything is saved.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- The required preview. Only its confirm button submits the form. --}}
+        <div class="modal fade" tabindex="-1" aria-labelledby="reviewTitle" aria-hidden="true" x-ref="reviewModal">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reviewTitle"><i class="bi bi-eye"></i> Preview — check it before it goes out</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <template x-if="review">
+                            <div class="row g-3">
+                                <div class="col-lg-8">
+                                    <template x-if="review.channel === 'email'">
+                                        <div>
+                                            <div class="border rounded bg-body-tertiary p-2 small mb-2">
+                                                <div><span class="text-muted">From:</span> <span x-text="review.from"></span></div>
+                                                <div><span class="text-muted">To:</span> <span x-text="review.to"></span> <span class="text-muted" x-show="review.summary.total > 1" x-text="`and ${(review.summary.total - 1).toLocaleString()} more`"></span></div>
+                                                <div class="text-break"><span class="text-muted">Subject:</span> <strong x-text="review.subject"></strong></div>
+                                            </div>
+                                            <iframe :srcdoc="review.html" sandbox title="Email preview" class="w-100 border rounded bg-white" style="height: 60vh;"></iframe>
+                                            <div class="form-text">Exactly what the first recipient gets — each recipient sees their own name. The unsubscribe link is disabled here.</div>
+                                        </div>
+                                    </template>
+                                    <template x-if="review.channel === 'sms'">
+                                        <div class="border rounded bg-body-tertiary p-3">
+                                            <div class="small text-muted mb-1">To <span x-text="review.to"></span></div>
+                                            <div class="bg-white border rounded-3 p-2 small text-break" style="white-space: pre-wrap; max-width: 360px;" x-text="review.text"></div>
+                                            <div class="form-text"><span x-text="sms.length"></span> characters · <span x-text="sms.segments"></span> SMS per recipient</div>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="small fw-semibold mb-2">Summary</div>
+                                    <dl class="row small mb-0">
+                                        <dt class="col-5 text-muted fw-normal">Recipients</dt>
+                                        <dd class="col-7 mb-2">
+                                            <strong class="fs-4" x-text="review.summary.total.toLocaleString()"></strong>
+                                            <div class="text-muted">
+                                                <span x-text="review.summary.from_leads"></span> lead(s) ·
+                                                <span x-text="review.summary.from_contacts"></span> contact(s) ·
+                                                <span x-text="review.summary.manual"></span> extra
+                                            </div>
+                                        </dd>
+                                        <dt class="col-5 text-muted fw-normal">Left out</dt>
+                                        <dd class="col-7 mb-2">
+                                            <span x-show="!review.summary.skipped_count">None</span>
+                                            <span x-show="review.summary.duplicates" x-text="`${review.summary.duplicates} duplicate(s)`" class="d-block"></span>
+                                            <span x-show="review.summary.unsubscribed" x-text="`${review.summary.unsubscribed} unsubscribed`" class="d-block"></span>
+                                            <span x-show="review.summary.invalid" x-text="`${review.summary.invalid} invalid / missing contact`" class="d-block text-danger"></span>
+                                        </dd>
+                                        <dt class="col-5 text-muted fw-normal">Sending</dt>
+                                        <dd class="col-7 mb-2">
+                                            <span x-text="`${review.summary.batches} batch(es) of up to ${review.summary.batch_size}, ${review.summary.per_minute}/min`"></span><span x-show="review.summary.pause_minutes" x-text="`, ${review.summary.pause_minutes} min pause`"></span>
+                                            <div class="text-muted" x-text="`about ${review.summary.duration} in all`"></div>
+                                        </dd>
+                                        <dt class="col-5 text-muted fw-normal">When</dt>
+                                        <dd class="col-7 mb-2" x-text="review.summary.when"></dd>
+                                        <template x-if="review.channel === 'email'">
+                                            <dt class="col-5 text-muted fw-normal">Signature</dt>
+                                        </template>
+                                        <template x-if="review.channel === 'email'">
+                                            <dd class="col-7 mb-2" x-text="review.summary.include_signature ? 'Included' : 'Off'"></dd>
+                                        </template>
+                                    </dl>
+                                    <div class="alert alert-warning small py-2 mt-2 mb-0" x-show="review.requires_approval">
+                                        <i class="bi bi-shield-check"></i> This goes to a Super Admin for approval — nothing is sent until they approve it.
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="bi bi-pencil"></i> Back to edit</button>
+                        <button type="button" class="btn btn-primary" @click="confirmSend()" :disabled="submitting || !review">
+                            <span x-show="!submitting">
+                                <template x-if="review && review.requires_approval"><span><i class="bi bi-send-check"></i> Submit for approval</span></template>
+                                <template x-if="review && !review.requires_approval"><span><i class="bi bi-send"></i> <span x-text="scheduledAt ? 'Schedule campaign' : `Send to ${review.summary.total.toLocaleString()} recipient(s)`"></span></span></template>
+                            </span>
                             <span x-show="submitting" x-cloak><span class="spinner-border spinner-border-sm"></span> Saving…</span>
                         </button>
                     </div>
