@@ -49,7 +49,7 @@ class CampaignMailer
     /**
      * @param  array{images?: array<int, array>, documents?: array<int, array>}  $files  see Campaign::mailAttachments()
      */
-    public function compose(string $subject, string $body, ?string $token, bool $includeSignature = true, bool $trackOpens = true, array $files = []): CampaignMail
+    public function compose(string $subject, string $body, ?string $token, bool $includeSignature = true, bool $trackOpens = true, array $files = [], ?string $bodyHtml = null): CampaignMail
     {
         return new CampaignMail(
             $subject,
@@ -60,6 +60,7 @@ class CampaignMailer
             footer: $this->settings->get('campaign_footer'),
             images: $files['images'] ?? [],
             documents: $files['documents'] ?? [],
+            bodyHtml: $bodyHtml,
         );
     }
 

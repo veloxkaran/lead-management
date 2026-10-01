@@ -64,13 +64,16 @@ class SendCampaignMessage implements ShouldQueue
 
         try {
             if ($campaign->channel === CampaignChannel::Email) {
+                $body = CampaignService::body($campaign->message, (string) $campaign->message_format, $recipient);
+
                 $mailer->send($recipient->address, $mailer->compose(
                     CampaignService::personalize((string) $campaign->subject, $recipient),
-                    $message,
+                    $body['text'],
                     $recipient->tracking_token,
                     (bool) $campaign->sendOption('include_signature'),
                     (bool) $campaign->sendOption('track_opens'),
                     $campaign->mailAttachments(),
+                    $body['html'],
                 ));
             } else {
                 $result = $sms->send($recipient->address, $message);

@@ -19,7 +19,7 @@ class Campaign extends Model
     use BelongsToCompany, HasFactory;
 
     protected $fillable = [
-        'company_id', 'name', 'channel', 'subject', 'message', 'audience', 'audience_filter', 'lead_ids', 'all_contacts', 'contact_ids',
+        'company_id', 'name', 'channel', 'subject', 'message', 'message_format', 'audience', 'audience_filter', 'lead_ids', 'all_contacts', 'contact_ids',
         'status', 'scheduled_at', 'next_batch_at', 'started_at', 'paused_at', 'completed_at',
         'recipient_count', 'batch_count', 'current_batch', 'skipped', 'send_options', 'created_by',
         'reviewed_by', 'reviewed_at', 'review_note',

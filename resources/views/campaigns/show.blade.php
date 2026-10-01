@@ -345,7 +345,12 @@
                         <div class="text-muted">Subject</div>
                         <p class="fw-semibold">{{ $campaign->subject }}</p>
                     @endif
-                    <div class="text-break" style="white-space: pre-wrap;">{{ $campaign->message }}</div>
+                    @if ($campaign->message_format === 'html')
+                        {{-- Sanitized when saved; cleaned again on output, like other rich-text fields. --}}
+                        <div class="text-break campaign-message-html">{!! \Mews\Purifier\Facades\Purifier::clean($campaign->message) !!}</div>
+                    @else
+                        <div class="text-break" style="white-space: pre-wrap;">{{ $campaign->message }}</div>
+                    @endif
                     @if ($campaign->attachments->isNotEmpty())
                         <div class="mt-3 pt-2 border-top">
                             <div class="text-muted mb-2">Images &amp; files</div>

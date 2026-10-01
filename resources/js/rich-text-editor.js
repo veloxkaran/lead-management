@@ -71,6 +71,8 @@ function initOne(root) {
     // button (whose default handler inserts the picked file as base64).
     if (withImages && !toolbar.children.length) {
         addControls(toolbar, IMAGE_TOOLBAR_OPTIONS);
+    } else if (root.hasAttribute('data-rich-text-toolbar-buttons') && !toolbar.children.length) {
+        addControls(toolbar, TOOLBAR_OPTIONS);
     }
 
     const quill = new Quill(body, {
@@ -107,7 +109,12 @@ function initOne(root) {
         const html = quill.root.innerHTML;
         input.value = html === EMPTY_BODY ? '' : html;
         showSize();
+        // Lets the surrounding form react to edits (e.g. the campaign composer).
+        input.dispatchEvent(new Event('input', { bubbles: true }));
     };
+
+    // For buttons that insert text at the cursor (e.g. merge tags).
+    root.quill = quill;
 
     quill.on('text-change', sync);
     showSize();

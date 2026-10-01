@@ -6,8 +6,11 @@ use App\Enums\CampaignAudience;
 use App\Enums\CampaignChannel;
 use App\Models\Campaign;
 use App\Models\Industry;
+use App\Support\CampaignBody;
 use App\Support\CampaignPreviewToken;
 use Illuminate\Foundation\Http\FormRequest;
+use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -17,6 +20,9 @@ class StoreCampaignRequest extends FormRequest
     public const SMS_MAX = 918;
 
     public const EMAIL_MAX = 10000;
+
+    /** Editor HTML carries markup, so it's allowed more characters than plain text. */
+    public const EMAIL_HTML_MAX = 60000;
 
     /** Images (shown in the email) and PDFs (attached) — email campaigns only. */
     public const MAX_FILES = 5;
@@ -64,15 +70,60 @@ class StoreCampaignRequest extends FormRequest
         return $this->user()->can('create', Campaign::class);
     }
 
+    /**
+     * An email body from the rich-text editor (message_html) becomes the
+     * sanitized message, flagged html. Plain `message` is still accepted
+     * for email (older forms, integrations) and is how SMS always arrives.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->dropEmptyFileSlots();
+
+        if ($this->input('channel') === CampaignChannel::Email->value && $this->filled('message_html')) {
+            $this->merge(['message' => CampaignBody::fromEditor($this->input('message_html')), 'message_format' => 'html']);
+        } else {
+            $this->merge(['message_format' => 'text']);
+        }
+    }
+
+    /**
+     * The browser sends the "Images & PDFs" input even when nothing was
+     * chosen — as an empty upload (null) or an empty value — which the
+     * `file` rule would reject. Only real uploads are kept.
+     */
+    private function dropEmptyFileSlots(): void
+    {
+        // Symfony's class, not Laravel's: a real request's file bag holds
+        // Symfony uploads (Laravel converts them later); tests hold Laravel's.
+        $files = array_values(array_filter(
+            Arr::wrap($this->files->all()['attachments'] ?? []),
+            fn ($file) => $file instanceof SymfonyUploadedFile,
+        ));
+
+        $this->files->remove('attachments');
+        $this->request->remove('attachments');
+        $this->query->remove('attachments');
+        $this->json()->remove('attachments');
+
+        if ($files) {
+            $this->files->set('attachments', $files);
+        }
+
+        $this->convertedFiles = null;
+    }
+
     public function rules(): array
     {
         $isEmail = $this->input('channel') === CampaignChannel::Email->value;
+        $isHtml = $isEmail && $this->input('message_format') === 'html';
 
         return [
             ...self::recipientRules(),
             'name' => ['required', 'string', 'max:150'],
             'subject' => [Rule::requiredIf($isEmail), 'nullable', 'string', 'max:200'],
-            'message' => ['required', 'string', 'max:'.($isEmail ? self::EMAIL_MAX : self::SMS_MAX)],
+            'message' => ['required', 'string', 'max:'.($isHtml ? self::EMAIL_HTML_MAX : ($isEmail ? self::EMAIL_MAX : self::SMS_MAX))],
+            'message_html' => ['nullable', 'string', 'max:'.(self::EMAIL_HTML_MAX * 2)],
+            'message_format' => ['required', 'in:text,html'],
             'scheduled_at' => ['nullable', 'date', 'after:now'],
             'include_signature' => ['nullable', 'boolean'],
             'attachments' => ['nullable', 'array', 'max:'.self::MAX_FILES],
@@ -142,6 +193,7 @@ class StoreCampaignRequest extends FormRequest
         return [
             'scheduled_at.after' => 'Pick a time in the future, or leave it blank to send now.',
             'preview_token.required' => 'Preview the campaign before sending it.',
+            'message.required' => 'Write the message.',
             'attachments.max' => 'Attach at most '.self::MAX_FILES.' files.',
             'attachments.*.mimes' => 'Only PNG, JPG and PDF files can be added.',
             'attachments.*.mimetypes' => 'Only PNG, JPG and PDF files can be added.',

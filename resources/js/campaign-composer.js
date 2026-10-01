@@ -48,12 +48,18 @@ window.campaignSendingPlan = function (count, { batch_size, per_minute, pause_mi
     return { batches, size, minutes, duration: formatMinutes(minutes), perHour: perHour.toLocaleString() };
 };
 
-window.campaignComposer = function ({ channel, audience, subject = '', message = '', scheduledAt = '', previewUrl, composePreviewUrl, sendOptions = {}, limits = {} }) {
+// Visible text of editor HTML — DOMParser documents are inert (no scripts, no image loads).
+function htmlText(html) {
+    return html ? new DOMParser().parseFromString(html, 'text/html').body.textContent || '' : '';
+}
+
+window.campaignComposer = function ({ channel, audience, subject = '', message = '', messageHtml = '', scheduledAt = '', previewUrl, composePreviewUrl, sendOptions = {}, limits = {} }) {
     return {
         channel,
         audience,
         subject,
         message,
+        messageHtml,
         scheduledAt,
         sendOptions,
         preview: null,
@@ -73,12 +79,16 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
 
         init() {
             // Any edit after previewing means previewing again.
-            this.$el.addEventListener('input', (event) => {
+            this.$root.addEventListener('input', (event) => {
+                // Once "Send" is clicked the editor syncs one last time on submit —
+                // that mustn't throw away the preview token being submitted.
+                if (this.confirmed) return;
                 if (!event.target.closest('.modal')) this.review = null;
+                if (event.target.name === 'message_html') this.messageHtml = event.target.value;
             });
             // select2 fires jQuery events, which native/Alpine listeners don't see.
             if (window.jQuery) {
-                window.jQuery(this.$el).on('change', 'select[data-select2-field]', () => this.schedulePreview());
+                window.jQuery(this.$root).on('change', 'select[data-select2-field]', () => this.schedulePreview());
             }
 
             this.schedulePreview(0);
@@ -107,7 +117,8 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
 
             const warnings = [];
             const subject = this.subject || '';
-            const text = `${subject}\n${this.message}`.toLowerCase();
+            const body = htmlText(this.messageHtml);
+            const text = `${subject}\n${body}`.toLowerCase();
             const letters = subject.replace(/[^A-Za-z]/g, '');
 
             if (letters.length >= 6 && letters.replace(/[^A-Z]/g, '').length / letters.length > 0.7) {
@@ -127,7 +138,8 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
             if (SHORTENERS.test(text)) {
                 warnings.push('Link shorteners (bit.ly etc.) are a strong spam signal — use the full link.');
             }
-            if ((this.message.match(/https?:\/\//g) || []).length > 3) {
+            const links = (this.messageHtml.match(/<a\s/gi) || []).length + (body.match(/https?:\/\//g) || []).length;
+            if (links > 3) {
                 warnings.push('Many links — keep it to two or three.');
             }
 
@@ -139,6 +151,16 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
          * the preview, and only "Send" / "Submit for approval" in there
          * actually submits.
          */
+        /** Puts a merge tag like {{name}} at the cursor in the email editor. */
+        insertTag(tag) {
+            const quill = this.$refs.bodyEditor?.querySelector('[data-rich-text-editor]')?.quill;
+            if (!quill) return;
+
+            const range = quill.getSelection(true);
+            quill.insertText(range.index, tag, 'user');
+            quill.setSelection(range.index + tag.length, 0, 'user');
+        },
+
         pickFiles() {
             this.files = [...(this.$refs.files?.files || [])].map(({ name, size, type }) => ({ name, size, type }));
         },
@@ -189,7 +211,7 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
                 return;
             }
 
-            const data = new FormData(this.$el);
+            const data = new FormData(this.$root);
             data.delete('preview_token');
 
             // Open straight away with a spinner — building the preview (shrinking
@@ -214,7 +236,8 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
                     this.reviewErrors = error.response?.status === 413
                         ? ['The files are too large for the server to accept — use smaller files.']
                         : (errors ? Object.values(errors).flat() : ['Could not build the preview — try again.']);
-                    modal.hide();
+                    // Shown inside the modal: hiding it here would be ignored by
+                    // Bootstrap while it's still fading in, leaving it blank.
                 })
                 .finally(() => {
                     this.reviewing = false;
@@ -223,7 +246,7 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
 
         confirmSend() {
             this.confirmed = true;
-            this.$nextTick(() => this.$el.requestSubmit());
+            this.$nextTick(() => this.$root.requestSubmit());
         },
 
         schedulePreview(delay = 500) {
@@ -233,10 +256,10 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
 
         loadPreview() {
             const request = ++this.request;
-            const data = new FormData(this.$el);
+            const data = new FormData(this.$root);
 
             // The preview only needs the recipient fields.
-            ['name', 'subject', 'message', 'scheduled_at'].forEach((field) => data.delete(field));
+            ['name', 'subject', 'message', 'message_html', 'scheduled_at', 'attachments[]'].forEach((field) => data.delete(field));
 
             this.loading = true;
 

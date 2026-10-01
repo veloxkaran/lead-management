@@ -24,6 +24,7 @@
               audience: @js(old('audience', $prefill['audience'])),
               subject: @js(old('subject', '')),
               message: @js(old('message', '')),
+              messageHtml: @js(old('message_html', '')),
               scheduledAt: @js(old('scheduled_at', '')),
               previewUrl: @js(route('campaigns.preview')),
               composePreviewUrl: @js(route('campaigns.compose-preview')),
@@ -31,7 +32,7 @@
               limits: @js(['files' => \App\Http\Requests\Campaign\StoreCampaignRequest::MAX_FILES, 'file' => \App\Http\Requests\Campaign\StoreCampaignRequest::maxFileBytes(), 'total' => \App\Http\Requests\Campaign\StoreCampaignRequest::maxTotalBytes()]),
           })"
           @input.debounce.600ms="if (['extra_contacts'].includes($event.target.name)) schedulePreview(0)"
-          @change="if (! ['name', 'subject', 'message', 'scheduled_at'].includes($event.target.name)) schedulePreview()"
+          @change="if (! ['name', 'subject', 'message', 'message_html', 'scheduled_at', 'attachments[]'].includes($event.target.name)) schedulePreview()"
           @submit="onSubmit($event)">
         @csrf
         <input type="hidden" name="preview_token" :value="review ? review.token : ''">
@@ -81,28 +82,41 @@
                             @error('subject')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold" for="campaignMessage">Message *</label>
-                            <textarea id="campaignMessage" name="message" x-model="message" rows="8"
-                                      :maxlength="channel === 'email' ? {{ \App\Http\Requests\Campaign\StoreCampaignRequest::EMAIL_MAX }} : {{ \App\Http\Requests\Campaign\StoreCampaignRequest::SMS_MAX }}"
-                                      class="form-control @error('message') is-invalid @enderror" required></textarea>
-                            <div class="form-text">
-                                Personalize with <code>@{{name}}</code> and <code>@{{company_name}}</code>.
-                                <span x-show="channel === 'email'">Plain text; line breaks are kept. Write it like a personal email — plain, personal emails reach the inbox far more often than designed newsletters.</span>
+                        {{-- Email: rich-text editor (sent as HTML). SMS: plain text with the segment counter. --}}
+                        <div class="mb-3" x-show="channel === 'email'" x-ref="bodyEditor">
+                            <div class="d-flex flex-wrap align-items-end gap-2 mb-1">
+                                <span class="form-label small fw-semibold mb-0">Message *</span>
+                                <span class="small text-muted ms-auto">Insert:</span>
+                                <button type="button" class="btn btn-outline-secondary btn-sm py-0" @click="insertTag('{{ '{{' }}name}}')">Name</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm py-0" @click="insertTag('{{ '{{' }}company_name}}')">Company</button>
                             </div>
-                            <div class="form-text" x-show="channel === 'sms'" x-cloak>
+                            <x-rich-text-editor name="message_html" toolbar :min-height="220" :value="old('message_html', '')" placeholder="Hi {{ '{{' }}name}}, …" />
+                            <div class="form-text">
+                                Bold, lists and links are kept. <code>@{{name}}</code> and <code>@{{company_name}}</code> are filled in for each recipient.
+                                Write it like a personal email — plain, personal emails reach the inbox far more often than designed newsletters.
+                            </div>
+                            @error('message')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="mb-3" x-show="channel === 'sms'" x-cloak>
+                            <label class="form-label small fw-semibold" for="campaignMessage">Message *</label>
+                            <textarea id="campaignMessage" name="message" x-model="message" rows="8" maxlength="{{ \App\Http\Requests\Campaign\StoreCampaignRequest::SMS_MAX }}"
+                                      class="form-control @error('message') is-invalid @enderror" :required="channel === 'sms'" :disabled="channel !== 'sms'"></textarea>
+                            <div class="form-text">Personalize with <code>@{{name}}</code> and <code>@{{company_name}}</code>.</div>
+                            <div class="form-text">
                                 <span x-text="sms.length"></span> characters ·
                                 <span x-text="sms.segments"></span> SMS
                                 <span x-show="sms.segments > 1">per recipient</span>
                                 <span x-show="sms.unicode" class="text-warning-emphasis">· Unicode (e.g. Nepali) — 70 characters per SMS</span>
                             </div>
                             @error('message')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <div class="alert alert-warning small py-2 mt-2 mb-0" x-show="spamWarnings.length" x-cloak>
-                                <div class="fw-semibold"><i class="bi bi-shield-exclamation"></i> Might look like spam:</div>
-                                <ul class="mb-0 ps-3">
-                                    <template x-for="warning in spamWarnings" :key="warning"><li x-text="warning"></li></template>
-                                </ul>
-                            </div>
+                        </div>
+
+                        <div class="alert alert-warning small py-2 mb-3" x-show="spamWarnings.length" x-cloak>
+                            <div class="fw-semibold"><i class="bi bi-shield-exclamation"></i> Might look like spam:</div>
+                            <ul class="mb-0 ps-3">
+                                <template x-for="warning in spamWarnings" :key="warning"><li x-text="warning"></li></template>
+                            </ul>
                         </div>
 
                         <div class="mb-3" x-show="channel === 'email'">
@@ -317,6 +331,10 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="alert alert-danger mb-0" x-show="!reviewing && !review && reviewErrors.length" x-cloak>
+                            <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle"></i> Fix these, then preview again:</div>
+                            <ul class="mb-0 ps-3"><template x-for="error in reviewErrors" :key="error"><li x-text="error"></li></template></ul>
+                        </div>
                         <div class="text-center text-muted py-5" x-show="reviewing && !review">
                             <div class="spinner-border mb-3" role="status"></div>
                             <div>Building the preview…</div>

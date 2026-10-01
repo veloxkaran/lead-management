@@ -18,7 +18,8 @@
                 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%; max-width:600px; background-color:#ffffff; border:1px solid #e5e7eb; border-radius: 6px;">
                     <tr>
                         <td style="padding: 28px 32px 8px; color:#1f2937; font-size: 15px; line-height: 1.6;">
-                            {!! nl2br(e($body)) !!}
+                            {{-- Sanitized editor HTML with escaped merge values (CampaignBody), or the plain body with line breaks. --}}
+                            {!! $bodyHtml !!}
                             {{-- Embedded (cid:) with its real type — a generic octet-stream part isn't shown as an image by every mail app.
                                  width="" is for Outlook for Windows. --}}
                             @foreach ($images as $image)

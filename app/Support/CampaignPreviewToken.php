@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 class CampaignPreviewToken
 {
     private const FIELDS = [
-        'channel', 'subject', 'message', 'audience', 'lead_status_ids', 'industries', 'lead_ids',
+        'channel', 'subject', 'message', 'message_html', 'audience', 'lead_status_ids', 'industries', 'lead_ids',
         'all_contacts', 'contact_ids', 'extra_contacts', 'scheduled_at', 'include_signature',
     ];
 

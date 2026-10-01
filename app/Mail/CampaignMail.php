@@ -40,6 +40,10 @@ class CampaignMail extends Mailable
         public ?string $footer = null,
         public array $images = [],
         public array $documents = [],
+        // The rich-text body (already personalized and safe); without it the
+        // plain renderedBody is shown with its line breaks. renderedBody is
+        // always the plain-text version, for the text part.
+        public ?string $bodyHtml = null,
     ) {
     }
 
@@ -74,6 +78,7 @@ class CampaignMail extends Mailable
             text: 'emails.campaign-text',
             with: [
                 'body' => $this->renderedBody,
+                'bodyHtml' => $this->bodyHtml ?? nl2br(e($this->renderedBody)),
                 'signatureHtml' => $this->signatureHtml,
                 'signatureText' => $this->signatureHtml ? HtmlToText::convert($this->signatureHtml) : null,
                 'footer' => $this->footer,

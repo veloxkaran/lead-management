@@ -149,13 +149,15 @@ class CampaignController extends Controller
             [$files, $temporary] = CampaignUploads::temporary($prepared);
 
             try {
+                $body = CampaignService::body($input['message'], $input['message_format'] ?? 'text', $first);
                 $mail = $mailer->compose(
                     CampaignService::personalize((string) $input['subject'], $first),
-                    CampaignService::personalize($input['message'], $first),
+                    $body['text'],
                     null,
                     $options['include_signature'],
                     false,
                     $files,
+                    $body['html'],
                 );
                 $mail->unsubscribeUrl = '#unsubscribe';
                 $html = $mail->render();
@@ -273,13 +275,15 @@ class CampaignController extends Controller
 
         $recipient = $campaign->recipients()->when($request->integer('as'), fn ($q, $id) => $q->whereKey($id))->orderBy('id')->first();
 
+        $body = CampaignService::body($campaign->message, (string) $campaign->message_format, $recipient);
         $mail = $mailer->compose(
             CampaignService::personalize((string) $campaign->subject, $recipient),
-            CampaignService::personalize($campaign->message, $recipient),
+            $body['text'],
             null,
             (bool) $campaign->sendOption('include_signature'),
             false,
             $campaign->mailAttachments(),
+            $body['html'],
         );
         $mail->unsubscribeUrl = '#unsubscribe';
 

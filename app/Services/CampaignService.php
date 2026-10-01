@@ -14,6 +14,7 @@ use App\Models\CampaignRecipient;
 use App\Models\User;
 use App\Notifications\CampaignAwaitingApprovalNotification;
 use App\Notifications\CampaignReviewedNotification;
+use App\Support\CampaignBody;
 use App\Support\CampaignRecipientBuilder;
 use App\Support\CampaignRecipientList;
 use App\Support\CampaignSettings;
@@ -86,6 +87,7 @@ class CampaignService
                 'channel' => $input['channel'],
                 'subject' => $input['channel'] === CampaignChannel::Email->value ? $input['subject'] : null,
                 'message' => $input['message'],
+                'message_format' => $input['channel'] === CampaignChannel::Email->value ? ($input['message_format'] ?? 'text') : 'text',
                 'audience' => $audience,
                 'audience_filter' => $this->audienceFilter($audience, $input),
                 'lead_ids' => array_values(array_map('intval', $input['lead_ids'] ?? [])) ?: null,
@@ -404,10 +406,29 @@ class CampaignService
      */
     public static function personalize(string $text, CampaignRecipient|array|null $recipient): string
     {
-        return EmailTemplateService::merge($text, [
+        return EmailTemplateService::merge($text, self::variables($recipient));
+    }
+
+    /**
+     * The message for one recipient, as HTML for the email and plain text
+     * (SMS, the email's text part) — see CampaignBody.
+     *
+     * @return array{html: string, text: string}
+     */
+    public static function body(string $message, string $format, CampaignRecipient|array|null $recipient): array
+    {
+        return CampaignBody::render($message, $format, self::variables($recipient));
+    }
+
+    /**
+     * @return array{name: ?string, company_name: ?string}
+     */
+    private static function variables(CampaignRecipient|array|null $recipient): array
+    {
+        return [
             'name' => data_get($recipient, 'name'),
             'company_name' => data_get($recipient, 'company_name'),
-        ]);
+        ];
     }
 
     /**
