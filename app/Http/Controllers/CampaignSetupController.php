@@ -130,9 +130,17 @@ class CampaignSetupController extends Controller
             $mailer->send($data['test_email'], $mail);
         } catch (Throwable $e) {
             // 535 = the server reached fine but refused the login — by far the most common setup mistake.
-            $hint = str_contains($e->getMessage(), '535')
-                ? ' — The mail server refused the username/password. Check the password by logging into webmail with it, then type it again in "Password" and save. (Your browser may have auto-filled a different saved password.)'
-                : '';
+            $hint = '';
+
+            if (str_contains($e->getMessage(), '535')) {
+                $hint = ' — The mail server refused the username/password. Check the password by logging into webmail with it, then type it again in "Password" and save. (Your browser may have auto-filled a different saved password.)';
+
+                $username = (string) $this->settings->get('campaign_smtp_username');
+                $from = (string) $this->settings->get('campaign_from_address');
+                if ($this->settings->emailMode() === 'smtp' && str_contains($username, '@') && $from !== '' && strcasecmp($username, $from) !== 0) {
+                    $hint .= " Note: the username ({$username}) is different from the From address ({$from}) — usually they're the same mailbox, so one of them is probably a typo.";
+                }
+            }
 
             return back()->withInput()->with('error', 'Test email failed: '.$e->getMessage().$hint);
         }

@@ -430,4 +430,22 @@ class CampaignBatchingTest extends TestCase
         $this->assertSame('acme.test', $result['domain']);
         $this->assertSame(['spf' => 'ok', 'dkim' => 'ok', 'dmarc' => 'missing', 'mx' => 'ok'], collect($result['checks'])->pluck('status', 'key')->all());
     }
+
+    public function test_a_refused_login_points_out_a_username_that_differs_from_the_from_address(): void
+    {
+        $settings = app(CampaignSettings::class);
+        $settings->set('campaign_email_mode', 'smtp');
+        $settings->set('campaign_smtp_username', 'sale@acme.test');
+        $settings->set('campaign_from_address', 'sales@acme.test');
+        $this->app->instance(\App\Services\CampaignMailer::class, new class($settings) extends \App\Services\CampaignMailer
+        {
+            public function send(string $to, CampaignMail $mail): void
+            {
+                throw new \RuntimeException('Expected response code "235" but got code "535", with message "535 Incorrect authentication data".');
+            }
+        });
+
+        $this->actingAs($this->admin())->post(route('campaign-setup.test-email'), ['test_email' => 'me@example.com'])
+            ->assertSessionHas('error', fn ($m) => str_contains($m, 'refused the username/password') && str_contains($m, 'the username (sale@acme.test) is different from the From address (sales@acme.test)'));
+    }
 }

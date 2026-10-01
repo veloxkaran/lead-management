@@ -123,6 +123,11 @@
                                            :placeholder="f.campaign_email_mode === 'smtp' ? (f.campaign_smtp_username || 'Same as the SMTP username') : @js(config('mail.from.address'))">
                                     @error('campaign_from_address')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     <div class="form-text">Must be on the same domain as the mail server's login, or receivers fail it on SPF/DMARC.</div>
+                                    <div class="small text-warning-emphasis mt-1" x-cloak
+                                         x-show="f.campaign_email_mode === 'smtp' && (f.campaign_smtp_username || '').includes('@') && f.campaign_from_address && f.campaign_from_address.trim().toLowerCase() !== f.campaign_smtp_username.trim().toLowerCase()">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        Doesn't match the SMTP username (<span x-text="f.campaign_smtp_username"></span>). They're normally the same mailbox — check for a typo.
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small fw-semibold" for="replyTo">Reply-to address (optional)</label>
