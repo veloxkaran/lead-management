@@ -32,6 +32,8 @@ import './raw-data-countdown';
 import './ticket-elapsed';
 import './attachment-preview';
 import './lead-duplicate-check';
+import './campaign-composer';
+import './contacts';
 
 import { initRichTextEditors } from './rich-text-editor';
 import { initCkEditors } from './ck-editor';

@@ -75,6 +75,24 @@
             </a>
         @endpermitted
 
+        @php
+            $showCampaigns = $user?->can('viewAny', App\Models\Campaign::class) && $user->hasPermission('campaigns');
+            $showContacts = $user?->can('viewAny', App\Models\Contact::class) && $user->hasPermission('contacts');
+        @endphp
+        @if ($showCampaigns || $showContacts)
+            <div class="nav-section-title">Outreach</div>
+        @endif
+        @if ($showContacts)
+            <a href="{{ route('contacts.index') }}" class="nav-link {{ request()->routeIs('contacts.*') ? 'active' : '' }}" title="Contacts" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-person-lines-fill"></i> <span class="nav-label">Contacts</span>
+            </a>
+        @endif
+        @if ($showCampaigns)
+            <a href="{{ route('campaigns.index') }}" class="nav-link {{ request()->routeIs('campaigns.*') ? 'active' : '' }}" title="Campaigns" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-send"></i> <span class="nav-label">Campaigns</span>
+            </a>
+        @endif
+
         <div class="nav-section-title">Reporting</div>
         <a href="{{ route('team.activities') }}" class="nav-link {{ request()->routeIs('team.activities') ? 'active' : '' }}" title="Team Activities" data-bs-toggle="tooltip" data-bs-placement="right">
             <i class="bi bi-clock-history"></i> <span class="nav-label">Team Activities</span>
@@ -100,6 +118,9 @@
             </a>
             <a href="{{ route('settings.edit') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active' : '' }}" title="Settings" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-gear"></i> <span class="nav-label">Settings</span>
+            </a>
+            <a href="{{ route('campaign-setup.edit') }}" class="nav-link {{ request()->routeIs('campaign-setup.*') ? 'active' : '' }}" title="Campaign Setup" data-bs-toggle="tooltip" data-bs-placement="right">
+                <i class="bi bi-sliders"></i> <span class="nav-label">Campaign Setup</span>
             </a>
             <a href="{{ route('email-templates.index') }}" class="nav-link {{ request()->routeIs('email-templates.*') ? 'active' : '' }}" title="Email Templates" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-file-earmark-text"></i> <span class="nav-label">Email Templates</span>

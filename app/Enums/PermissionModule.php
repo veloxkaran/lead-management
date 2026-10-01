@@ -4,6 +4,8 @@ namespace App\Enums;
 
 use App\Models\Agenda;
 use App\Models\Announcement;
+use App\Models\Campaign;
+use App\Models\Contact;
 use App\Models\DailySummary;
 use App\Models\FollowUp;
 use App\Models\Goal;
@@ -36,6 +38,8 @@ enum PermissionModule: string
     case KnowledgeBase = 'knowledge_base';
     case ReleaseNotes = 'release_notes';
     case Announcements = 'announcements';
+    case Campaigns = 'campaigns';
+    case Contacts = 'contacts';
     case Meetings = 'meetings';
     case MeetingRoom = 'meeting_room';
     case DailySummaries = 'daily_summaries';
@@ -55,6 +59,8 @@ enum PermissionModule: string
             self::KnowledgeBase => 'Knowledge Base',
             self::ReleaseNotes => 'Release Notes',
             self::Announcements => 'Announcements',
+            self::Campaigns => 'Campaigns',
+            self::Contacts => 'Contacts',
             self::Meetings => 'Meetings',
             self::MeetingRoom => 'Meeting Room',
             self::DailySummaries => 'Daily Summaries',
@@ -76,6 +82,8 @@ enum PermissionModule: string
             self::KnowledgeBase => 'bi-journal-richtext',
             self::ReleaseNotes => 'bi-megaphone',
             self::Announcements => 'bi-broadcast',
+            self::Campaigns => 'bi-send',
+            self::Contacts => 'bi-person-lines-fill',
             self::Meetings => 'bi-calendar-event',
             self::MeetingRoom => 'bi-people',
             self::DailySummaries => 'bi-journal-text',
@@ -93,6 +101,8 @@ enum PermissionModule: string
     {
         return match ($this) {
             self::Announcements => [PermissionAction::View, PermissionAction::Create],
+            // Sent campaigns can't be edited or deleted — "Edit" is cancelling one still pending.
+            self::Campaigns => [PermissionAction::View, PermissionAction::Create, PermissionAction::Update],
             self::MeetingRoom, self::DailySummaries => [PermissionAction::View, PermissionAction::Create, PermissionAction::Update],
             self::Reports => [PermissionAction::View],
             default => PermissionAction::cases(),
@@ -124,6 +134,8 @@ enum PermissionModule: string
             KnowledgeBaseItem::class => self::KnowledgeBase,
             ReleaseNote::class => self::ReleaseNotes,
             Announcement::class => self::Announcements,
+            Campaign::class => self::Campaigns,
+            Contact::class => self::Contacts,
             Meeting::class => self::Meetings,
             Agenda::class => self::MeetingRoom,
             DailySummary::class => self::DailySummaries,

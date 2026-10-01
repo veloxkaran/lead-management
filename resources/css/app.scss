@@ -1265,3 +1265,12 @@ a.lead-chip:hover {
         font-size: 16px !important;
     }
 }
+
+// ---- WebKit (Safari, every iOS browser) widens the page to a <select>'s
+// longest option text even though the select itself renders at 100% width —
+// a long lead/company or email-account name made phone screens scroll
+// sideways. Clipping the select's own overflow stops that; a closed select
+// only ever shows one line, so nothing visible changes.
+.form-select {
+    overflow: hidden;
+}

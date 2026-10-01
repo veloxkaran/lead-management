@@ -9,6 +9,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailAccountController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AnnouncementDocumentController;
+use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\CampaignSetupController;
+use App\Http\Controllers\CampaignTrackingController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\EmailLogController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\FollowUpController;
@@ -66,6 +70,24 @@ Route::prefix('support-access')->name('client-support.')->group(function () {
     Route::post('/ticket', [ClientSupportController::class, 'storeTicket'])->name('ticket.store');
     Route::get('/ticket/submitted', [ClientSupportController::class, 'submitted'])->name('ticket.submitted');
     Route::post('/logout', [ClientSupportController::class, 'logout'])->name('logout');
+});
+
+// Public — campaign delivery confirmations: the tracking image in campaign
+// emails, and the SMS gateway's delivery-report callback (its URL carries a
+// secret; see Campaign Setup). No session or CSRF: mail apps and gateways
+// have neither, and a session row per email open would bloat the table.
+// Same for unsubscribe: mail apps' one-click unsubscribe POSTs with no
+// session — the recipient's random token is what authorizes it.
+Route::withoutMiddleware([
+    \Illuminate\Session\Middleware\StartSession::class,
+    \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+    \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+    \App\Http\Middleware\EnsureUserIsActive::class,
+])->group(function () {
+    Route::get('track/email/{token}', [CampaignTrackingController::class, 'open'])->name('campaigns.track-open');
+    Route::match(['get', 'post'], 'webhooks/sms/delivery/{secret}', [CampaignTrackingController::class, 'smsDelivery'])->name('webhooks.sms-delivery');
+    Route::get('unsubscribe/{token}', [CampaignTrackingController::class, 'unsubscribeForm'])->name('campaigns.unsubscribe');
+    Route::post('unsubscribe/{token}', [CampaignTrackingController::class, 'unsubscribe'])->middleware('throttle:30,1')->name('campaigns.unsubscribe.confirm');
 });
 
 Route::middleware('auth')->group(function () {
@@ -197,6 +219,27 @@ Route::middleware('auth')->group(function () {
         Route::get('announcement-documents/{document}/preview', [AnnouncementDocumentController::class, 'preview'])->name('announcement-documents.preview');
     });
 
+    // Super Admin, Manager and Business Development — see ContactPolicy.
+    Route::middleware('permission:contacts')->group(function () {
+        Route::get('contacts/import', [ContactController::class, 'importForm'])->middleware('permission:contacts,create')->name('contacts.import');
+        Route::post('contacts/import', [ContactController::class, 'import'])->middleware('permission:contacts,create')->name('contacts.import.store');
+        Route::get('contacts/import/template', [ContactController::class, 'template'])->middleware('permission:contacts,create')->name('contacts.import.template');
+        Route::get('contacts/export', [ContactController::class, 'export'])->name('contacts.export');
+        Route::post('contacts/bulk-delete', [ContactController::class, 'bulkDestroy'])->middleware('permission:contacts,delete')->name('contacts.bulk-destroy');
+        Route::resource('contacts', ContactController::class)->only(['index', 'store', 'update', 'destroy']);
+    });
+
+    // Super Admin, Manager and Business Development — see CampaignPolicy.
+    Route::middleware('permission:campaigns')->group(function () {
+        Route::post('campaigns/preview', [CampaignController::class, 'preview'])->middleware('permission:campaigns,create')->name('campaigns.preview');
+        Route::resource('campaigns', CampaignController::class)->only(['index', 'create', 'store', 'show']);
+        Route::post('campaigns/{campaign}/cancel', [CampaignController::class, 'cancel'])->name('campaigns.cancel');
+        Route::post('campaigns/{campaign}/pause', [CampaignController::class, 'pause'])->name('campaigns.pause');
+        Route::post('campaigns/{campaign}/resume', [CampaignController::class, 'resume'])->name('campaigns.resume');
+        Route::post('campaigns/{campaign}/retry-failed', [CampaignController::class, 'retryFailed'])->name('campaigns.retry-failed');
+        Route::get('campaigns/{campaign}/export', [CampaignController::class, 'export'])->name('campaigns.export');
+    });
+
     Route::middleware('permission:knowledge_base')->group(function () {
         Route::resource('knowledge-base', KnowledgeBaseController::class);
         Route::get('knowledge-base/{knowledge_base}/download', [KnowledgeBaseController::class, 'download'])->name('knowledge-base.download');
@@ -275,6 +318,13 @@ Route::middleware('auth')->group(function () {
         Route::get('email-templates/{emailTemplate}/edit', [EmailTemplateController::class, 'edit'])->name('email-templates.edit');
         Route::put('email-templates/{emailTemplate}', [EmailTemplateController::class, 'update'])->name('email-templates.update');
         Route::get('email-templates/{emailTemplate}/preview', [EmailTemplateController::class, 'preview'])->name('email-templates.preview');
+
+        Route::get('campaign-setup', [CampaignSetupController::class, 'edit'])->name('campaign-setup.edit');
+        Route::put('campaign-setup', [CampaignSetupController::class, 'update'])->name('campaign-setup.update');
+        Route::put('campaign-setup/email', [CampaignSetupController::class, 'updateEmail'])->name('campaign-setup.update-email');
+        Route::post('campaign-setup/test-email', [CampaignSetupController::class, 'testEmail'])->name('campaign-setup.test-email');
+        Route::post('campaign-setup/test-sms', [CampaignSetupController::class, 'testSms'])->name('campaign-setup.test-sms');
+        Route::get('campaign-setup/domain-check', [CampaignSetupController::class, 'domainCheck'])->name('campaign-setup.domain-check');
 
         Route::get('email-logs', [EmailLogController::class, 'index'])->name('email-logs.index');
         Route::get('email-logs/{emailLog}', [EmailLogController::class, 'show'])->name('email-logs.show');
