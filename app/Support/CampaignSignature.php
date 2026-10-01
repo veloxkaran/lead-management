@@ -290,8 +290,6 @@ class CampaignSignature
             $type === IMAGETYPE_PNG ? imagepng($scaled, null, 9) : imagejpeg($scaled, null, 82);
             $result = (string) ob_get_clean();
 
-            imagedestroy($source);
-            imagedestroy($scaled);
 
             return $result !== '' ? $result : null;
         } catch (Throwable $e) {

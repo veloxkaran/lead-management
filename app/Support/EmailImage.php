@@ -100,7 +100,6 @@ class EmailImage
                 imagepng($image, null, 6);
             }
             $contents = (string) ob_get_clean();
-            imagedestroy($image);
 
             return ['contents' => $contents, 'extension' => $type === IMAGETYPE_JPEG ? 'jpg' : 'png'];
         } finally {
@@ -129,7 +128,6 @@ class EmailImage
         }
 
         imagecopyresampled($scaled, $image, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-        imagedestroy($image);
 
         return $scaled;
     }

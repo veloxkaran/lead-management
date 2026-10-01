@@ -192,19 +192,29 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
             const data = new FormData(this.$el);
             data.delete('preview_token');
 
+            // Open straight away with a spinner — building the preview (shrinking
+            // photos, rendering the email) can take a moment.
+            const modal = window.bootstrap.Modal.getOrCreateInstance(this.$refs.reviewModal);
+            this.review = null;
             this.reviewing = true;
             this.reviewErrors = [];
+            modal.show();
+
+            // The live recipient check would only queue up behind the preview.
+            clearTimeout(this.timer);
+            this.request++;
+            this.loading = false;
 
             axios.post(composePreviewUrl, data)
                 .then(({ data: review }) => {
                     this.review = review;
-                    window.bootstrap.Modal.getOrCreateInstance(this.$refs.reviewModal).show();
                 })
                 .catch((error) => {
                     const errors = error.response?.data?.errors;
                     this.reviewErrors = error.response?.status === 413
                         ? ['The files are too large for the server to accept — use smaller files.']
                         : (errors ? Object.values(errors).flat() : ['Could not build the preview — try again.']);
+                    modal.hide();
                 })
                 .finally(() => {
                     this.reviewing = false;

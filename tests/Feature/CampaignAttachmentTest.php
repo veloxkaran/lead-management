@@ -142,4 +142,35 @@ class CampaignAttachmentTest extends TestCase
         $noView->forceFill(['permissions' => ['campaigns' => []]])->save();
         $this->actingAs($noView)->get(route('campaigns.attachment', [$campaign, $file]))->assertForbidden();
     }
+
+    public function test_sending_reuses_the_images_the_preview_already_shrank(): void
+    {
+        Mail::fake();
+        $admin = $this->admin();
+        $photo = UploadedFile::fake()->image('photo.jpg', 2400, 1600);
+        $hash = sha1_file($photo->getRealPath());
+
+        $preview = $this->actingAs($admin)->postJson(route('campaigns.compose-preview'), $this->payload([$photo]))->assertOk();
+        Storage::disk('local')->assertExists("campaign-drafts/{$hash}.jpg");
+
+        // Mark the draft, so the send can be seen using it instead of shrinking again.
+        Storage::disk('local')->put("campaign-drafts/{$hash}.jpg", $marker = (string) Storage::disk('local')->get("campaign-drafts/{$hash}.jpg").'reused');
+
+        $this->actingAs($admin)->post(route('campaigns.store'), [...$this->payload([$photo]), 'preview_token' => $preview->json('token')])
+            ->assertSessionHasNoErrors();
+
+        $stored = Campaign::firstOrFail()->attachments->first();
+        $this->assertSame($marker, Storage::disk('local')->get($stored->disk_path));
+        Storage::disk('local')->assertMissing("campaign-drafts/{$hash}.jpg");
+    }
+
+    public function test_unsent_drafts_are_cleared_after_a_day(): void
+    {
+        Storage::disk('local')->put('campaign-drafts/old.jpg', 'x');
+        touch(Storage::disk('local')->path('campaign-drafts/old.jpg'), now()->subDays(2)->getTimestamp());
+
+        $this->actingAs($this->admin())->postJson(route('campaigns.compose-preview'), $this->payload([UploadedFile::fake()->image('new.png', 20, 20)]))->assertOk();
+
+        Storage::disk('local')->assertMissing('campaign-drafts/old.jpg');
+    }
 }

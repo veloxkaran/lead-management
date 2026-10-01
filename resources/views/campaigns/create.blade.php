@@ -317,6 +317,11 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        <div class="text-center text-muted py-5" x-show="reviewing && !review">
+                            <div class="spinner-border mb-3" role="status"></div>
+                            <div>Building the preview…</div>
+                            <div class="small" x-show="files.some((f) => f.type !== 'application/pdf')">Resizing images for email</div>
+                        </div>
                         <template x-if="review">
                             <div class="row g-3">
                                 <div class="col-lg-8">

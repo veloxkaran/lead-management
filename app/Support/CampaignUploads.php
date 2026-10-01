@@ -13,9 +13,18 @@ use Illuminate\Support\Str;
  * go through EmailImage (scaled to email width, JPEG metadata stripped) —
  * every recipient downloads them, so a phone photo mustn't go out at full
  * size. PDFs are kept as they are.
+ *
+ * Shrinking a phone photo takes the better part of a second, and the
+ * composer uploads the same files twice (preview, then send) — so each
+ * shrunk image is kept for a day under campaign-drafts/, keyed by the
+ * original file's checksum, and the send reuses the preview's work.
  */
 class CampaignUploads
 {
+    public const DRAFTS = 'campaign-drafts';
+
+    private const DRAFT_HOURS = 24;
+
     /**
      * @param  array<int, UploadedFile>  $files
      * @return array<int, array{kind: string, contents: string, extension: string, mime: string, name: string}>
@@ -35,12 +44,53 @@ class CampaignUploads
                 continue;
             }
 
-            $image = EmailImage::prepare($file);
-            $extension = $image['extension'] === 'jpeg' ? 'jpg' : $image['extension'];
-            $prepared[] = ['kind' => 'image', 'contents' => $image['contents'], 'extension' => $extension, 'mime' => $extension === 'png' ? 'image/png' : 'image/jpeg', 'name' => $file->getClientOriginalName()];
+            $image = self::shrunk($file);
+            $prepared[] = ['kind' => 'image', 'contents' => $image['contents'], 'extension' => $image['extension'], 'mime' => $image['extension'] === 'png' ? 'image/png' : 'image/jpeg', 'name' => $file->getClientOriginalName(), 'hash' => $image['hash']];
         }
 
         return $prepared;
+    }
+
+    /**
+     * The shrunk image — from campaign-drafts/ when this exact file was
+     * prepared recently (by the preview), otherwise made and kept there.
+     *
+     * @return array{contents: string, extension: string, hash: string}
+     */
+    private static function shrunk(UploadedFile $file): array
+    {
+        $disk = Storage::disk('local');
+        $hash = sha1_file($file->getRealPath());
+
+        foreach (['jpg', 'png'] as $extension) {
+            $draft = self::DRAFTS."/{$hash}.{$extension}";
+            if ($disk->exists($draft)) {
+                return ['contents' => (string) $disk->get($draft), 'extension' => $extension, 'hash' => $hash];
+            }
+        }
+
+        self::pruneDrafts();
+
+        $image = EmailImage::prepare($file);
+        $extension = $image['extension'] === 'jpeg' ? 'jpg' : $image['extension'];
+        $disk->put(self::DRAFTS."/{$hash}.{$extension}", $image['contents']);
+
+        return ['contents' => $image['contents'], 'extension' => $extension, 'hash' => $hash];
+    }
+
+    /**
+     * Drafts from previews that were never sent.
+     */
+    private static function pruneDrafts(): void
+    {
+        $disk = Storage::disk('local');
+        $cutoff = now()->subHours(self::DRAFT_HOURS)->getTimestamp();
+
+        foreach ($disk->files(self::DRAFTS) as $path) {
+            if ($disk->lastModified($path) < $cutoff) {
+                $disk->delete($path);
+            }
+        }
     }
 
     /**
@@ -60,6 +110,11 @@ class CampaignUploads
                 'size' => strlen($file['contents']),
                 'sort' => $i,
             ]);
+
+            // Saved for good now — the draft has done its job.
+            if (isset($file['hash'])) {
+                Storage::disk('local')->delete(self::DRAFTS."/{$file['hash']}.{$file['extension']}");
+            }
         }
     }
 
