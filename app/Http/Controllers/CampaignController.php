@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\CampaignAudience;
 use App\Enums\CampaignChannel;
 use App\Enums\CampaignRecipientStatus;
+use App\Enums\CampaignStatus;
 use App\Http\Requests\Campaign\PreviewCampaignRecipientsRequest;
 use App\Http\Requests\Campaign\StoreCampaignRequest;
 use App\Models\Campaign;
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -35,12 +37,20 @@ class CampaignController extends Controller
     {
         $this->authorize('viewAny', Campaign::class);
 
+        $status = CampaignStatus::tryFrom((string) $request->query('status'));
+
         return view('campaigns.index', [
             'campaigns' => $this->visibleTo($request)
                 ->with('creator')
                 ->withCount(Campaign::statusCounts())
+                ->when($status, fn ($q, $status) => $q->where('status', $status))
+                // Waiting campaigns first, so they're never missed.
+                ->orderByRaw('CASE WHEN status = ? THEN 0 ELSE 1 END', [CampaignStatus::AwaitingApproval->value])
                 ->latest()
-                ->paginate(20),
+                ->paginate(20)
+                ->withQueryString(),
+            'currentStatus' => $status,
+            'awaitingCount' => $this->visibleTo($request)->where('status', CampaignStatus::AwaitingApproval)->count(),
         ]);
     }
 
@@ -90,19 +100,23 @@ class CampaignController extends Controller
         $campaign = $this->campaigns->create($request->validated(), $request->user());
 
         $skipped = count($campaign->skipped ?? []);
-        $message = $campaign->scheduled_at
-            ? "Campaign scheduled for {$campaign->scheduled_at->format('M d, Y g:i A')} — {$campaign->recipient_count} recipient(s)."
-            : "Campaign queued for {$campaign->recipient_count} recipient(s).";
+        $message = match (true) {
+            $campaign->isAwaitingApproval() => "Campaign submitted for approval — {$campaign->recipient_count} recipient(s). A Super Admin will review it; nothing is sent until it's approved.",
+            $campaign->scheduled_at !== null => "Campaign scheduled for {$campaign->scheduled_at->format('M d, Y g:i A')} — {$campaign->recipient_count} recipient(s).",
+            default => "Campaign queued for {$campaign->recipient_count} recipient(s).",
+        };
 
         return redirect()->route('campaigns.show', $campaign)
             ->with('success', $message.($skipped ? " {$skipped} duplicate/invalid entr".($skipped === 1 ? 'y was' : 'ies were').' left out.' : ''));
     }
 
-    public function show(Request $request, Campaign $campaign): View
+    public function show(Request $request, Campaign $campaign, CampaignMailer $mailer): View
     {
         $this->authorize('view', $campaign);
 
-        $campaign->load('creator')->loadCount([
+        $campaign->load('creator', 'reviewer')->loadCount([
+            'recipients as from_leads_count' => fn ($q) => $q->whereNotNull('lead_id'),
+            'recipients as from_contacts_count' => fn ($q) => $q->whereNull('lead_id')->whereNotNull('contact_id'),
             ...Campaign::statusCounts(),
             'recipients as unsubscribed_count' => fn ($q) => $q->whereNotNull('unsubscribed_at'),
             'recipients as retryable_count' => fn ($q) => $q->where('status', CampaignRecipientStatus::Failed)->whereNull('sent_at'),
@@ -117,6 +131,9 @@ class CampaignController extends Controller
             'filters' => $filters,
             'batches' => $this->batchSummary($campaign),
             'stuckCount' => $this->stuckCount($campaign),
+            'sender' => $campaign->isEmail() ? $mailer->senderDescription() : null,
+            // "Preview as" choices on the review panel.
+            'previewRecipients' => $campaign->isAwaitingApproval() ? $campaign->recipients()->orderBy('id')->limit(25)->get(['id', 'address', 'name', 'company_name']) : collect(),
             'statusNames' => $campaign->audience === CampaignAudience::LeadStatuses
                 ? LeadStatus::whereIn('id', $campaign->audience_filter ?? [])->pluck('name')
                 : collect(),
@@ -153,6 +170,60 @@ class CampaignController extends Controller
 
             fclose($out);
         }, Str::slug($campaign->name).'-send-log-'.now()->format('Ymd-His').'.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    /**
+     * The email exactly as a recipient gets it — signature, footer,
+     * unsubscribe link — personalized for one of its recipients (?as=id,
+     * default the first). Shown in a sandboxed iframe on the campaign page.
+     */
+    public function emailPreview(Request $request, Campaign $campaign, CampaignMailer $mailer): Response
+    {
+        $this->authorize('view', $campaign);
+        abort_unless($campaign->isEmail(), 404);
+
+        $recipient = $campaign->recipients()->when($request->integer('as'), fn ($q, $id) => $q->whereKey($id))->orderBy('id')->first();
+
+        $mail = $mailer->compose(
+            CampaignService::personalize((string) $campaign->subject, $recipient),
+            CampaignService::personalize($campaign->message, $recipient),
+            null,
+            (bool) $campaign->sendOption('include_signature'),
+            false,
+        );
+        $mail->unsubscribeUrl = '#unsubscribe';
+
+        return response($mail->render(), 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+            // Rendered inside the campaign page only; never runs scripts.
+            'Content-Security-Policy' => "default-src 'none'; img-src * data:; style-src 'unsafe-inline'",
+            'X-Frame-Options' => 'SAMEORIGIN',
+        ]);
+    }
+
+    public function approve(Request $request, Campaign $campaign): RedirectResponse
+    {
+        $this->authorize('review', $campaign);
+
+        $this->campaigns->approve($campaign, $request->user());
+        $campaign->refresh();
+
+        return back()->with('success', $campaign->status === CampaignStatus::Pending && $campaign->scheduled_at?->isFuture()
+            ? "Campaign approved — it sends on {$campaign->scheduled_at->format('M d, Y g:i A')}."
+            : 'Campaign approved — sending has started.');
+    }
+
+    public function reject(Request $request, Campaign $campaign): RedirectResponse
+    {
+        $this->authorize('review', $campaign);
+
+        $data = $request->validate(['review_note' => ['required', 'string', 'max:1000']], [
+            'review_note.required' => 'Say why it was rejected, so the creator can fix it.',
+        ]);
+
+        $this->campaigns->reject($campaign, $request->user(), trim($data['review_note']));
+
+        return back()->with('success', 'Campaign rejected — the creator has been told why. Nothing was sent.');
     }
 
     public function pause(Campaign $campaign): RedirectResponse

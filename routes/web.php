@@ -238,6 +238,9 @@ Route::middleware('auth')->group(function () {
         Route::post('campaigns/{campaign}/resume', [CampaignController::class, 'resume'])->name('campaigns.resume');
         Route::post('campaigns/{campaign}/retry-failed', [CampaignController::class, 'retryFailed'])->name('campaigns.retry-failed');
         Route::get('campaigns/{campaign}/export', [CampaignController::class, 'export'])->name('campaigns.export');
+        Route::get('campaigns/{campaign}/email-preview', [CampaignController::class, 'emailPreview'])->name('campaigns.email-preview');
+        Route::post('campaigns/{campaign}/approve', [CampaignController::class, 'approve'])->name('campaigns.approve');
+        Route::post('campaigns/{campaign}/reject', [CampaignController::class, 'reject'])->name('campaigns.reject');
     });
 
     Route::middleware('permission:knowledge_base')->group(function () {

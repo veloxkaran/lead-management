@@ -214,7 +214,7 @@ class ContactTest extends TestCase
     public function test_campaigns_can_go_to_all_or_picked_contacts(): void
     {
         Mail::fake();
-        $user = $this->user();
+        $user = $this->user(UserRole::SuperAdmin);
         $ram = Contact::factory()->create(['name' => 'Ram', 'company_name' => 'Acme', 'email' => 'ram@acme.test']);
         $sita = Contact::factory()->create(['name' => 'Sita', 'email' => 'sita@acme.test']);
         Contact::factory()->create(['name' => 'Phone only', 'email' => null]);

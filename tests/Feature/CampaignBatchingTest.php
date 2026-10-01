@@ -36,6 +36,16 @@ class CampaignBatchingTest extends TestCase
         $settings->set('campaign_batch_pause_minutes', (string) $pause);
     }
 
+    /** A CAMPAIGN_MAIL_* login, as .env would give it. */
+    private function campaignMail(array $overrides = []): void
+    {
+        config(['campaigns.mail' => [
+            'host' => '127.0.0.1', 'port' => 1, 'username' => 'news@acme.test', 'password' => 'env-secret',
+            'encryption' => 'none', 'from_address' => 'news@acme.test', 'from_name' => 'Acme News', 'reply_to' => null,
+            ...$overrides,
+        ]]);
+    }
+
     private function contacts(int $count): string
     {
         return collect(range(1, $count))->map(fn ($i) => "person{$i}@example.com")->implode("\n");
@@ -210,8 +220,6 @@ class CampaignBatchingTest extends TestCase
         $settings = app(CampaignSettings::class);
         $settings->set('campaign_signature', '<p><strong>Ram Sharma</strong><br>Acme Pvt. Ltd.</p>');
         $settings->set('campaign_footer', "Acme Pvt. Ltd.\nPutalisadak, Kathmandu");
-        $settings->set('campaign_reply_to', 'sales@acme.test');
-        $settings->set('campaign_from_name', 'Ram from Acme');
 
         $this->createCampaign($this->admin(), 1);
         $recipient = CampaignRecipient::firstOrFail();
@@ -227,11 +235,22 @@ class CampaignBatchingTest extends TestCase
                 ->assertDontSeeInText('<strong>');
 
             return $mail->headers()->text['List-Unsubscribe'] === "<{$unsubscribe}>"
-                && $mail->headers()->text['List-Unsubscribe-Post'] === 'List-Unsubscribe=One-Click'
-                // Set by CampaignMailer at send time, so on the properties rather than the envelope.
-                && $mail->replyTo == [['address' => 'sales@acme.test', 'name' => null]]
-                && $mail->from == [['address' => config('mail.from.address'), 'name' => 'Ram from Acme']];
+                && $mail->headers()->text['List-Unsubscribe-Post'] === 'List-Unsubscribe=One-Click';
         });
+    }
+
+    public function test_from_and_reply_to_come_from_the_campaign_mail_login(): void
+    {
+        $this->campaignMail(['reply_to' => 'sales@acme.test']);
+        $mail = app(\App\Services\CampaignMailer::class)->prepare(new CampaignMail('Subject', 'Body'));
+
+        // Set by CampaignMailer at send time, so on the properties rather than the envelope.
+        $this->assertEquals([['address' => 'news@acme.test', 'name' => 'Acme News']], $mail->from);
+        $this->assertEquals([['address' => 'sales@acme.test', 'name' => null]], $mail->replyTo);
+
+        // Without a From address, the login's own address is used.
+        $this->campaignMail(['from_address' => null, 'username' => 'login@acme.test']);
+        $this->assertSame('login@acme.test', app(\App\Services\CampaignMailer::class)->from()[0]);
     }
 
     public function test_the_signature_can_be_left_off_and_open_tracking_turned_off(): void
@@ -301,20 +320,12 @@ class CampaignBatchingTest extends TestCase
         $this->assertSame(CampaignStatus::Completed, $campaign->fresh()->status);
     }
 
-    public function test_email_setup_saves_sender_signature_and_speed(): void
+    public function test_email_setup_saves_signature_footer_and_speed(): void
     {
         $admin = $this->admin();
         $settings = app(CampaignSettings::class);
 
         $this->actingAs($admin)->put(route('campaign-setup.update-email'), [
-            'campaign_email_mode' => 'smtp',
-            'campaign_smtp_host' => 'mail.acme.test',
-            'campaign_smtp_port' => 465,
-            'campaign_smtp_encryption' => 'ssl',
-            'campaign_smtp_username' => 'campaigns@acme.test',
-            'campaign_smtp_password' => 'smtp-secret',
-            'campaign_from_name' => 'Acme Sales',
-            'campaign_reply_to' => 'sales@acme.test',
             'campaign_signature' => '<p>Ram<script>alert(1)</script></p>',
             'campaign_footer' => 'Acme, Kathmandu',
             'campaign_track_opens' => '0',
@@ -323,46 +334,28 @@ class CampaignBatchingTest extends TestCase
             'campaign_batch_pause_minutes' => 30,
         ])->assertSessionHasNoErrors()->assertSessionHas('success');
 
-        $this->assertSame('smtp', $settings->emailMode());
-        $this->assertSame('smtp-secret', $settings->smtpPassword());
-        $this->assertDatabaseMissing('settings', ['value' => 'smtp-secret']);
         $this->assertStringNotContainsString('<script', $settings->signature());
         $this->assertStringContainsString('Ram', $settings->signature());
+        $this->assertSame('Acme, Kathmandu', $settings->get('campaign_footer'));
         $this->assertFalse($settings->tracksOpens());
         $this->assertSame(['batch_size' => 50, 'per_minute' => 10, 'pause_minutes' => 30], array_intersect_key($settings->sendOptions(\App\Enums\CampaignChannel::Email), array_flip(['batch_size', 'per_minute', 'pause_minutes'])));
 
-        $page = $this->actingAs($admin)->get(route('campaign-setup.edit'))->assertOk();
-        $page->assertDontSee('smtp-secret')->assertSee('saved — leave blank to keep')->assertSee('Acme Sales &lt;campaigns@acme.test&gt; via dedicated SMTP (mail.acme.test)', false);
-
-        // SMTP mode needs its server details.
-        $this->actingAs($admin)->put(route('campaign-setup.update-email'), [
-            'campaign_email_mode' => 'smtp', 'campaign_batch_size' => 100, 'campaign_emails_per_minute' => 20, 'campaign_batch_pause_minutes' => 15,
-        ])->assertSessionHasErrors(['campaign_smtp_host', 'campaign_smtp_port', 'campaign_smtp_encryption']);
-
         // Speed limits are enforced.
         $this->actingAs($admin)->put(route('campaign-setup.update-email'), [
-            'campaign_email_mode' => 'system', 'campaign_batch_size' => 5000, 'campaign_emails_per_minute' => 500, 'campaign_batch_pause_minutes' => 15,
+            'campaign_batch_size' => 5000, 'campaign_emails_per_minute' => 500, 'campaign_batch_pause_minutes' => 15,
         ])->assertSessionHasErrors(['campaign_batch_size', 'campaign_emails_per_minute']);
 
-        // Saving the SMS tab leaves the email setup alone.
-        $this->actingAs($admin)->put(route('campaign-setup.update'), ['sms_method' => 'POST', 'sms_format' => 'form', 'sms_auth_mode' => 'param'])->assertSessionHasNoErrors();
-        $this->assertSame('smtp', $settings->emailMode());
-    }
+        // The sender can't be set from the page any more.
+        $this->actingAs($admin)->put(route('campaign-setup.update-email'), [
+            'campaign_smtp_host' => 'evil.test', 'campaign_batch_size' => 100, 'campaign_emails_per_minute' => 20, 'campaign_batch_pause_minutes' => 15,
+        ])->assertSessionHasNoErrors();
+        $this->assertNull($settings->get('campaign_smtp_host'));
 
-    public function test_campaign_email_goes_through_the_dedicated_smtp_login(): void
-    {
-        $settings = app(CampaignSettings::class);
-        $settings->set('campaign_email_mode', 'smtp');
-        $settings->set('campaign_smtp_host', '127.0.0.1');
-        $settings->set('campaign_smtp_port', '1');
-        $settings->set('campaign_smtp_encryption', 'none');
-        $settings->set('campaign_from_address', 'campaigns@example.com');
-
-        $this->createCampaign($this->admin(), 1);
-
-        $recipient = CampaignRecipient::firstOrFail();
-        $this->assertSame(CampaignRecipientStatus::Failed, $recipient->status);
-        $this->assertStringContainsString('127.0.0.1', $recipient->error);
+        // With no CAMPAIGN_MAIL_HOST the page says email falls back to MAIL_*.
+        $this->actingAs($admin)->get(route('campaign-setup.edit'))->assertOk()
+            ->assertSee('No campaign login set.')
+            ->assertDontSee('name="campaign_email_mode"', false)
+            ->assertDontSee('name="campaign_smtp_password"', false);
     }
 
     public function test_the_send_log_filters_by_batch_and_search_and_exports_csv(): void
@@ -407,7 +400,7 @@ class CampaignBatchingTest extends TestCase
 
     public function test_the_domain_check_reports_spf_dkim_and_dmarc(): void
     {
-        app(CampaignSettings::class)->set('campaign_from_address', 'news@acme.test');
+        $this->campaignMail(['from_address' => 'news@acme.test']);
         $this->app->instance(SenderDomainCheck::class, new class extends SenderDomainCheck
         {
             protected function txt(string $host): array
@@ -433,11 +426,8 @@ class CampaignBatchingTest extends TestCase
 
     public function test_a_refused_login_points_out_a_username_that_differs_from_the_from_address(): void
     {
-        $settings = app(CampaignSettings::class);
-        $settings->set('campaign_email_mode', 'smtp');
-        $settings->set('campaign_smtp_username', 'sale@acme.test');
-        $settings->set('campaign_from_address', 'sales@acme.test');
-        $this->app->instance(\App\Services\CampaignMailer::class, new class($settings) extends \App\Services\CampaignMailer
+        $this->campaignMail(['username' => 'sale@acme.test', 'from_address' => 'sales@acme.test']);
+        $this->app->instance(\App\Services\CampaignMailer::class, new class(app(CampaignSettings::class)) extends \App\Services\CampaignMailer
         {
             public function send(string $to, CampaignMail $mail): void
             {
@@ -446,6 +436,28 @@ class CampaignBatchingTest extends TestCase
         });
 
         $this->actingAs($this->admin())->post(route('campaign-setup.test-email'), ['test_email' => 'me@example.com'])
-            ->assertSessionHas('error', fn ($m) => str_contains($m, 'refused the username/password') && str_contains($m, 'the username (sale@acme.test) is different from the From address (sales@acme.test)'));
+            ->assertSessionHas('error', fn ($m) => str_contains($m, 'correct CAMPAIGN_MAIL_USERNAME / CAMPAIGN_MAIL_PASSWORD in .env') && str_contains($m, 'the username (sale@acme.test) is different from the From address (sales@acme.test)'));
+    }
+
+    public function test_campaign_email_is_sent_through_the_campaign_mail_login(): void
+    {
+        $this->campaignMail(['username' => 'login@acme.test']);
+        $admin = $this->admin();
+
+        $this->actingAs($admin)->get(route('campaign-setup.edit'))->assertOk()
+            ->assertSee('Acme News &lt;news@acme.test&gt; via login@acme.test at 127.0.0.1', false)
+            ->assertSee('127.0.0.1:1')
+            ->assertSee('password set')
+            ->assertSee('are different mailboxes')
+            ->assertDontSee('env-secret');
+
+        // It really connects with that login.
+        $this->createCampaign($admin, 1);
+        $this->assertStringContainsString('127.0.0.1', CampaignRecipient::firstOrFail()->error);
+    }
+
+    public function test_tests_never_see_the_real_campaign_mail_login(): void
+    {
+        $this->assertNull(app(CampaignSettings::class)->envMail(), 'phpunit.xml must blank CAMPAIGN_MAIL_HOST so tests cannot send real email');
     }
 }

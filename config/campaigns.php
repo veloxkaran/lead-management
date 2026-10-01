@@ -25,6 +25,22 @@ return [
     'stuck_after_minutes' => 15,
 
     /*
+    | The login campaign email is sent through. Set in .env only — Campaign
+    | Setup shows it but can't change it. Without a host, campaign email
+    | falls back to the app's MAIL_* settings.
+    */
+    'mail' => [
+        'host' => env('CAMPAIGN_MAIL_HOST'),
+        'port' => (int) env('CAMPAIGN_MAIL_PORT', 465),
+        'username' => env('CAMPAIGN_MAIL_USERNAME'),
+        'password' => env('CAMPAIGN_MAIL_PASSWORD'),
+        'encryption' => env('CAMPAIGN_MAIL_ENCRYPTION', 'ssl'),
+        'from_address' => env('CAMPAIGN_MAIL_FROM_ADDRESS'),
+        'from_name' => env('CAMPAIGN_MAIL_FROM_NAME'),
+        'reply_to' => env('CAMPAIGN_MAIL_REPLY_TO'),
+    ],
+
+    /*
     | Country calling code stripped when normalizing phone numbers for
     | duplicate detection, so "+977 9800000000" and "9800000000" count as the
     | same number.

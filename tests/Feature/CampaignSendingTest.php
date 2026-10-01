@@ -4,12 +4,10 @@ namespace Tests\Feature;
 
 use App\Enums\CampaignRecipientStatus;
 use App\Enums\CampaignStatus;
-use App\Enums\MailEncryption;
 use App\Jobs\SendCampaignMessage;
 use App\Mail\CampaignMail;
 use App\Models\Campaign;
 use App\Models\CampaignRecipient;
-use App\Models\EmailAccount;
 use App\Models\Lead;
 use App\Models\User;
 use App\Services\CampaignService;
@@ -68,7 +66,7 @@ class CampaignSendingTest extends TestCase
     {
         Queue::fake();
         config(['campaigns.emails_per_minute' => 2]);
-        $user = User::factory()->create();
+        $user = User::factory()->superAdmin()->create();
         Lead::factory()->count(3)->sequence(fn ($s) => ['email' => "lead{$s->index}@example.com"])->create();
 
         $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload())
@@ -90,7 +88,7 @@ class CampaignSendingTest extends TestCase
     public function test_sending_an_email_personalizes_it_and_marks_the_campaign_completed(): void
     {
         Mail::fake();
-        $user = User::factory()->create();
+        $user = User::factory()->superAdmin()->create();
         Lead::factory()->create(['company_name' => 'Acme', 'contact_person' => 'Ram', 'email' => 'ram@acme.test']);
 
         $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload());
@@ -132,16 +130,8 @@ class CampaignSendingTest extends TestCase
 
     public function test_an_email_failure_is_recorded_with_the_reason(): void
     {
-        $user = User::factory()->create();
-        $account = EmailAccount::factory()->create([
-            'user_id' => $user->id,
-            'email_address' => 'campaigns@example.com',
-            'smtp_host' => '127.0.0.1',
-            'smtp_port' => 1,
-            'smtp_encryption' => MailEncryption::None,
-            'is_active' => true,
-        ]);
-        app(CampaignSettings::class)->set('campaign_email_account_id', (string) $account->id);
+        $user = User::factory()->superAdmin()->create();
+        config(['campaigns.mail' => ['host' => '127.0.0.1', 'port' => 1, 'username' => 'campaigns@example.com', 'password' => 'x', 'encryption' => 'none', 'from_address' => 'campaigns@example.com', 'from_name' => null, 'reply_to' => null]]);
 
         $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload([
             'audience' => 'none',
@@ -150,7 +140,7 @@ class CampaignSendingTest extends TestCase
 
         $recipient = CampaignRecipient::firstOrFail();
         $this->assertSame(CampaignRecipientStatus::Failed, $recipient->status);
-        $this->assertStringContainsString('127.0.0.1', $recipient->error, 'it went through the chosen Email Account, not the default mailer');
+        $this->assertStringContainsString('127.0.0.1', $recipient->error, 'it went through the CAMPAIGN_MAIL_* login, not the default mailer');
         $this->assertSame(CampaignStatus::Completed, $recipient->campaign->fresh()->status);
     }
 
@@ -158,7 +148,7 @@ class CampaignSendingTest extends TestCase
     {
         $this->configureSms();
         Http::fake(['sms.test/*' => Http::response(['response_code' => 200, 'message_id' => 'gw-1'])]);
-        $user = User::factory()->create();
+        $user = User::factory()->superAdmin()->create();
         Lead::factory()->create(['contact_person' => 'Sita', 'phone' => '+977 9800000001']);
 
         $this->actingAs($user)->post(route('campaigns.store'), [
@@ -183,7 +173,7 @@ class CampaignSendingTest extends TestCase
     {
         $this->configureSms(['sms_auth_mode' => 'header', 'sms_auth_name' => 'X-Api-Key', 'sms_country_prefix' => '977', 'sms_format' => 'json']);
         Http::fake(['sms.test/*' => Http::response(['response_code' => 200])]);
-        $user = User::factory()->create();
+        $user = User::factory()->superAdmin()->create();
 
         $this->actingAs($user)->post(route('campaigns.store'), [
             'name' => 'SMS', 'channel' => 'sms', 'message' => 'Hi', 'audience' => 'none', 'extra_contacts' => '9800000001',
@@ -199,7 +189,7 @@ class CampaignSendingTest extends TestCase
     {
         $this->configureSms();
         Http::fake(['sms.test/*' => Http::response(['response_code' => 1002, 'response' => 'Invalid token'])]);
-        $user = User::factory()->create();
+        $user = User::factory()->superAdmin()->create();
 
         $this->actingAs($user)->post(route('campaigns.store'), [
             'name' => 'SMS', 'channel' => 'sms', 'message' => 'Hi', 'audience' => 'none', 'extra_contacts' => '9800000001',
@@ -213,7 +203,7 @@ class CampaignSendingTest extends TestCase
     public function test_sms_fails_clearly_when_the_gateway_is_not_set_up(): void
     {
         Http::fake();
-        $user = User::factory()->create();
+        $user = User::factory()->superAdmin()->create();
 
         $this->actingAs($user)->post(route('campaigns.store'), [
             'name' => 'SMS', 'channel' => 'sms', 'message' => 'Hi', 'audience' => 'none', 'extra_contacts' => '9800000001',
@@ -253,7 +243,7 @@ class CampaignSendingTest extends TestCase
     public function test_a_scheduled_campaign_stays_pending_until_its_time(): void
     {
         Queue::fake();
-        $user = User::factory()->create();
+        $user = User::factory()->superAdmin()->create();
         Lead::factory()->create(['email' => 'a@example.com']);
 
         $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload([
@@ -277,7 +267,7 @@ class CampaignSendingTest extends TestCase
     public function test_a_campaign_is_never_queued_twice(): void
     {
         Queue::fake();
-        $user = User::factory()->create();
+        $user = User::factory()->superAdmin()->create();
         Lead::factory()->create(['email' => 'a@example.com']);
 
         $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload());
@@ -293,7 +283,7 @@ class CampaignSendingTest extends TestCase
     {
         Queue::fake();
         Mail::fake();
-        $user = User::factory()->create();
+        $user = User::factory()->superAdmin()->create();
         Lead::factory()->count(2)->sequence(fn ($s) => ['email' => "l{$s->index}@example.com"])->create();
 
         $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload());
@@ -313,7 +303,7 @@ class CampaignSendingTest extends TestCase
 
     public function test_a_campaign_with_nobody_to_send_to_is_rejected(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->superAdmin()->create();
         Lead::factory()->create(['email' => null]);
 
         $this->actingAs($user)->post(route('campaigns.store'), $this->emailCampaignPayload())
@@ -324,7 +314,7 @@ class CampaignSendingTest extends TestCase
 
     public function test_campaign_validation(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->superAdmin()->create();
 
         $this->actingAs($user)->post(route('campaigns.store'), ['channel' => 'email', 'audience' => 'all_leads'])
             ->assertSessionHasErrors(['name', 'subject', 'message']);
@@ -338,7 +328,7 @@ class CampaignSendingTest extends TestCase
 
     public function test_campaign_pages_render_with_statuses_and_left_out_entries(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->superAdmin()->create();
         $campaign = Campaign::factory()->create(['created_by' => $user->id, 'recipient_count' => 2, 'skipped' => [['value' => 'dup@example.com', 'reason' => 'Duplicate — already included', 'type' => 'duplicate']]]);
         $campaign->recipients()->create(['address' => 'a@example.com', 'status' => CampaignRecipientStatus::Delivered]);
         $campaign->recipients()->create(['address' => 'b@example.com', 'status' => CampaignRecipientStatus::Failed, 'error' => 'Mailbox full']);

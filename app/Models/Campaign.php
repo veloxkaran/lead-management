@@ -22,6 +22,7 @@ class Campaign extends Model
         'company_id', 'name', 'channel', 'subject', 'message', 'audience', 'audience_filter', 'lead_ids', 'all_contacts', 'contact_ids',
         'status', 'scheduled_at', 'next_batch_at', 'started_at', 'paused_at', 'completed_at',
         'recipient_count', 'batch_count', 'current_batch', 'skipped', 'send_options', 'created_by',
+        'reviewed_by', 'reviewed_at', 'review_note',
     ];
 
     protected function casts(): array
@@ -41,12 +42,32 @@ class Campaign extends Model
             'started_at' => 'datetime',
             'paused_at' => 'datetime',
             'completed_at' => 'datetime',
+            'reviewed_at' => 'datetime',
         ];
     }
 
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    /**
+     * Only Super Admins send straight away; everyone else's campaigns wait
+     * for a Super Admin to approve them.
+     */
+    public static function requiresApproval(User $creator): bool
+    {
+        return ! $creator->isSuperAdmin();
+    }
+
+    public function isAwaitingApproval(): bool
+    {
+        return $this->status === CampaignStatus::AwaitingApproval;
     }
 
     public function recipients(): HasMany
@@ -60,12 +81,26 @@ class Campaign extends Model
     }
 
     /**
-     * Pending (not started yet), mid-send or paused — either way there are
-     * messages left that cancelling would stop.
+     * Awaiting approval, pending (not started yet), mid-send or paused —
+     * either way there are messages left that cancelling would stop.
      */
     public function isCancellable(): bool
     {
-        return in_array($this->status, [CampaignStatus::Pending, CampaignStatus::Sending, CampaignStatus::Paused], true);
+        return in_array($this->status, [CampaignStatus::AwaitingApproval, CampaignStatus::Pending, CampaignStatus::Sending, CampaignStatus::Paused], true);
+    }
+
+    /**
+     * Minutes the whole send takes from start to finish at its batch
+     * settings — shown to the Super Admin reviewing it.
+     */
+    public function estimatedDurationMinutes(): int
+    {
+        $size = max(1, (int) $this->sendOption('batch_size'));
+        $perMinute = max(1, (int) $this->sendOption('per_minute'));
+        $batches = max(1, (int) ceil($this->recipient_count / $size));
+        $last = $this->recipient_count - ($batches - 1) * $size;
+
+        return ($batches - 1) * $this->batchIntervalMinutes() + (int) ceil(max(1, $last) / $perMinute);
     }
 
     /**

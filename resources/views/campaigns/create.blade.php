@@ -253,8 +253,15 @@
                         </template>
                     </div>
                     <div class="card-footer bg-white">
+                        @if (App\Models\Campaign::requiresApproval(auth()->user()))
+                            <div class="small text-muted mb-2"><i class="bi bi-shield-check"></i> A Super Admin reviews it first — nothing is sent until it's approved.</div>
+                        @endif
                         <button type="submit" class="btn btn-primary w-100" :disabled="submitting || (preview && preview.total === 0)">
-                            <span x-show="!submitting"><i class="bi bi-send"></i> <span x-text="scheduledAt ? 'Schedule Campaign' : 'Send Campaign'">Send Campaign</span></span>
+                            @if (App\Models\Campaign::requiresApproval(auth()->user()))
+                                <span x-show="!submitting"><i class="bi bi-send-check"></i> Submit for Approval</span>
+                            @else
+                                <span x-show="!submitting"><i class="bi bi-send"></i> <span x-text="scheduledAt ? 'Schedule Campaign' : 'Send Campaign'">Send Campaign</span></span>
+                            @endif
                             <span x-show="submitting" x-cloak><span class="spinner-border spinner-border-sm"></span> Saving…</span>
                         </button>
                     </div>

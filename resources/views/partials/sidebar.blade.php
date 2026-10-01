@@ -78,6 +78,9 @@
         @php
             $showCampaigns = $user?->can('viewAny', App\Models\Campaign::class) && $user->hasPermission('campaigns');
             $showContacts = $user?->can('viewAny', App\Models\Contact::class) && $user->hasPermission('contacts');
+            $campaignsToApprove = $showCampaigns && $user->isSuperAdmin()
+                ? App\Models\Campaign::where('status', App\Enums\CampaignStatus::AwaitingApproval)->count()
+                : 0;
         @endphp
         @if ($showCampaigns || $showContacts)
             <div class="nav-section-title">Outreach</div>
@@ -88,8 +91,9 @@
             </a>
         @endif
         @if ($showCampaigns)
-            <a href="{{ route('campaigns.index') }}" class="nav-link {{ request()->routeIs('campaigns.*') ? 'active' : '' }}" title="Campaigns" data-bs-toggle="tooltip" data-bs-placement="right">
+            <a href="{{ route('campaigns.index', $campaignsToApprove ? ['status' => App\Enums\CampaignStatus::AwaitingApproval->value] : []) }}" class="nav-link {{ request()->routeIs('campaigns.*') ? 'active' : '' }}" title="Campaigns{{ $campaignsToApprove ? ' · '.$campaignsToApprove.' to approve' : '' }}" data-bs-toggle="tooltip" data-bs-placement="right">
                 <i class="bi bi-send"></i> <span class="nav-label">Campaigns</span>
+                @if ($campaignsToApprove)<span class="badge rounded-pill bg-warning text-dark ms-auto">{{ $campaignsToApprove }}</span>@endif
             </a>
         @endif
 

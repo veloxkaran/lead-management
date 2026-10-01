@@ -13,6 +13,26 @@
         @endcan
     </x-page-header>
 
+    @if ($awaitingCount && $currentStatus !== App\Enums\CampaignStatus::AwaitingApproval)
+        <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2 small">
+            <i class="bi bi-hourglass-split"></i>
+            <strong>{{ $awaitingCount }} campaign(s) awaiting approval.</strong>
+            @if (auth()->user()->isSuperAdmin())
+                Review them — nothing is sent until you approve.
+            @else
+                A Super Admin will review them before anything is sent.
+            @endif
+            <a href="{{ route('campaigns.index', ['status' => App\Enums\CampaignStatus::AwaitingApproval->value]) }}" class="btn btn-sm btn-warning ms-auto">Show them</a>
+        </div>
+    @endif
+
+    @if ($currentStatus)
+        <div class="small mb-2">
+            Showing <span class="badge {{ $currentStatus->badgeClass() }}">{{ $currentStatus->label() }}</span> only ·
+            <a href="{{ route('campaigns.index') }}">Show all</a>
+        </div>
+    @endif
+
     <div class="card border-0 shadow-sm">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -65,7 +85,11 @@
                                 @endif
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('campaigns.show', $campaign) }}" class="btn btn-sm btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
+                                @if ($campaign->isAwaitingApproval() && auth()->user()->isSuperAdmin())
+                                    <a href="{{ route('campaigns.show', $campaign) }}" class="btn btn-sm btn-warning"><i class="bi bi-eye"></i> Review</a>
+                                @else
+                                    <a href="{{ route('campaigns.show', $campaign) }}" class="btn btn-sm btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
+                                @endif
                             </td>
                         </tr>
                     @empty

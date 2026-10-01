@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CampaignChannel;
-use App\Enums\MailEncryption;
 use App\Http\Requests\Campaign\UpdateCampaignEmailSetupRequest;
 use App\Http\Requests\Campaign\UpdateCampaignSetupRequest;
 use App\Mail\CampaignMail;
 use App\Models\CampaignUnsubscribe;
-use App\Models\EmailAccount;
 use App\Services\CampaignMailer;
 use App\Services\SmsGateway;
 use App\Support\CampaignSettings;
@@ -22,9 +20,9 @@ use Illuminate\View\View;
 use Throwable;
 
 /**
- * Administration → Campaign Setup. Email tab: who campaign email comes
- * from (system settings, an Email Account, or a dedicated SMTP login),
- * reply-to, signature, footer and sending speed. SMS tab: the gateway's
+ * Administration → Campaign Setup. Email tab: signature, footer and
+ * sending speed — the sender itself is the CAMPAIGN_MAIL_* login in .env,
+ * shown read-only. SMS tab: the gateway's
  * endpoint, key and parameter names. Super Admin only (route middleware).
  */
 class CampaignSetupController extends Controller
@@ -36,7 +34,6 @@ class CampaignSetupController extends Controller
     public function edit(Request $request, CampaignMailer $mailer): View
     {
         $email = collect(CampaignSettings::EMAIL_KEYS)->mapWithKeys(fn (string $key) => [$key => $this->settings->get($key)]);
-        $email['campaign_email_mode'] = $this->settings->emailMode();
         $email['campaign_track_opens'] = $this->settings->tracksOpens() ? '1' : '0';
 
         // Blank settings show the config defaults they fall back to.
@@ -53,13 +50,10 @@ class CampaignSetupController extends Controller
             'signature' => CampaignSignature::forEditor($this->settings->get('campaign_signature')),
             'signatureImageSizes' => CampaignSignature::imageSizes($this->settings->get('campaign_signature')),
             'signatureMissingImages' => CampaignSignature::missingImages($this->settings->get('campaign_signature')),
-            'hasSmtpPassword' => $this->settings->hasSmtpPassword(),
-            'emailModes' => CampaignSettings::EMAIL_MODES,
-            'encryptions' => MailEncryption::cases(),
             'hasApiKey' => $this->settings->hasSmsApiKey(),
             'presets' => CampaignSettings::SMS_PRESETS,
-            'emailAccounts' => EmailAccount::withoutGlobalScopes()->where('is_active', true)->with('user:id,name')->orderBy('email_address')->get(),
             'sender' => $mailer->senderDescription(),
+            'envMail' => ($env = $this->settings->envMail()) ? [...array_diff_key($env, ['password' => true]), 'has_password' => filled($env['password'])] : null,
             'fromAddress' => $mailer->from()[0],
             'unsubscribeCount' => CampaignUnsubscribe::where('channel', CampaignChannel::Email)->count(),
             'dlrUrl' => route('webhooks.sms-delivery', $this->settings->dlrSecret()),
@@ -79,13 +73,6 @@ class CampaignSetupController extends Controller
         $this->settings->set('campaign_track_opens', $request->boolean('campaign_track_opens') ? '1' : '0');
 
         $this->settings->set('campaign_signature', CampaignSignature::save($data['campaign_signature'] ?? null, missing: $missing));
-
-        // A blank password field keeps the saved one; only "Remove saved password" clears it.
-        if ($request->boolean('clear_campaign_smtp_password')) {
-            $this->settings->setSmtpPassword(null);
-        } elseif (filled($data['campaign_smtp_password'] ?? null)) {
-            $this->settings->setSmtpPassword($data['campaign_smtp_password']);
-        }
 
         return redirect()->route('campaign-setup.edit')->with('success', 'Email setup saved.'.($missing
             ? " {$missing} signature image(s) whose file had gone missing were removed — insert the image again and save."
@@ -133,11 +120,12 @@ class CampaignSetupController extends Controller
             $hint = '';
 
             if (str_contains($e->getMessage(), '535')) {
-                $hint = ' — The mail server refused the username/password. Check the password by logging into webmail with it, then type it again in "Password" and save. (Your browser may have auto-filled a different saved password.)';
+                $hint = ' — The mail server refused the username/password. Check them by logging into webmail, then correct CAMPAIGN_MAIL_USERNAME / CAMPAIGN_MAIL_PASSWORD in .env.';
 
-                $username = (string) $this->settings->get('campaign_smtp_username');
-                $from = (string) $this->settings->get('campaign_from_address');
-                if ($this->settings->emailMode() === 'smtp' && str_contains($username, '@') && $from !== '' && strcasecmp($username, $from) !== 0) {
+                $env = $this->settings->envMail();
+                $username = (string) ($env['username'] ?? '');
+                $from = (string) ($env['from_address'] ?? '');
+                if (str_contains($username, '@') && $from !== '' && strcasecmp($username, $from) !== 0) {
                     $hint .= " Note: the username ({$username}) is different from the From address ({$from}) — usually they're the same mailbox, so one of them is probably a typo.";
                 }
             }

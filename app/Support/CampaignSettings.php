@@ -3,7 +3,6 @@
 namespace App\Support;
 
 use App\Enums\CampaignChannel;
-use App\Models\EmailAccount;
 use App\Models\Setting;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
@@ -11,24 +10,14 @@ use Illuminate\Support\Str;
 
 /**
  * Campaign Setup values (Administration → Campaign Setup), stored in the
- * settings table. The SMS API key and the campaign SMTP password are kept
- * encrypted with APP_KEY; rotating APP_KEY makes them unreadable, and they
- * then have to be entered again.
+ * settings table — except the email sender, which comes from .env
+ * (CAMPAIGN_MAIL_*). The SMS API key is kept encrypted with APP_KEY;
+ * rotating APP_KEY makes it unreadable, and it then has to be entered again.
  */
 class CampaignSettings
 {
-    /** Where campaign email is sent from. */
-    public const EMAIL_MODES = [
-        'system' => 'System mail settings (.env)',
-        'account' => 'One of the saved Email Accounts',
-        'smtp' => 'A dedicated SMTP login (entered here)',
-    ];
-
-    /** Plain-text email settings, in form order. The signature is saved separately (sanitized HTML). */
+    /** Plain-text email settings, in form order. The signature is saved separately (sanitized HTML). The sender comes from .env (see envMail()). */
     public const EMAIL_KEYS = [
-        'campaign_email_mode', 'campaign_email_account_id',
-        'campaign_smtp_host', 'campaign_smtp_port', 'campaign_smtp_encryption', 'campaign_smtp_username',
-        'campaign_from_name', 'campaign_from_address', 'campaign_reply_to',
         'campaign_footer', 'campaign_track_opens',
         'campaign_batch_size', 'campaign_emails_per_minute', 'campaign_batch_pause_minutes',
     ];
@@ -114,48 +103,16 @@ class CampaignSettings
     }
 
     /**
-     * system | account | smtp. Setups saved before the mode existed only
-     * had an account id — that still means "account".
+     * The campaign login from .env (config campaigns.mail), or null when
+     * CAMPAIGN_MAIL_HOST isn't set.
+     *
+     * @return array{host: string, port: int, username: ?string, password: ?string, encryption: ?string, from_address: ?string, from_name: ?string, reply_to: ?string}|null
      */
-    public function emailMode(): string
+    public function envMail(): ?array
     {
-        $mode = $this->get('campaign_email_mode');
+        $mail = (array) config('campaigns.mail');
 
-        if (! array_key_exists((string) $mode, self::EMAIL_MODES)) {
-            $mode = $this->get('campaign_email_account_id') ? 'account' : 'system';
-        }
-
-        return $mode;
-    }
-
-    /**
-     * The email account campaigns are sent from, or null when they go out
-     * through the system settings or the dedicated SMTP login.
-     */
-    public function emailAccount(): ?EmailAccount
-    {
-        $id = $this->get('campaign_email_account_id');
-
-        if ($this->emailMode() !== 'account' || ! $id) {
-            return null;
-        }
-
-        return EmailAccount::withoutGlobalScopes()->where('is_active', true)->find($id);
-    }
-
-    public function smtpPassword(): ?string
-    {
-        return $this->decrypt('campaign_smtp_password');
-    }
-
-    public function setSmtpPassword(?string $password): void
-    {
-        $this->set('campaign_smtp_password', $password === null || $password === '' ? null : Crypt::encryptString($password));
-    }
-
-    public function hasSmtpPassword(): bool
-    {
-        return $this->smtpPassword() !== null;
+        return filled($mail['host'] ?? null) ? $mail : null;
     }
 
     /**

@@ -13,8 +13,9 @@ use App\Models\User;
  * cancel) campaigns they
  * created — recipient lists are client contact details. Per-member
  * permissions (Users → Permissions → Campaigns) can narrow this further.
- * Campaign Setup (gateway keys, sender) is Super Admin only, enforced on
- * its routes.
+ * Campaigns from anyone but a Super Admin wait for a Super Admin's
+ * approval before anything is sent (review()). Campaign Setup is Super
+ * Admin only, enforced on its routes.
  */
 class CampaignPolicy
 {
@@ -59,5 +60,13 @@ class CampaignPolicy
     public function retryFailed(User $user, Campaign $campaign): bool
     {
         return $campaign->canRetryFailed() && $this->view($user, $campaign);
+    }
+
+    /**
+     * Approving or rejecting a campaign that's waiting — Super Admin only.
+     */
+    public function review(User $user, Campaign $campaign): bool
+    {
+        return $user->isSuperAdmin() && $campaign->isAwaitingApproval();
     }
 }

@@ -46,6 +46,131 @@
         $statusFilter = request('status');
     @endphp
 
+    @if ($campaign->status === App\Enums\CampaignStatus::Rejected)
+        <div class="alert alert-danger small">
+            <i class="bi bi-x-octagon"></i>
+            <strong>Rejected by {{ $campaign->reviewer?->name ?? 'a Super Admin' }}</strong> on {{ $campaign->reviewed_at?->format('M d, Y g:i A') }} — nothing was sent.
+            @if ($campaign->review_note)
+                <div class="mt-1 text-break" style="white-space: pre-wrap;">“{{ $campaign->review_note }}”</div>
+            @endif
+        </div>
+    @endif
+
+    @if ($campaign->isAwaitingApproval())
+        @php
+            $first = $previewRecipients->first();
+            $extraCount = $campaign->recipient_count - $campaign->from_leads_count - $campaign->from_contacts_count;
+            $skippedCount = count($campaign->skipped ?? []);
+            $duration = $campaign->estimatedDurationMinutes();
+            $durationLabel = $duration < 60 ? "{$duration} min" : intdiv($duration, 60).'h'.($duration % 60 ? ' '.($duration % 60).'m' : '');
+        @endphp
+        <div class="card border-warning shadow-sm mb-3">
+            <div class="card-header bg-warning-subtle d-flex flex-wrap align-items-center gap-2">
+                <span class="fw-semibold"><i class="bi bi-hourglass-split"></i> Awaiting approval</span>
+                <span class="small text-muted">Submitted by {{ $campaign->creator?->name ?? 'Unknown' }} {{ $campaign->created_at->diffForHumans() }} · nothing is sent until a Super Admin approves it</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-lg-7">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                            <span class="small fw-semibold">Preview</span>
+                            @if ($campaign->isEmail() && $previewRecipients->count() > 1)
+                                <label class="small text-muted ms-auto" for="previewAs">as</label>
+                                <select id="previewAs" class="form-select form-select-sm" style="max-width: 260px;"
+                                        onchange="document.getElementById('emailPreview').src = this.value">
+                                    @foreach ($previewRecipients as $r)
+                                        <option value="{{ route('campaigns.email-preview', [$campaign, 'as' => $r->id]) }}">{{ $r->name ? $r->name.' · ' : '' }}{{ $r->address }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
+                        </div>
+                        @if ($campaign->isEmail())
+                            <div class="border rounded bg-body-tertiary p-2 small mb-2">
+                                <div><span class="text-muted">From:</span> {{ $sender }}</div>
+                                <div><span class="text-muted">To:</span> {{ $first?->address ?? '—' }}</div>
+                                <div class="text-break"><span class="text-muted">Subject:</span> <strong>{{ App\Services\CampaignService::personalize((string) $campaign->subject, $first) }}</strong></div>
+                            </div>
+                            <iframe id="emailPreview" src="{{ route('campaigns.email-preview', [$campaign, 'as' => $first?->id]) }}" title="Email preview"
+                                    sandbox class="w-100 border rounded bg-white" style="height: 520px;"></iframe>
+                            <div class="form-text">Exactly what recipients get, personalized for the selected recipient. The unsubscribe link is disabled in this preview.</div>
+                        @else
+                            @php $smsText = App\Services\CampaignService::personalize($campaign->message, $first); @endphp
+                            <div class="border rounded bg-body-tertiary p-3">
+                                <div class="small text-muted mb-1">To {{ $first?->address ?? '—' }}</div>
+                                <div class="bg-white border rounded-3 p-2 small text-break" style="white-space: pre-wrap; max-width: 360px;">{{ $smsText }}</div>
+                                <div class="form-text">{{ mb_strlen($smsText) }} characters</div>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="small fw-semibold mb-2">Summary</div>
+                        <dl class="row small mb-3">
+                            <dt class="col-5 text-muted fw-normal">Channel</dt>
+                            <dd class="col-7 mb-1"><i class="bi {{ $campaign->channel->icon() }}"></i> {{ $campaign->channel->label() }}</dd>
+                            <dt class="col-5 text-muted fw-normal">Recipients</dt>
+                            <dd class="col-7 mb-1">
+                                <strong class="fs-5">{{ number_format($campaign->recipient_count) }}</strong>
+                                <div class="text-muted">
+                                    {{ number_format($campaign->from_leads_count) }} lead(s) · {{ number_format($campaign->from_contacts_count) }} contact(s) · {{ number_format(max(0, $extraCount)) }} extra
+                                </div>
+                            </dd>
+                            <dt class="col-5 text-muted fw-normal">Left out</dt>
+                            <dd class="col-7 mb-1">{{ $skippedCount ? number_format($skippedCount).' duplicate/invalid/unsubscribed — see Audience below' : 'None' }}</dd>
+                            <dt class="col-5 text-muted fw-normal">Sending</dt>
+                            <dd class="col-7 mb-1">
+                                {{ $campaign->batch_count }} batch(es) of up to {{ $campaign->sendOption('batch_size') }}, {{ $campaign->sendOption('per_minute') }}/min{{ $campaign->sendOption('pause_minutes') ? ', '.$campaign->sendOption('pause_minutes').' min pause' : '' }}
+                                <div class="text-muted">about {{ $durationLabel }} in all</div>
+                            </dd>
+                            <dt class="col-5 text-muted fw-normal">When</dt>
+                            <dd class="col-7 mb-1">
+                                @if ($campaign->scheduled_at && $campaign->scheduled_at->isFuture())
+                                    Scheduled for {{ $campaign->scheduled_at->format('M d, Y g:i A') }}
+                                @elseif ($campaign->scheduled_at)
+                                    <span class="text-warning-emphasis">Was scheduled for {{ $campaign->scheduled_at->format('M d, g:i A') }} — sends as soon as it's approved</span>
+                                @else
+                                    As soon as it's approved
+                                @endif
+                            </dd>
+                            @if ($campaign->isEmail())
+                                <dt class="col-5 text-muted fw-normal">Signature</dt>
+                                <dd class="col-7 mb-1">{{ $campaign->sendOption('include_signature') ? 'Included' : 'Off' }}</dd>
+                                <dt class="col-5 text-muted fw-normal">Open tracking</dt>
+                                <dd class="col-7 mb-1">{{ $campaign->sendOption('track_opens') ? 'On' : 'Off' }}</dd>
+                            @endif
+                        </dl>
+
+                        @can('review', $campaign)
+                            <form method="POST" action="{{ route('campaigns.approve', $campaign) }}" class="mb-2">
+                                @csrf
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-check2-circle"></i>
+                                    Approve &amp; {{ $campaign->scheduled_at?->isFuture() ? 'schedule' : 'send' }} to {{ number_format($campaign->recipient_count) }} recipient(s)
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ route('campaigns.reject', $campaign) }}" x-data="{ open: @js($errors->has('review_note')) }">
+                                @csrf
+                                <button type="button" class="btn btn-outline-danger w-100" x-show="!open" @click="open = true; $nextTick(() => $refs.note.focus())"><i class="bi bi-x-circle"></i> Reject…</button>
+                                <div x-show="open" x-cloak>
+                                    <label class="form-label small fw-semibold" for="reviewNote">Why is it rejected? (the creator sees this)</label>
+                                    <textarea id="reviewNote" name="review_note" x-ref="note" rows="3" maxlength="1000" class="form-control form-control-sm @error('review_note') is-invalid @enderror" placeholder="e.g. Subject has a typo — please fix and resubmit.">{{ old('review_note') }}</textarea>
+                                    @error('review_note')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <div class="d-flex gap-2 mt-2">
+                                        <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-circle"></i> Reject campaign</button>
+                                        <button type="button" class="btn btn-link btn-sm" @click="open = false">Cancel</button>
+                                    </div>
+                                </div>
+                            </form>
+                        @else
+                            <div class="alert alert-light border small mb-0">
+                                <i class="bi bi-info-circle"></i> A Super Admin needs to approve this before anything is sent. You'll get a notification when it's approved or rejected.
+                            </div>
+                        @endcan
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @if ($stuckCount)
         <div class="alert alert-danger small">
             <i class="bi bi-exclamation-octagon"></i>
@@ -128,6 +253,9 @@
                     <span><i class="bi bi-flag text-muted"></i> Finishes around {{ $finishAt->format($finishAt->isToday() ? 'g:i A' : 'M d, g:i A') }}</span>
                 @elseif ($campaign->completed_at)
                     <span class="text-muted"><i class="bi bi-flag"></i> {{ $campaign->status->label() }} {{ $campaign->completed_at->format('M d, g:i A') }}</span>
+                @endif
+                @if ($campaign->reviewed_at && $campaign->status !== App\Enums\CampaignStatus::Rejected)
+                    <span class="text-muted"><i class="bi bi-patch-check"></i> Approved by {{ $campaign->reviewer?->name ?? 'a Super Admin' }} {{ $campaign->reviewed_at->format('M d, g:i A') }}</span>
                 @endif
                 @if ($campaign->isEmail())
                     <span class="text-muted"><i class="bi bi-pen"></i> Signature {{ $campaign->sendOption('include_signature') ? 'on' : 'off' }} · open tracking {{ $campaign->sendOption('track_opens') ? 'on' : 'off' }}</span>

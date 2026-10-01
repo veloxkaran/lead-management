@@ -6,15 +6,20 @@ use App\Enums\CampaignAudience;
 use App\Enums\CampaignChannel;
 use App\Enums\CampaignRecipientStatus;
 use App\Enums\CampaignStatus;
+use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use App\Jobs\SendCampaignMessage;
 use App\Models\Campaign;
 use App\Models\CampaignRecipient;
 use App\Models\User;
+use App\Notifications\CampaignAwaitingApprovalNotification;
+use App\Notifications\CampaignReviewedNotification;
 use App\Support\CampaignRecipientBuilder;
 use App\Support\CampaignRecipientList;
 use App\Support\CampaignSettings;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -44,8 +49,10 @@ class CampaignService
 
     /**
      * Saves the campaign with one pending row per recipient, each assigned
-     * to a batch, then either starts sending or (scheduled for later)
-     * leaves it Pending for `campaigns:dispatch-due` to pick up.
+     * to a batch. A Super Admin's campaign then starts sending (or, if
+     * scheduled for later, stays Pending for `campaigns:dispatch-due`).
+     * Anyone else's waits AwaitingApproval — nothing is sent until a Super
+     * Admin approves it — and the Super Admins are notified.
      *
      * @param  array<string, mixed>  $input
      *
@@ -80,7 +87,7 @@ class CampaignService
                 'lead_ids' => array_values(array_map('intval', $input['lead_ids'] ?? [])) ?: null,
                 'all_contacts' => (bool) ($input['all_contacts'] ?? false),
                 'contact_ids' => array_values(array_map('intval', $input['contact_ids'] ?? [])) ?: null,
-                'status' => CampaignStatus::Pending,
+                'status' => Campaign::requiresApproval($actor) ? CampaignStatus::AwaitingApproval : CampaignStatus::Pending,
                 'scheduled_at' => $scheduledAt?->isFuture() ? $scheduledAt : null,
                 'recipient_count' => $list->count(),
                 'batch_count' => (int) ceil($list->count() / $options['batch_size']),
@@ -105,11 +112,76 @@ class CampaignService
             return $campaign;
         });
 
-        if ($campaign->scheduled_at === null) {
+        if ($campaign->isAwaitingApproval()) {
+            Notification::send(
+                User::where('role', UserRole::SuperAdmin)->where('status', UserStatus::Active)->get(),
+                new CampaignAwaitingApprovalNotification($campaign->load('creator')),
+            );
+        } elseif ($campaign->scheduled_at === null) {
             $this->dispatch($campaign);
         }
 
         return $campaign;
+    }
+
+    /**
+     * Super Admin approval. The campaign becomes Pending: it starts now,
+     * or at its scheduled time if that's still ahead (a time that passed
+     * while it waited means now).
+     */
+    public function approve(Campaign $campaign, User $reviewer): void
+    {
+        $approved = Campaign::whereKey($campaign->id)
+            ->where('status', CampaignStatus::AwaitingApproval)
+            ->update([
+                'status' => CampaignStatus::Pending,
+                'reviewed_by' => $reviewer->id,
+                'reviewed_at' => now(),
+                'review_note' => null,
+            ]);
+
+        if (! $approved) {
+            return;
+        }
+
+        $campaign->refresh();
+
+        if ($campaign->scheduled_at === null || $campaign->scheduled_at->isPast()) {
+            $this->dispatch($campaign);
+        }
+
+        $campaign->creator?->notify(new CampaignReviewedNotification($campaign->refresh()->load('reviewer')));
+    }
+
+    /**
+     * Super Admin rejection: nothing is sent, and the creator is told why.
+     */
+    public function reject(Campaign $campaign, User $reviewer, string $note): void
+    {
+        $rejected = DB::transaction(function () use ($campaign, $reviewer, $note) {
+            $rejected = Campaign::whereKey($campaign->id)
+                ->where('status', CampaignStatus::AwaitingApproval)
+                ->update([
+                    'status' => CampaignStatus::Rejected,
+                    'reviewed_by' => $reviewer->id,
+                    'reviewed_at' => now(),
+                    'review_note' => $note,
+                    'completed_at' => now(),
+                ]);
+
+            if ($rejected) {
+                $campaign->recipients()->where('status', CampaignRecipientStatus::Pending)->update([
+                    'status' => CampaignRecipientStatus::Cancelled->value,
+                    'updated_at' => now(),
+                ]);
+            }
+
+            return $rejected;
+        });
+
+        if ($rejected) {
+            $campaign->creator?->notify(new CampaignReviewedNotification($campaign->refresh()->load('reviewer')));
+        }
     }
 
     /**

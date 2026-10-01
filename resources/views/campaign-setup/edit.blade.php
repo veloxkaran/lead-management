@@ -47,115 +47,41 @@
             <div class="row g-3">
                 <div class="col-xl-7">
                     <div class="card border-0 shadow-sm mb-3">
-                        <div class="card-header bg-white fw-semibold"><i class="bi bi-person-badge"></i> Sender</div>
-                        <div class="card-body">
-                            <label class="form-label small fw-semibold d-block">Send campaign email through</label>
-                            @foreach ($emailModes as $mode => $label)
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="campaign_email_mode" id="mode_{{ $mode }}" value="{{ $mode }}" x-model="f.campaign_email_mode">
-                                    <label class="form-check-label small" for="mode_{{ $mode }}">{{ $label }}</label>
-                                </div>
-                            @endforeach
-                            @error('campaign_email_mode')<div class="text-danger small">{{ $message }}</div>@enderror
-
-                            <div class="mt-3" x-show="f.campaign_email_mode === 'account'" x-cloak>
-                                <label class="form-label small fw-semibold" for="emailAccount">Email Account</label>
-                                <select id="emailAccount" name="campaign_email_account_id" x-model="f.campaign_email_account_id" class="form-select @error('campaign_email_account_id') is-invalid @enderror">
-                                    <option value="">Choose an account…</option>
-                                    @foreach ($emailAccounts as $account)
-                                        <option value="{{ $account->id }}">{{ $account->email_address }}{{ $account->user ? ' — '.$account->user->name : '' }}</option>
-                                    @endforeach
-                                </select>
-                                @error('campaign_email_account_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                <div class="form-text">Email Accounts are added under <a href="{{ route('email-accounts.index') }}">Account → Email Accounts</a>. Mail always goes out as the account's own address.</div>
-                            </div>
-
-                            <div class="row g-2 mt-1" x-show="f.campaign_email_mode === 'smtp'" x-cloak>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold" for="smtpHost">SMTP server</label>
-                                    <input type="text" id="smtpHost" name="campaign_smtp_host" x-model="f.campaign_smtp_host" class="form-control @error('campaign_smtp_host') is-invalid @enderror" placeholder="mail.yourdomain.com">
-                                    @error('campaign_smtp_host')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <label class="form-label small fw-semibold" for="smtpPort">Port</label>
-                                    <input type="number" id="smtpPort" name="campaign_smtp_port" x-model="f.campaign_smtp_port" class="form-control @error('campaign_smtp_port') is-invalid @enderror" placeholder="465">
-                                    @error('campaign_smtp_port')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <label class="form-label small fw-semibold" for="smtpEnc">Encryption</label>
-                                    <select id="smtpEnc" name="campaign_smtp_encryption" x-model="f.campaign_smtp_encryption" class="form-select @error('campaign_smtp_encryption') is-invalid @enderror">
-                                        <option value="">Choose…</option>
-                                        @foreach ($encryptions as $encryption)
-                                            <option value="{{ $encryption->value }}">{{ $encryption->label() }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('campaign_smtp_encryption')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold" for="smtpUser">Username</label>
-                                    <input type="text" id="smtpUser" name="campaign_smtp_username" x-model="f.campaign_smtp_username" class="form-control" autocomplete="off" placeholder="campaigns@yourdomain.com">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold" for="smtpPass">Password</label>
-                                    <input type="password" id="smtpPass" name="campaign_smtp_password" class="form-control" autocomplete="new-password" placeholder="{{ $hasSmtpPassword ? '•••••••• saved — leave blank to keep' : 'Mailbox password' }}">
-                                    @if ($hasSmtpPassword)
-                                        <div class="form-check mt-1">
-                                            <input class="form-check-input" type="checkbox" name="clear_campaign_smtp_password" value="1" id="clearSmtpPass">
-                                            <label class="form-check-label small" for="clearSmtpPass">Remove saved password</label>
-                                        </div>
-                                    @endif
-                                </div>
-                                <div class="col-12 form-text mt-0">Port 465 = SSL, 587 = TLS (STARTTLS). Stored encrypted; never shown again. Use a mailbox on your own domain made for campaigns, so a spam complaint never affects your everyday mailbox.</div>
-                            </div>
-
-                            <hr>
-
-                            <div class="row g-2">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold" for="fromName">From name</label>
-                                    <input type="text" id="fromName" name="campaign_from_name" x-model="f.campaign_from_name" maxlength="100" class="form-control @error('campaign_from_name') is-invalid @enderror" placeholder="{{ config('app.name') }}">
-                                    @error('campaign_from_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    <div class="form-text">A real person's name ("Ram from Acme") gets opened more and flagged less.</div>
-                                </div>
-                                <div class="col-md-6" x-show="f.campaign_email_mode !== 'account'">
-                                    <label class="form-label small fw-semibold" for="fromAddress">From address</label>
-                                    <input type="email" id="fromAddress" name="campaign_from_address" x-model="f.campaign_from_address" class="form-control @error('campaign_from_address') is-invalid @enderror"
-                                           :placeholder="f.campaign_email_mode === 'smtp' ? (f.campaign_smtp_username || 'Same as the SMTP username') : @js(config('mail.from.address'))">
-                                    @error('campaign_from_address')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    <div class="form-text">Must be on the same domain as the mail server's login, or receivers fail it on SPF/DMARC.</div>
-                                    <div class="small text-warning-emphasis mt-1" x-cloak
-                                         x-show="f.campaign_email_mode === 'smtp' && (f.campaign_smtp_username || '').includes('@') && f.campaign_from_address && f.campaign_from_address.trim().toLowerCase() !== f.campaign_smtp_username.trim().toLowerCase()">
+                        <div class="card-header bg-white fw-semibold"><i class="bi bi-person-badge"></i> Sender <span class="badge bg-secondary-subtle text-secondary-emphasis fw-normal ms-1">from .env</span></div>
+                        <div class="card-body small">
+                            @if ($envMail)
+                                <dl class="row mb-2">
+                                    <dt class="col-sm-4 text-muted fw-normal">From</dt>
+                                    <dd class="col-sm-8 text-break mb-1"><strong>{{ $sender }}</strong></dd>
+                                    <dt class="col-sm-4 text-muted fw-normal">SMTP server</dt>
+                                    <dd class="col-sm-8 text-break mb-1">{{ $envMail['host'] }}:{{ $envMail['port'] }} · {{ strtoupper((string) $envMail['encryption']) }}</dd>
+                                    <dt class="col-sm-4 text-muted fw-normal">Login</dt>
+                                    <dd class="col-sm-8 text-break mb-1">{{ $envMail['username'] ?: '— (no login)' }} · password {{ $envMail['has_password'] ? 'set' : 'not set' }}</dd>
+                                    <dt class="col-sm-4 text-muted fw-normal">Reply-to</dt>
+                                    <dd class="col-sm-8 text-break mb-1">{{ $envMail['reply_to'] ?: 'Same as From' }}</dd>
+                                </dl>
+                                @if (str_contains((string) $envMail['username'], '@') && $envMail['from_address'] && strcasecmp($envMail['username'], $envMail['from_address']) !== 0)
+                                    <div class="alert alert-warning py-2 mb-2">
                                         <i class="bi bi-exclamation-triangle"></i>
-                                        Doesn't match the SMTP username (<span x-text="f.campaign_smtp_username"></span>). They're normally the same mailbox — check for a typo.
+                                        The login ({{ $envMail['username'] }}) and the From address ({{ $envMail['from_address'] }}) are different mailboxes.
+                                        That works on the same server, but sending as the login's own address is safest for inbox placement — and check the login isn't a typo.
                                     </div>
+                                @endif
+                            @else
+                                <div class="alert alert-warning py-2 mb-2">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    <strong>No campaign login set.</strong> Campaign email falls back to the app's own MAIL_* settings: <strong>{{ $sender }}</strong>.
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold" for="replyTo">Reply-to address (optional)</label>
-                                    <input type="email" id="replyTo" name="campaign_reply_to" x-model="f.campaign_reply_to" class="form-control @error('campaign_reply_to') is-invalid @enderror" placeholder="sales@yourdomain.com">
-                                    @error('campaign_reply_to')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    <div class="form-text">Where replies go, if not the From address.</div>
-                                </div>
-                            </div>
-
-                            <div class="form-text mt-2">Currently saved: <strong>{{ $sender }}</strong></div>
-
-                            <div x-show="f.campaign_email_mode === 'system'">
-                                {{-- A Bootstrap collapse, not <details>: WebKit lets a closed <details>' unwrapped
-                                     content widen the page on phones; display:none content never does. --}}
-                                <button class="btn btn-link btn-sm px-0 mt-2 fw-semibold text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#envMailHelp" aria-expanded="false" aria-controls="envMailHelp">
-                                    <i class="bi bi-chevron-down"></i> Using the system mail settings (.env)
-                                </button>
-                                <div class="collapse small" id="envMailHelp">
-                                    <p class="mt-2 mb-1">Set these in <code>.env</code>, then run <code>php artisan config:clear</code>:</p>
-<pre class="bg-body-tertiary border rounded p-2 small mb-0" style="white-space: pre-wrap; overflow-wrap: anywhere;">MAIL_MAILER=smtp
-MAIL_HOST=mail.yourdomain.com
-MAIL_PORT=465          # 465 = SSL, 587 = STARTTLS
-MAIL_USERNAME=you@yourdomain.com
-MAIL_PASSWORD="your-mailbox-password"
-MAIL_FROM_ADDRESS="you@yourdomain.com"
-MAIL_FROM_NAME="${APP_NAME}"</pre>
-                                </div>
-                            </div>
+                            @endif
+                            <p class="text-muted mb-1">The sender is set in <code>.env</code>, not here. To change it, edit these lines, then run <code>php artisan config:clear</code>:</p>
+<pre class="bg-body-tertiary border rounded p-2 small mb-0" style="white-space: pre-wrap; overflow-wrap: anywhere;">CAMPAIGN_MAIL_HOST=mail.yourdomain.com
+CAMPAIGN_MAIL_PORT=465            # 465 = ssl, 587 = tls
+CAMPAIGN_MAIL_ENCRYPTION=ssl
+CAMPAIGN_MAIL_USERNAME=campaigns@yourdomain.com
+CAMPAIGN_MAIL_PASSWORD="mailbox-password"
+CAMPAIGN_MAIL_FROM_ADDRESS="campaigns@yourdomain.com"
+CAMPAIGN_MAIL_FROM_NAME="Your Company"
+CAMPAIGN_MAIL_REPLY_TO=           # optional</pre>
                         </div>
                     </div>
 

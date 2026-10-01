@@ -4,16 +4,15 @@ namespace App\Services;
 
 use App\Enums\MailEncryption;
 use App\Mail\CampaignMail;
-use App\Models\EmailAccount;
 use App\Support\CampaignSettings;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Support\Facades\Mail;
 
 /**
- * Sends campaign email from the sender chosen in Campaign Setup: one of
- * the saved Email Accounts, a dedicated SMTP login entered on the setup
- * page (each built on the fly — the global mail config is never touched),
- * or the app's MAIL_* settings.
+ * Sends campaign email through the campaign login in .env (CAMPAIGN_MAIL_*,
+ * built on the fly — the global mail config is never touched). Without
+ * CAMPAIGN_MAIL_HOST it falls back to the app's own MAIL_* settings, and
+ * Campaign Setup warns about it.
  */
 class CampaignMailer
 {
@@ -23,16 +22,23 @@ class CampaignMailer
 
     public function send(string $to, CampaignMail $mail): void
     {
-        $account = $this->settings->emailAccount();
-        [$address, $name] = $this->from($account);
+        $this->mailer()->to($to)->send($this->prepare($mail));
+    }
+
+    /**
+     * Sets From and Reply-To from the campaign login.
+     */
+    public function prepare(CampaignMail $mail): CampaignMail
+    {
+        [$address, $name] = $this->from();
 
         $mail->from($address, $name);
 
-        if ($replyTo = $this->settings->get('campaign_reply_to')) {
+        if ($replyTo = $this->settings->envMail()['reply_to'] ?? null) {
             $mail->replyTo($replyTo);
         }
 
-        $this->mailer($account)->to($to)->send($mail);
+        return $mail;
     }
 
     /**
@@ -53,74 +59,54 @@ class CampaignMailer
     }
 
     /**
-     * The From address and name. An Email Account always sends as its own
-     * address — a different From would fail SPF/DMARC alignment and land
-     * in spam — but its display name can be overridden.
+     * The From address and name: CAMPAIGN_MAIL_FROM_* (the address falls
+     * back to the login username), else MAIL_FROM_*.
      *
      * @return array{0: string, 1: ?string}
      */
-    public function from(?EmailAccount $account = null): array
+    public function from(): array
     {
-        $account ??= $this->settings->emailAccount();
-        $name = $this->settings->get('campaign_from_name');
-
-        if ($account) {
-            return [$account->email_address, $name ?? ($account->display_name ?: null)];
-        }
+        $env = $this->settings->envMail();
 
         return [
-            $this->settings->get('campaign_from_address', $this->settings->emailMode() === 'smtp' ? $this->settings->get('campaign_smtp_username') : null)
-                ?? (string) config('mail.from.address'),
-            $name ?? config('mail.from.name'),
+            ($env['from_address'] ?? null) ?: (($env['username'] ?? null) ?: (string) config('mail.from.address')),
+            ($env['from_name'] ?? null) ?: config('mail.from.name'),
         ];
     }
 
     /**
-     * Where campaign email currently comes from, for the setup page.
+     * Where campaign email currently comes from, for the setup page and composer.
      */
     public function senderDescription(): string
     {
-        $account = $this->settings->emailAccount();
-        [$address, $name] = $this->from($account);
+        [$address, $name] = $this->from();
         $from = $name ? "{$name} <{$address}>" : $address;
+        $env = $this->settings->envMail();
 
-        return match (true) {
-            $account !== null => "{$from} via Email Account ({$account->smtp_host})",
-            $this->settings->emailMode() === 'smtp' => "{$from} via dedicated SMTP ({$this->settings->get('campaign_smtp_host', 'host not set')})",
-            default => "{$from} via system mail settings (.env, ".config('mail.mailers.smtp.host').')',
-        };
+        return $env
+            ? "{$from} via {$env['username']} at {$env['host']}"
+            : "{$from} via the app's MAIL_* settings (CAMPAIGN_MAIL_* isn't set)";
     }
 
-    private function mailer(?EmailAccount $account): Mailer
+    private function mailer(): Mailer
     {
-        if ($account) {
-            return $this->smtp($account->smtp_host, $account->smtp_port, $account->smtp_encryption, $account->username, $account->password);
+        $env = $this->settings->envMail();
+
+        if (! $env) {
+            return Mail::mailer();
         }
 
-        if ($this->settings->emailMode() === 'smtp') {
-            return $this->smtp(
-                (string) $this->settings->get('campaign_smtp_host'),
-                (int) $this->settings->get('campaign_smtp_port', '587'),
-                MailEncryption::tryFrom((string) $this->settings->get('campaign_smtp_encryption')) ?? MailEncryption::Tls,
-                $this->settings->get('campaign_smtp_username'),
-                $this->settings->smtpPassword(),
-            );
-        }
+        $encryption = MailEncryption::tryFrom(strtolower((string) $env['encryption'])) ?? MailEncryption::Ssl;
 
-        return Mail::mailer();
-    }
-
-    private function smtp(string $host, int $port, ?MailEncryption $encryption, ?string $username, ?string $password): Mailer
-    {
         return Mail::build([
             'transport' => 'smtp',
             'scheme' => $encryption === MailEncryption::Ssl ? 'smtps' : 'smtp',
-            'host' => $host,
-            'port' => $port,
-            'username' => $username,
-            'password' => $password,
+            'host' => (string) $env['host'],
+            'port' => (int) $env['port'],
+            'username' => $env['username'] ?: null,
+            'password' => $env['password'] ?: null,
             'timeout' => 30,
-            // Plain (unencrypted) accounts must not be upgraded to STARTTLS.
+            // Plain (unencrypted) servers must not be upgraded to STARTTLS.
             'auto_tls' => $encryption !== MailEncryption::None,
         ]);
     }
