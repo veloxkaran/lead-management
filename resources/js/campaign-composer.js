@@ -48,7 +48,7 @@ window.campaignSendingPlan = function (count, { batch_size, per_minute, pause_mi
     return { batches, size, minutes, duration: formatMinutes(minutes), perHour: perHour.toLocaleString() };
 };
 
-window.campaignComposer = function ({ channel, audience, subject = '', message = '', scheduledAt = '', previewUrl, composePreviewUrl, sendOptions = {} }) {
+window.campaignComposer = function ({ channel, audience, subject = '', message = '', scheduledAt = '', previewUrl, composePreviewUrl, sendOptions = {}, limits = {} }) {
     return {
         channel,
         audience,
@@ -68,6 +68,8 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
         reviewing: false,
         reviewErrors: [],
         confirmed: false,
+        files: [],
+        limits,
 
         init() {
             // Any edit after previewing means previewing again.
@@ -137,6 +139,24 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
          * the preview, and only "Send" / "Submit for approval" in there
          * actually submits.
          */
+        pickFiles() {
+            this.files = [...(this.$refs.files?.files || [])].map(({ name, size, type }) => ({ name, size, type }));
+        },
+
+        clearFiles() {
+            if (this.$refs.files) this.$refs.files.value = '';
+            this.files = [];
+            this.review = null;
+        },
+
+        get filesBytes() {
+            return this.files.reduce((sum, file) => sum + file.size, 0);
+        },
+
+        formatBytes(bytes) {
+            return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1048576).toFixed(1)} MB`;
+        },
+
         onSubmit(event) {
             if (!this.confirmed) {
                 event.preventDefault();
@@ -148,7 +168,27 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
             this.submitting = true;
         },
 
+        /** File problems caught before uploading — PHP would reject the whole form otherwise. */
+        fileErrors() {
+            if (this.channel !== 'email') return [];
+
+            const errors = [];
+            if (this.files.length > this.limits.files) errors.push(`Attach at most ${this.limits.files} files.`);
+            this.files.filter((file) => file.size > this.limits.file)
+                .forEach((file) => errors.push(`${file.name} is ${this.formatBytes(file.size)} — each file can be at most ${this.formatBytes(this.limits.file)}.`));
+            if (this.filesBytes > this.limits.total) errors.push(`The files add up to ${this.formatBytes(this.filesBytes)} — keep them under ${this.formatBytes(this.limits.total)} in total.`);
+
+            return errors;
+        },
+
         openPreview() {
+            const tooBig = this.fileErrors();
+            if (tooBig.length) {
+                this.reviewErrors = tooBig;
+
+                return;
+            }
+
             const data = new FormData(this.$el);
             data.delete('preview_token');
 
@@ -162,7 +202,9 @@ window.campaignComposer = function ({ channel, audience, subject = '', message =
                 })
                 .catch((error) => {
                     const errors = error.response?.data?.errors;
-                    this.reviewErrors = errors ? Object.values(errors).flat() : ['Could not build the preview — try again.'];
+                    this.reviewErrors = error.response?.status === 413
+                        ? ['The files are too large for the server to accept — use smaller files.']
+                        : (errors ? Object.values(errors).flat() : ['Could not build the preview — try again.']);
                 })
                 .finally(() => {
                     this.reviewing = false;

@@ -17,6 +17,7 @@ use App\Notifications\CampaignReviewedNotification;
 use App\Support\CampaignRecipientBuilder;
 use App\Support\CampaignRecipientList;
 use App\Support\CampaignSettings;
+use App\Support\CampaignUploads;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -76,7 +77,10 @@ class CampaignService
         // The signature is on by default whenever one is set up; the composer can leave it off.
         $options['include_signature'] = $options['include_signature'] && (bool) ($input['include_signature'] ?? true);
 
-        $campaign = DB::transaction(function () use ($input, $actor, $list, $audience, $scheduledAt, $options) {
+        // Images resized before the transaction — it can take a moment.
+        $uploads = $channel === CampaignChannel::Email ? CampaignUploads::prepare($input['attachments'] ?? []) : [];
+
+        $campaign = DB::transaction(function () use ($input, $actor, $list, $audience, $scheduledAt, $options, $uploads) {
             $campaign = Campaign::create([
                 'name' => $input['name'],
                 'channel' => $input['channel'],
@@ -108,6 +112,8 @@ class CampaignService
                     'updated_at' => $now,
                 ], $chunk, array_keys($chunk)));
             }
+
+            CampaignUploads::store($campaign, $uploads);
 
             return $campaign;
         });

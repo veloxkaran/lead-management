@@ -46,7 +46,10 @@ class CampaignMailer
      * (the recipient's) drives the unsubscribe link and the open-tracking
      * image; a test email passes none.
      */
-    public function compose(string $subject, string $body, ?string $token, bool $includeSignature = true, bool $trackOpens = true): CampaignMail
+    /**
+     * @param  array{images?: array<int, array>, documents?: array<int, array>}  $files  see Campaign::mailAttachments()
+     */
+    public function compose(string $subject, string $body, ?string $token, bool $includeSignature = true, bool $trackOpens = true, array $files = []): CampaignMail
     {
         return new CampaignMail(
             $subject,
@@ -55,6 +58,8 @@ class CampaignMailer
             unsubscribeUrl: $token ? route('campaigns.unsubscribe', $token) : null,
             signatureHtml: $includeSignature ? $this->settings->signature() : null,
             footer: $this->settings->get('campaign_footer'),
+            images: $files['images'] ?? [],
+            documents: $files['documents'] ?? [],
         );
     }
 

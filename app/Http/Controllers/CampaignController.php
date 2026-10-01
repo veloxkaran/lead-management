@@ -10,6 +10,7 @@ use App\Http\Requests\Campaign\ComposePreviewRequest;
 use App\Http\Requests\Campaign\PreviewCampaignRecipientsRequest;
 use App\Http\Requests\Campaign\StoreCampaignRequest;
 use App\Models\Campaign;
+use App\Models\CampaignAttachment;
 use App\Models\Contact;
 use App\Models\Industry;
 use App\Models\Lead;
@@ -18,6 +19,7 @@ use App\Services\CampaignMailer;
 use App\Services\CampaignService;
 use App\Support\CampaignPreviewToken;
 use App\Support\CampaignSettings;
+use App\Support\CampaignUploads;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +28,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CampaignController extends Controller
@@ -142,16 +145,32 @@ class CampaignController extends Controller
         ];
 
         if ($channel === CampaignChannel::Email) {
-            $mail = $mailer->compose(
-                CampaignService::personalize((string) $input['subject'], $first),
-                CampaignService::personalize($input['message'], $first),
-                null,
-                $options['include_signature'],
-                false,
-            );
-            $mail->unsubscribeUrl = '#unsubscribe';
+            $prepared = CampaignUploads::prepare($input['attachments'] ?? []);
+            [$files, $temporary] = CampaignUploads::temporary($prepared);
 
-            $preview += ['from' => $mailer->senderDescription(), 'subject' => $mail->renderedSubject, 'html' => $mail->render()];
+            try {
+                $mail = $mailer->compose(
+                    CampaignService::personalize((string) $input['subject'], $first),
+                    CampaignService::personalize($input['message'], $first),
+                    null,
+                    $options['include_signature'],
+                    false,
+                    $files,
+                );
+                $mail->unsubscribeUrl = '#unsubscribe';
+                $html = $mail->render();
+            } finally {
+                array_map('unlink', $temporary);
+            }
+
+            $preview += [
+                'from' => $mailer->senderDescription(),
+                'subject' => $mail->renderedSubject,
+                'html' => $html,
+                'attachments' => array_map(fn ($f) => ['name' => $f['name'], 'kind' => $f['kind'], 'size' => strlen($f['contents'])], $prepared),
+                // What every recipient downloads — HTML plus images and PDFs.
+                'email_bytes' => strlen($html) + array_sum(array_map(fn ($f) => strlen($f['contents']), $prepared)),
+            ];
         } else {
             $preview += ['text' => CampaignService::personalize($input['message'], $first)];
         }
@@ -184,7 +203,7 @@ class CampaignController extends Controller
     {
         $this->authorize('view', $campaign);
 
-        $campaign->load('creator', 'reviewer')->loadCount([
+        $campaign->load('creator', 'reviewer', 'attachments')->loadCount([
             'recipients as from_leads_count' => fn ($q) => $q->whereNotNull('lead_id'),
             'recipients as from_contacts_count' => fn ($q) => $q->whereNull('lead_id')->whereNotNull('contact_id'),
             ...Campaign::statusCounts(),
@@ -260,6 +279,7 @@ class CampaignController extends Controller
             null,
             (bool) $campaign->sendOption('include_signature'),
             false,
+            $campaign->mailAttachments(),
         );
         $mail->unsubscribeUrl = '#unsubscribe';
 
@@ -268,6 +288,21 @@ class CampaignController extends Controller
             // Rendered inside the campaign page only; never runs scripts.
             'Content-Security-Policy' => "default-src 'none'; img-src * data:; style-src 'unsafe-inline'",
             'X-Frame-Options' => 'SAMEORIGIN',
+        ]);
+    }
+
+    /**
+     * An image or PDF of the campaign, opened in the browser.
+     */
+    public function attachment(Campaign $campaign, CampaignAttachment $attachment): BinaryFileResponse
+    {
+        $this->authorize('view', $campaign);
+        abort_unless(is_file($attachment->path()), 404);
+
+        return response()->file($attachment->path(), [
+            'Content-Type' => $attachment->mime,
+            'Content-Disposition' => 'inline; filename="'.addcslashes($attachment->original_name, '"\\').'"',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
     }
 

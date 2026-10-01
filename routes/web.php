@@ -240,6 +240,7 @@ Route::middleware('auth')->group(function () {
         Route::post('campaigns/{campaign}/retry-failed', [CampaignController::class, 'retryFailed'])->name('campaigns.retry-failed');
         Route::get('campaigns/{campaign}/export', [CampaignController::class, 'export'])->name('campaigns.export');
         Route::get('campaigns/{campaign}/email-preview', [CampaignController::class, 'emailPreview'])->name('campaigns.email-preview');
+        Route::get('campaigns/{campaign}/attachments/{attachment}', [CampaignController::class, 'attachment'])->scopeBindings()->name('campaigns.attachment');
         Route::post('campaigns/{campaign}/approve', [CampaignController::class, 'approve'])->name('campaigns.approve');
         Route::post('campaigns/{campaign}/reject', [CampaignController::class, 'reject'])->name('campaigns.reject');
     });

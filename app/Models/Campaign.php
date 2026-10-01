@@ -70,6 +70,26 @@ class Campaign extends Model
         return $this->status === CampaignStatus::AwaitingApproval;
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(CampaignAttachment::class)->orderBy('sort')->orderBy('id');
+    }
+
+    /**
+     * The campaign's files as CampaignMail takes them.
+     *
+     * @return array{images: array<int, array>, documents: array<int, array>}
+     */
+    public function mailAttachments(): array
+    {
+        $files = $this->attachments->filter(fn (CampaignAttachment $a) => is_file($a->path()));
+
+        return [
+            'images' => $files->filter->isImage()->map->forMail()->values()->all(),
+            'documents' => $files->reject->isImage()->map->forMail()->values()->all(),
+        ];
+    }
+
     public function recipients(): HasMany
     {
         return $this->hasMany(CampaignRecipient::class);

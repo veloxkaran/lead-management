@@ -18,7 +18,7 @@
         <div class="alert alert-warning small"><i class="bi bi-eye"></i> {{ $message }}</div>
     @enderror
 
-    <form method="POST" action="{{ route('campaigns.store') }}"
+    <form method="POST" action="{{ route('campaigns.store') }}" enctype="multipart/form-data"
           x-data="campaignComposer({
               channel: @js(old('channel', $prefill['channel'])),
               audience: @js(old('audience', $prefill['audience'])),
@@ -28,6 +28,7 @@
               previewUrl: @js(route('campaigns.preview')),
               composePreviewUrl: @js(route('campaigns.compose-preview')),
               sendOptions: @js($sendOptions),
+              limits: @js(['files' => \App\Http\Requests\Campaign\StoreCampaignRequest::MAX_FILES, 'file' => \App\Http\Requests\Campaign\StoreCampaignRequest::maxFileBytes(), 'total' => \App\Http\Requests\Campaign\StoreCampaignRequest::maxTotalBytes()]),
           })"
           @input.debounce.600ms="if (['extra_contacts'].includes($event.target.name)) schedulePreview(0)"
           @change="if (! ['name', 'subject', 'message', 'scheduled_at'].includes($event.target.name)) schedulePreview()"
@@ -101,6 +102,35 @@
                                 <ul class="mb-0 ps-3">
                                     <template x-for="warning in spamWarnings" :key="warning"><li x-text="warning"></li></template>
                                 </ul>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" x-show="channel === 'email'">
+                            <label class="form-label small fw-semibold" for="campaignFiles">Images &amp; PDFs (optional)</label>
+                            <input type="file" id="campaignFiles" name="attachments[]" x-ref="files" multiple accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf"
+                                   class="form-control @if ($errors->has('attachments') || $errors->has('attachments.*')) is-invalid @endif" :disabled="channel !== 'email'" @change="pickFiles()">
+                            @if ($errors->has('attachments') || $errors->has('attachments.*'))
+                                <div class="invalid-feedback">{{ $errors->first('attachments') ?: $errors->first('attachments.*') }}</div>
+                            @endif
+                            <ul class="list-unstyled small mt-2 mb-1" x-show="files.length" x-cloak>
+                                <template x-for="file in files" :key="file.name">
+                                    <li class="d-flex align-items-center gap-2 border-bottom py-1">
+                                        <i class="bi" :class="file.type === 'application/pdf' ? 'bi-file-earmark-pdf text-danger' : 'bi-image text-primary'"></i>
+                                        <span class="text-break" x-text="file.name"></span>
+                                        <span class="text-muted ms-auto text-nowrap" x-text="formatBytes(file.size)"></span>
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis" x-text="file.type === 'application/pdf' ? 'attached' : 'in the email'"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                            <div class="d-flex flex-wrap gap-2 align-items-center" x-show="files.length" x-cloak>
+                                <span class="small" :class="filesBytes > limits.total ? 'text-danger fw-semibold' : 'text-muted'" x-text="`${files.length} file(s), ${formatBytes(filesBytes)}`"></span>
+                                <button type="button" class="btn btn-link btn-sm p-0" @click="clearFiles()">Remove all</button>
+                            </div>
+                            <div class="alert alert-warning small py-1 px-2 mt-1 mb-0" x-show="filesBytes > 1048576" x-cloak>
+                                <i class="bi bi-exclamation-triangle"></i> Every recipient downloads these. Big emails are more likely to land in spam — keep the total under about 1 MB if you can (large photos are shrunk automatically).
+                            </div>
+                            <div class="form-text">PNG or JPG images appear inside the email under the message; PDFs are attached. Up to {{ \App\Http\Requests\Campaign\StoreCampaignRequest::MAX_FILES }} files, {{ \App\Http\Requests\Campaign\StoreCampaignRequest::megabytes(\App\Http\Requests\Campaign\StoreCampaignRequest::maxFileBytes()) }} each, {{ \App\Http\Requests\Campaign\StoreCampaignRequest::megabytes(\App\Http\Requests\Campaign\StoreCampaignRequest::maxTotalBytes()) }} in total.
+                                @if ($errors->any()) <strong>Choose the files again</strong> — the browser can't keep them after an error.@endif
                             </div>
                         </div>
 
@@ -297,6 +327,14 @@
                                                 <div><span class="text-muted">To:</span> <span x-text="review.to"></span> <span class="text-muted" x-show="review.summary.total > 1" x-text="`and ${(review.summary.total - 1).toLocaleString()} more`"></span></div>
                                                 <div class="text-break"><span class="text-muted">Subject:</span> <strong x-text="review.subject"></strong></div>
                                             </div>
+                                            <div class="small mb-2" x-show="review.attachments && review.attachments.length">
+                                                <template x-for="file in review.attachments" :key="file.name">
+                                                    <span class="badge border text-body bg-body me-1 mb-1 fw-normal">
+                                                        <i class="bi" :class="file.kind === 'document' ? 'bi-paperclip' : 'bi-image'"></i>
+                                                        <span x-text="file.name"></span> · <span x-text="formatBytes(file.size)"></span>
+                                                    </span>
+                                                </template>
+                                            </div>
                                             <iframe :srcdoc="review.html" sandbox title="Email preview" class="w-100 border rounded bg-white" style="height: 60vh;"></iframe>
                                             <div class="form-text">Exactly what the first recipient gets — each recipient sees their own name. The unsubscribe link is disabled here.</div>
                                         </div>
@@ -335,6 +373,15 @@
                                         </dd>
                                         <dt class="col-5 text-muted fw-normal">When</dt>
                                         <dd class="col-7 mb-2" x-text="review.summary.when"></dd>
+                                        <template x-if="review.channel === 'email'">
+                                            <dt class="col-5 text-muted fw-normal">Email size</dt>
+                                        </template>
+                                        <template x-if="review.channel === 'email'">
+                                            <dd class="col-7 mb-2">
+                                                <span x-text="formatBytes(review.email_bytes)" :class="review.email_bytes > 1048576 && 'text-warning-emphasis fw-semibold'"></span>
+                                                <div class="text-muted" x-show="review.email_bytes > 1048576">Large — more likely to land in spam</div>
+                                            </dd>
+                                        </template>
                                         <template x-if="review.channel === 'email'">
                                             <dt class="col-5 text-muted fw-normal">Signature</dt>
                                         </template>

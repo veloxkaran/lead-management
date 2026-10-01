@@ -15,6 +15,6 @@ class ComposePreviewRequest extends StoreCampaignRequest
 
     public function after(): array
     {
-        return [];
+        return [fn ($validator) => self::checkTotalSize($this, $validator)];
     }
 }

@@ -32,6 +32,8 @@ class CampaignSignature
     /** Wider than this (px) gets scaled down when an image alone would blow the budget. */
     private const SHRINK_WIDTH = 400;
 
+    private const MIME = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'gif' => 'image/gif', 'webp' => 'image/webp'];
+
     private const TYPES = [IMAGETYPE_PNG => 'png', IMAGETYPE_JPEG => 'jpg', IMAGETYPE_GIF => 'gif', IMAGETYPE_WEBP => 'webp'];
 
     /** Matches a stored signature image in any src, whatever APP_URL was when it was saved. */
@@ -161,7 +163,10 @@ class CampaignSignature
                 return '';
             }
 
-            $url = $message ? $message->embed($path) : self::publicPath($m[1]);
+            // Embedded with its real type — a generic octet-stream part isn't shown as an image by every mail app.
+            $url = $message
+                ? $message->embedData((string) file_get_contents($path), $m[1], self::MIME[pathinfo($m[1], PATHINFO_EXTENSION)] ?? 'image/png')
+                : self::publicPath($m[1]);
             $alt = self::cleanAlt($tag[0]);
             $width = EmailImage::displayWidth($path);
 

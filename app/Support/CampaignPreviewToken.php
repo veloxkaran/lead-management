@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 /**
  * Proof that a campaign was previewed exactly as it's being sent. The
  * compose-preview endpoint signs a fingerprint of everything that changes
- * what goes out (message, subject, recipients, schedule, signature);
+ * what goes out (message, subject, recipients, schedule, signature, the
+ * attached files' contents);
  * storing the campaign recomputes it from the submitted form and refuses
  * a missing or different one — so skipping the preview, or editing after
  * it, means previewing again. The campaign name (internal only) is left
@@ -27,6 +28,12 @@ class CampaignPreviewToken
         foreach (self::FIELDS as $field) {
             $data[$field] = self::normalize($request->input($field));
         }
+
+        // The files themselves, by content — a different file with the same name doesn't pass.
+        $data['attachments'] = collect($request->file('attachments', []))
+            ->filter(fn ($file) => $file?->isValid())
+            ->map(fn ($file) => sha1_file($file->getRealPath()).':'.$file->getClientOriginalName())
+            ->sort()->values()->all();
 
         return hash_hmac('sha256', json_encode($data).'|'.$request->user()?->id, (string) config('app.key'));
     }

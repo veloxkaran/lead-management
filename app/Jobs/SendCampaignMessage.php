@@ -70,6 +70,7 @@ class SendCampaignMessage implements ShouldQueue
                     $recipient->tracking_token,
                     (bool) $campaign->sendOption('include_signature'),
                     (bool) $campaign->sendOption('track_opens'),
+                    $campaign->mailAttachments(),
                 ));
             } else {
                 $result = $sms->send($recipient->address, $message);

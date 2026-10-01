@@ -132,6 +132,14 @@
                                 @endif
                             </dd>
                             @if ($campaign->isEmail())
+                                <dt class="col-5 text-muted fw-normal">Images &amp; files</dt>
+                                <dd class="col-7 mb-1">
+                                    @forelse ($campaign->attachments as $file)
+                                        <div class="text-break"><i class="bi {{ $file->isImage() ? 'bi-image' : 'bi-paperclip' }}"></i> <a href="{{ route('campaigns.attachment', [$campaign, $file]) }}" target="_blank" rel="noopener">{{ $file->original_name }}</a> <span class="text-muted">{{ number_format($file->size / 1024) }} KB</span></div>
+                                    @empty
+                                        None
+                                    @endforelse
+                                </dd>
                                 <dt class="col-5 text-muted fw-normal">Signature</dt>
                                 <dd class="col-7 mb-1">{{ $campaign->sendOption('include_signature') ? 'Included' : 'Off' }}</dd>
                                 <dt class="col-5 text-muted fw-normal">Open tracking</dt>
@@ -338,6 +346,23 @@
                         <p class="fw-semibold">{{ $campaign->subject }}</p>
                     @endif
                     <div class="text-break" style="white-space: pre-wrap;">{{ $campaign->message }}</div>
+                    @if ($campaign->attachments->isNotEmpty())
+                        <div class="mt-3 pt-2 border-top">
+                            <div class="text-muted mb-2">Images &amp; files</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach ($campaign->attachments as $file)
+                                    <a href="{{ route('campaigns.attachment', [$campaign, $file]) }}" target="_blank" rel="noopener" class="border rounded p-1 text-decoration-none small d-inline-flex align-items-center gap-2" title="{{ $file->original_name }}">
+                                        @if ($file->isImage())
+                                            <img src="{{ route('campaigns.attachment', [$campaign, $file]) }}" alt="{{ $file->original_name }}" style="height: 64px; width: auto; max-width: 120px; object-fit: cover;" class="rounded">
+                                        @else
+                                            <i class="bi bi-file-earmark-pdf fs-3 text-danger"></i>
+                                        @endif
+                                        <span class="text-break" style="max-width: 160px;">{{ $file->original_name }}<br><span class="text-muted">{{ $file->isImage() ? 'in the email' : 'attached' }} · {{ number_format($file->size / 1024) }} KB</span></span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

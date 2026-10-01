@@ -19,6 +19,18 @@
                     <tr>
                         <td style="padding: 28px 32px 8px; color:#1f2937; font-size: 15px; line-height: 1.6;">
                             {!! nl2br(e($body)) !!}
+                            {{-- Embedded (cid:) with its real type — a generic octet-stream part isn't shown as an image by every mail app.
+                                 width="" is for Outlook for Windows. --}}
+                            @foreach ($images as $image)
+                                <div style="margin-top: 16px;">
+                                    <img src="{{ isset($message) ? $message->embedData((string) @file_get_contents($image['path']), $image['name'], $image['mime']) : 'data:'.$image['mime'].';base64,'.base64_encode((string) @file_get_contents($image['path'])) }}" width="{{ $image['width'] }}" alt="" style="width: 100%; max-width: {{ $image['width'] }}px; height: auto; border: 0; border-radius: 4px; display: block;">
+                                </div>
+                            @endforeach
+                            @if ($documents)
+                                <div style="margin-top: 16px; color:#6b7280; font-size: 13px;">
+                                    Attached: {{ collect($documents)->pluck('name')->implode(', ') }}
+                                </div>
+                            @endif
                         </td>
                     </tr>
                     @if ($signatureHtml)
