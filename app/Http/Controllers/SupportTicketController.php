@@ -24,10 +24,11 @@ class SupportTicketController extends Controller
     {
         $this->authorize('viewAny', SupportTicket::class);
 
-        $filters = $request->only(['search', 'status', 'priority', 'period', 'date_from', 'date_to']);
+        $filters = $request->only(['search', 'status', 'priority', 'period', 'date_from', 'date_to', 'view']);
 
         return view('support-tickets.index', [
             'tickets' => $this->supportTickets->list($filters, 20),
+            'summary' => $this->supportTickets->summary($filters),
             'statuses' => RequirementStatus::cases(),
             'priorities' => RequirementPriority::cases(),
             'filters' => $filters,

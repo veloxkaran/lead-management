@@ -32,6 +32,24 @@ class SupportTicket extends Model
         ];
     }
 
+    /**
+     * Not Completed and open longer than its priority allows
+     * (config/support_tickets.php) — tickets have no due date.
+     */
+    public function isOverdue(): bool
+    {
+        return $this->status !== RequirementStatus::Completed
+            && $this->created_at !== null
+            && $this->created_at->lte(now()->subHours(self::overdueAfterHours($this->priority)));
+    }
+
+    public static function overdueAfterHours(?RequirementPriority $priority): int
+    {
+        $hours = (array) config('support_tickets.overdue_after_hours');
+
+        return (int) ($hours[$priority?->value ?? 'medium'] ?? $hours['medium'] ?? 168);
+    }
+
     public function lead(): BelongsTo
     {
         return $this->belongsTo(Lead::class);

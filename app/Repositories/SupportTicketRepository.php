@@ -6,7 +6,9 @@ use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
 use App\Models\SupportTicket;
 use App\Support\PeriodRange;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class SupportTicketRepository extends BaseRepository
 {
@@ -17,30 +19,7 @@ class SupportTicketRepository extends BaseRepository
 
     public function filter(array $filters, int $perPage = 20): LengthAwarePaginator
     {
-        $query = $this->query()->with(['lead', 'raiser', 'assignee']);
-
-        if (! empty($filters['search'])) {
-            $term = '%'.$filters['search'].'%';
-            $query->whereHas('lead', fn ($q) => $q->where('company_name', 'like', $term));
-        }
-
-        if (! empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (! empty($filters['priority'])) {
-            $query->where('priority', $filters['priority']);
-        }
-
-        [$from, $to] = PeriodRange::resolve($filters);
-
-        if ($from) {
-            $query->where('created_at', '>=', $from);
-        }
-
-        if ($to) {
-            $query->where('created_at', '<=', $to);
-        }
+        $query = $this->applyFilters($this->query()->with(['lead', 'raiser', 'assignee']), $filters);
 
         return $query
             ->orderByRaw(
@@ -65,5 +44,62 @@ class SupportTicketRepository extends BaseRepository
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    /**
+     * Every ticket matching the filters (minus the quick view), with only
+     * what SupportTicketSummary needs — for the counts strip on the list.
+     */
+    public function forSummary(array $filters): Collection
+    {
+        unset($filters['view']);
+
+        return $this->applyFilters($this->query(), $filters)->get(['id', 'status', 'priority', 'created_at', 'resolved_at']);
+    }
+
+    /**
+     * Where-clauses only, shared by the list and the summary so the counts
+     * always describe the list underneath them.
+     */
+    private function applyFilters(Builder $query, array $filters): Builder
+    {
+        if (! empty($filters['search'])) {
+            $term = '%'.$filters['search'].'%';
+            $query->whereHas('lead', fn ($q) => $q->where('company_name', 'like', $term));
+        }
+
+        if (! empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (! empty($filters['priority'])) {
+            $query->where('priority', $filters['priority']);
+        }
+
+        [$from, $to] = PeriodRange::resolve($filters);
+
+        if ($from) {
+            $query->where('created_at', '>=', $from);
+        }
+
+        if ($to) {
+            $query->where('created_at', '<=', $to);
+        }
+
+        // Quick views from the counts strip; "overdue" mirrors SupportTicket::isOverdue().
+        match ($filters['view'] ?? null) {
+            'open' => $query->where('status', '!=', RequirementStatus::Completed->value),
+            'completed' => $query->where('status', RequirementStatus::Completed->value),
+            'overdue' => $query->where('status', '!=', RequirementStatus::Completed->value)
+                ->where(function (Builder $q) {
+                    foreach (RequirementPriority::cases() as $priority) {
+                        $q->orWhere(fn (Builder $q) => $q->where('priority', $priority->value)
+                            ->where('created_at', '<=', now()->subHours(SupportTicket::overdueAfterHours($priority))));
+                    }
+                }),
+            default => null,
+        };
+
+        return $query;
     }
 }

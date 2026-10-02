@@ -13,9 +13,26 @@
         </x-slot:actions>
     </x-page-header>
 
+    @php
+        $currentView = $filters['view'] ?? null;
+        $activeFilterCount = count(array_filter(\Illuminate\Support\Arr::except($filters, ['view'])));
+        $overdueRule = collect(App\Enums\RequirementPriority::cases())
+            ->map(fn ($p) => $p->label().' '.App\Models\SupportTicket::overdueAfterHours($p).'h')
+            ->implode(', ');
+        $views = [
+            null => ['All', $summary->total, 'primary', null],
+            'open' => ['Open', $summary->open, 'info', 'Not completed yet'],
+            'overdue' => ['Overdue', $summary->overdue, 'danger', "Open longer than its priority allows — {$overdueRule}"],
+            'completed' => ['Completed', $summary->completed, 'success', null],
+        ];
+    @endphp
+
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body">
             <form method="GET" class="row g-2 align-items-end" x-data="{ period: '{{ $filters['period'] ?? '' }}' }">
+                @if ($currentView)
+                    <input type="hidden" name="view" value="{{ $currentView }}">
+                @endif
                 <div class="col-md-3">
                     <label class="form-label small">Company</label>
                     <input type="text" name="search" class="form-control form-control-sm" placeholder="Search by company" value="{{ $filters['search'] ?? '' }}">
@@ -65,6 +82,27 @@
     </div>
 
     <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2 py-2">
+            <nav class="nav nav-pills small" aria-label="Quick views">
+                @foreach ($views as $key => [$label, $count, $tone, $hint])
+                    @php $isActive = $currentView === ($key ?: null); @endphp
+                    <a href="{{ route('support-tickets.index', array_filter([...$filters, 'view' => $key ?: null])) }}"
+                       @class(['nav-link py-1 px-2 d-flex align-items-center gap-1', 'active' => $isActive, 'text-body' => ! $isActive])
+                       @if ($hint) title="{{ $hint }}" @endif
+                       @if ($isActive) aria-current="page" @endif>
+                        {{ $label }}
+                        <span @class(['badge rounded-pill', 'bg-white text-primary' => $isActive, "bg-{$tone}-subtle text-{$tone}-emphasis" => ! $isActive])>{{ $count }}</span>
+                    </a>
+                @endforeach
+            </nav>
+            <div class="ms-auto d-flex align-items-center gap-3 small text-muted">
+                @if ($activeFilterCount)
+                    <span class="text-primary" title="Filters narrowing this list"><i class="bi bi-funnel-fill"></i> {{ $activeFilterCount }} {{ \Illuminate\Support\Str::plural('filter', $activeFilterCount) }} active</span>
+                @endif
+                <span title="Completed out of total"><i class="bi bi-check2-circle"></i> {{ $summary->completionPercent() }}% done</span>
+                <span title="Average time from raised to resolved"><i class="bi bi-stopwatch"></i> {{ $summary->avgResolutionTime ?? 'None resolved yet' }}</span>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -93,7 +131,12 @@
                             <td class="small text-muted">{{ $ticket->raiserDisplayName() }}</td>
                             <td class="small">{{ $ticket->assignee?->name ?? '—' }}</td>
                             <td><x-status-badge :status="$ticket->priority" /></td>
-                            <td><x-status-badge :status="$ticket->status" /></td>
+                            <td>
+                                <x-status-badge :status="$ticket->status" />
+                                @if ($ticket->isOverdue())
+                                    <span class="badge bg-danger-subtle text-danger-emphasis" title="Open longer than {{ App\Models\SupportTicket::overdueAfterHours($ticket->priority) }}h for {{ strtolower($ticket->priority?->label() ?? 'this') }} priority">Overdue</span>
+                                @endif
+                            </td>
                             <td class="small">
                                 @if ($ticket->resolved_at)
                                     <span class="text-success">Solved in {{ $ticket->elapsedFormatted() }}</span>

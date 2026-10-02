@@ -10,6 +10,7 @@ use App\Models\SupportTicket;
 use App\Models\SupportTicketComment;
 use App\Models\User;
 use App\Repositories\SupportTicketRepository;
+use App\Support\SupportTicketSummary;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +26,14 @@ class SupportTicketService
     public function list(array $filters, int $perPage = 20): LengthAwarePaginator
     {
         return $this->tickets->filter($filters, $perPage);
+    }
+
+    /**
+     * The counts strip above the list — same filters, ignoring the quick view.
+     */
+    public function summary(array $filters): SupportTicketSummary
+    {
+        return SupportTicketSummary::of($this->tickets->forSummary($filters));
     }
 
     /**
