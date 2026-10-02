@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -71,7 +72,13 @@ class SendClientNotificationEmail implements ShouldQueue
                     ->values()->all()
                 : [];
 
-            Mail::to($log->to_email)->send(new ClientNotificationMail($log->subject, $log->body, $images, $documents));
+            // Older rows (and legacy jobs) have no token yet — give them one so opens are tracked too.
+            $log->tracking_token ??= Str::random(40);
+
+            Mail::to($log->to_email)->send(new ClientNotificationMail(
+                $log->subject, $log->body, $images, $documents,
+                route('email-logs.track-open', $log->tracking_token),
+            ));
 
             $log->status = EmailLogStatus::Sent;
             $log->sent_at = now();

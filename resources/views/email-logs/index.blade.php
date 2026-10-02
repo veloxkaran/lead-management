@@ -48,6 +48,23 @@
     </div>
 
     <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2 py-2">
+            <nav class="nav nav-pills small" aria-label="By status">
+                @foreach ([null, ...$statuses] as $status)
+                    @php
+                        $value = $status?->value;
+                        $isActive = ($filters['status'] ?? null) === $value;
+                        $count = $value ? ($statusCounts[$value] ?? 0) : array_sum($statusCounts);
+                    @endphp
+                    <a href="{{ route('email-logs.index', array_filter([...$filters, 'status' => $value])) }}"
+                       @class(['nav-link py-1 px-2 d-flex align-items-center gap-1', 'active' => $isActive, 'text-body' => ! $isActive])>
+                        {{ $status?->label() ?? 'All' }}
+                        <span @class(['badge rounded-pill', 'bg-white text-primary' => $isActive, 'bg-secondary-subtle text-secondary-emphasis' => ! $isActive])>{{ number_format($count) }}</span>
+                    </a>
+                @endforeach
+            </nav>
+            <span class="ms-auto small text-muted" title="Plain email has no delivery receipt — an email counts as delivered once the recipient opens it (with images on)."><i class="bi bi-info-circle"></i> Delivered = opened by the recipient</span>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -56,8 +73,9 @@
                         <th>Subject</th>
                         <th>Related To</th>
                         <th>Status</th>
+                        <th style="min-width: 240px;">Remarks</th>
                         <th>Queued</th>
-                        <th>Sent</th>
+                        <th>Sent / Opened</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -78,15 +96,26 @@
                                 @endif
                             </td>
                             <td><x-status-badge :status="$log->status" /></td>
-                            <td class="small text-muted">{{ $log->created_at->format('M d, Y g:i A') }}</td>
-                            <td class="small text-muted">{{ $log->sent_at?->format('M d, Y g:i A') ?? '—' }}</td>
+                            <td class="small">
+                                <div @class(['text-danger' => $log->status === App\Enums\EmailLogStatus::Failed, 'text-warning-emphasis' => $log->status === App\Enums\EmailLogStatus::Pending, 'text-muted' => in_array($log->status, [App\Enums\EmailLogStatus::Sent, App\Enums\EmailLogStatus::Delivered], true)])>{{ $log->remarks() }}</div>
+                                @if ($log->error)
+                                    <div class="text-muted text-break font-monospace" style="font-size: .75rem;" title="{{ $log->error }}">{{ \Illuminate\Support\Str::limit($log->error, 140) }}</div>
+                                @endif
+                            </td>
+                            <td class="small text-muted text-nowrap">{{ $log->created_at->format('M d, Y g:i A') }}</td>
+                            <td class="small text-muted text-nowrap">
+                                {{ $log->sent_at?->format('M d, Y g:i A') ?? '—' }}
+                                @if ($log->delivered_at)
+                                    <div class="text-success"><i class="bi bi-envelope-open"></i> {{ $log->delivered_at->format('M d, g:i A') }}</div>
+                                @endif
+                            </td>
                             <td class="text-end">
                                 <a href="{{ route('email-logs.show', $log) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 <x-empty-state icon="bi-envelope-paper" title="No emails found" description="Notification emails appear here once a requirement or support ticket is created or changes status." />
                             </td>
                         </tr>

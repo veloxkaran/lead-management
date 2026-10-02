@@ -379,7 +379,7 @@ class CampaignBatchingTest extends TestCase
         $csv = $this->actingAs($user)->get(route('campaigns.export', $campaign))->assertOk()->streamedContent();
         $lines = array_values(array_filter(explode("\n", $csv)));
         $this->assertCount(6, $lines);
-        $this->assertStringStartsWith('Batch,Email,Name,Company,Source,Status,Error,"Queued at","Sent at","Opened at","Unsubscribed at"', $lines[0]);
+        $this->assertStringStartsWith('Batch,Email,Name,Company,Source,Status,Remarks,Error,"Queued at","Sent at","Opened at","Unsubscribed at"', $lines[0]);
         $this->assertStringContainsString('3,person5@example.com', $csv);
 
         $noView = User::factory()->create(['role' => UserRole::BusinessDevelopment]);

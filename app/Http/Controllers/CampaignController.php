@@ -245,14 +245,14 @@ class CampaignController extends Controller
 
         return response()->streamDownload(function () use ($recipients, $campaign, $opened) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, ['Batch', $campaign->isEmail() ? 'Email' : 'Phone', 'Name', 'Company', 'Source', 'Status', 'Error', 'Queued at', 'Sent at', $opened, 'Unsubscribed at']);
+            fputcsv($out, ['Batch', $campaign->isEmail() ? 'Email' : 'Phone', 'Name', 'Company', 'Source', 'Status', 'Remarks', 'Error', 'Queued at', 'Sent at', $opened, 'Unsubscribed at']);
 
-            $recipients->chunk(500, function ($chunk) use ($out) {
+            $recipients->chunk(500, function ($chunk) use ($out, $campaign) {
                 foreach ($chunk as $r) {
                     fputcsv($out, [
                         $r->batch, $r->address, $r->name, $r->company_name,
                         $r->lead ? 'Lead: '.$r->lead->company_name : ($r->contact_id ? 'Contact' : 'Extra contact'),
-                        $r->status->label(), $r->error,
+                        $r->status->label(), $r->remarks($campaign->isEmail()), $r->error,
                         $r->queued_at?->toDateTimeString(), $r->sent_at?->toDateTimeString(),
                         $r->delivered_at?->toDateTimeString(), $r->unsubscribed_at?->toDateTimeString(),
                     ]);

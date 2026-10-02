@@ -85,6 +85,7 @@ Route::withoutMiddleware([
     \App\Http\Middleware\EnsureUserIsActive::class,
 ])->group(function () {
     Route::get('track/email/{token}', [CampaignTrackingController::class, 'open'])->name('campaigns.track-open');
+    Route::get('track/notification/{token}', [CampaignTrackingController::class, 'notificationOpen'])->name('email-logs.track-open');
     Route::match(['get', 'post'], 'webhooks/sms/delivery/{secret}', [CampaignTrackingController::class, 'smsDelivery'])->name('webhooks.sms-delivery');
     Route::get('unsubscribe/{token}', [CampaignTrackingController::class, 'unsubscribeForm'])->name('campaigns.unsubscribe');
     Route::post('unsubscribe/{token}', [CampaignTrackingController::class, 'unsubscribe'])->middleware('throttle:30,1')->name('campaigns.unsubscribe.confirm');

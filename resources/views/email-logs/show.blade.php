@@ -17,8 +17,10 @@
                 <dt class="col-2 text-muted">To</dt><dd class="col-10">{{ $log->to_email }}</dd>
                 <dt class="col-2 text-muted">Subject</dt><dd class="col-10">{{ $log->subject }}</dd>
                 <dt class="col-2 text-muted">Status</dt><dd class="col-10"><x-status-badge :status="$log->status" /></dd>
+                <dt class="col-2 text-muted">Remarks</dt>
+                <dd @class(['col-10', 'text-danger' => $log->status === App\Enums\EmailLogStatus::Failed])>{{ $log->remarks() }}</dd>
                 @if ($log->error)
-                    <dt class="col-2 text-muted">Error</dt><dd class="col-10 text-danger">{{ $log->error }}</dd>
+                    <dt class="col-2 text-muted">Error</dt><dd class="col-10 text-break font-monospace small">{{ $log->error }}</dd>
                 @endif
                 <dt class="col-2 text-muted">Related To</dt>
                 <dd class="col-10">
@@ -34,6 +36,7 @@
                 </dd>
                 <dt class="col-2 text-muted">Queued</dt><dd class="col-10">{{ $log->created_at->format('M d, Y g:i A') }}</dd>
                 <dt class="col-2 text-muted">Sent</dt><dd class="col-10">{{ $log->sent_at?->format('M d, Y g:i A') ?? '—' }}</dd>
+                <dt class="col-2 text-muted">Opened</dt><dd class="col-10">{{ $log->delivered_at?->format('M d, Y g:i A') ?? '—' }}</dd>
             </dl>
         </div>
     </div>

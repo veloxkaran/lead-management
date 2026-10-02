@@ -460,6 +460,7 @@
                         <th>Name</th>
                         <th>Lead / Contact</th>
                         <th>Status</th>
+                        <th style="min-width: 240px;">Remarks</th>
                         <th>Queued</th>
                         <th>Sent</th>
                         <th>{{ $openedLabel }}</th>
@@ -486,8 +487,11 @@
                                 @if ($recipient->unsubscribed_at)
                                     <span class="badge bg-secondary-subtle text-secondary-emphasis" title="{{ $recipient->unsubscribed_at->format('M d, Y g:i A') }}">Unsubscribed</span>
                                 @endif
-                                @if ($recipient->error)
-                                    <div class="text-danger text-break" style="max-width: 320px;">{{ \Illuminate\Support\Str::limit($recipient->error, 160) }}</div>
+                            </td>
+                            <td class="small">
+                                <div @class(['text-danger' => $recipient->status === App\Enums\CampaignRecipientStatus::Failed, 'text-muted' => $recipient->status !== App\Enums\CampaignRecipientStatus::Failed])>{{ $recipient->remarks($campaign->isEmail()) }}</div>
+                                @if ($recipient->error && $recipient->status === App\Enums\CampaignRecipientStatus::Failed)
+                                    <div class="text-muted text-break font-monospace" style="font-size: .75rem; max-width: 360px;" title="{{ $recipient->error }}">{{ \Illuminate\Support\Str::limit($recipient->error, 140) }}</div>
                                 @endif
                             </td>
                             <td class="small text-muted text-nowrap">{{ $recipient->queued_at?->format('M d, g:i A') ?? '—' }}</td>
@@ -495,7 +499,7 @@
                             <td class="small text-muted text-nowrap">{{ $recipient->delivered_at?->format('M d, g:i A') ?? '—' }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="text-center text-muted small py-4">No recipients match.</td></tr>
+                        <tr><td colspan="9" class="text-center text-muted small py-4">No recipients match.</td></tr>
                     @endforelse
                 </tbody>
             </table>

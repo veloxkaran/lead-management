@@ -29,6 +29,8 @@ class ClientNotificationMail extends Mailable
         public string $renderedBody,
         public array $imagePaths = [],
         public array $documents = [],
+        // 1×1 image whose loading marks the email log "Delivered" (opened).
+        public ?string $trackingUrl = null,
     ) {
     }
 
@@ -61,6 +63,7 @@ class ClientNotificationMail extends Mailable
                     'path' => $path,
                     'width' => EmailImage::displayWidth($path),
                 ], $this->imagePaths),
+                'trackingUrl' => $this->trackingUrl,
             ],
         );
     }

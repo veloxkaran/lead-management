@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Enums\CampaignChannel;
 use App\Enums\CampaignRecipientStatus;
+use App\Enums\EmailLogStatus;
 use App\Models\CampaignRecipient;
 use App\Models\CampaignUnsubscribe;
+use App\Models\EmailLog;
 use App\Models\Setting;
 use App\Support\CampaignSettings;
 use Illuminate\Http\Request;
@@ -29,6 +31,22 @@ class CampaignTrackingController extends Controller
         CampaignRecipient::where('tracking_token', $token)
             ->where('status', CampaignRecipientStatus::Sent)
             ->update(['status' => CampaignRecipientStatus::Delivered->value, 'delivered_at' => now()]);
+
+        return response(base64_decode(self::PIXEL), 200, [
+            'Content-Type' => 'image/gif',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
+    }
+
+    /**
+     * The 1×1 image in client notification emails (Email Log) — same idea
+     * as open(): loading it means the email arrived and was opened.
+     */
+    public function notificationOpen(string $token): Response
+    {
+        EmailLog::where('tracking_token', $token)
+            ->where('status', EmailLogStatus::Sent)
+            ->update(['status' => EmailLogStatus::Delivered->value, 'delivered_at' => now()]);
 
         return response(base64_decode(self::PIXEL), 200, [
             'Content-Type' => 'image/gif',

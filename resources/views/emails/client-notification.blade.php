@@ -30,6 +30,9 @@
                     <tr>
                         <td style="padding: 16px 32px; color:#9ca3af; font-size: 12px; border-top: 1px solid #e5e7eb;">
                             This is an automated message from {{ $companyName }}.
+                            @if (! empty($trackingUrl))
+                                <img src="{{ $trackingUrl }}" width="1" height="1" alt="" style="display:block; width:1px; height:1px; border:0;">
+                            @endif
                         </td>
                     </tr>
                 </table>
