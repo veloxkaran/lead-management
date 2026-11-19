@@ -7,6 +7,7 @@ use App\Models\Task;
 use App\Models\TaskComment;
 use App\Services\TaskService;
 use Illuminate\Http\RedirectResponse;
+use App\Services\MentionNotifier;
 
 class TaskCommentController extends Controller
 {
@@ -14,9 +15,10 @@ class TaskCommentController extends Controller
     {
     }
 
-    public function store(StoreTaskCommentRequest $request, Task $task): RedirectResponse
+    public function store(StoreTaskCommentRequest $request, Task $task, MentionNotifier $mentions): RedirectResponse
     {
         $this->tasks->addComment($task, $request->validated(), $request->user());
+        $mentions->notify($request->validated('comment'), $request->user(), $task);
 
         return back()->with('success', 'Comment added.');
     }

@@ -12,6 +12,7 @@ use App\Notifications\AgendaCreatedNotification;
 use App\Notifications\AgendaStatusChangedNotification;
 use App\Repositories\AgendaRepository;
 use App\Support\MentionParser;
+use App\Services\MentionNotifier;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
@@ -84,6 +85,9 @@ class AgendaService
             ->all();
 
         $this->notifyOthers($agenda, $actor, new AgendaCommentNotification($comment->load('author'), $mentionedIds));
+
+        // The bell notification above already covers mentions; this adds the Slack post.
+        app(MentionNotifier::class)->notify($attributes['comment'], $actor, $agenda, inApp: false);
 
         return $comment->load('author');
     }

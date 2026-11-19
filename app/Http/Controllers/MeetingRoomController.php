@@ -114,6 +114,8 @@ class MeetingRoomController extends Controller
             'author_id' => $comment->author_id,
             'author_name' => $comment->author->name,
             'comment' => $comment->comment,
+            // Escaped, with @mentions as name chips (safe for x-html).
+            'comment_html' => (string) \App\Support\MentionParser::highlight($comment->comment, auth()->user()),
             'formatted_at' => $comment->created_at->format('M d, Y g:i A'),
         ];
     }

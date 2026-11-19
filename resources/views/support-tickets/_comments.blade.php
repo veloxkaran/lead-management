@@ -6,7 +6,7 @@
         @permitted('support_tickets', 'update')
             <form method="POST" action="{{ route('support-tickets.comments.store', $supportTicket) }}" class="mb-3">
                 @csrf
-                <textarea name="comment" rows="2" class="form-control form-control-sm" placeholder="Add a comment..." required></textarea>
+                <textarea name="comment" rows="2" class="form-control form-control-sm" placeholder="Add a comment… type @ to mention a teammate" data-mentions="{{ route('mentions.users', ['support_ticket', $supportTicket->id]) }}" required></textarea>
                 <button type="submit" class="btn btn-sm btn-primary mt-2"><i class="bi bi-send"></i> Post Comment</button>
             </form>
         @endpermitted
@@ -27,14 +27,14 @@
                         </button>
                     @endif
                 </div>
-                <p class="small mb-1">{{ $comment->comment }}</p>
+                <x-comment-text :text="$comment->comment" />
 
                 @if ($comment->author_id === auth()->id() && $comment->isEditable())
                     <div class="collapse" id="editComment{{ $comment->id }}">
                         <form method="POST" action="{{ route('support-tickets.comments.update', [$supportTicket, $comment]) }}" class="d-flex gap-2">
                             @csrf
                             @method('PATCH')
-                            <textarea name="comment" rows="2" class="form-control form-control-sm">{{ $comment->comment }}</textarea>
+                            <textarea name="comment" rows="2" class="form-control form-control-sm" data-mentions="{{ route('mentions.users', ['support_ticket', $supportTicket->id]) }}">{{ $comment->comment }}</textarea>
                             <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">Save</button>
                         </form>
                     </div>

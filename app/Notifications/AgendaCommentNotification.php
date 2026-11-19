@@ -33,6 +33,8 @@ class AgendaCommentNotification extends Notification
 
         return [
             'message' => $message,
+            'type' => $wasMentioned ? 'mention' : 'comment',
+            'url' => route('meeting-room.index'),
             'agenda_id' => $agenda->id,
             'comment_id' => $this->comment->id,
             'url' => route('meeting-room.index', ['agenda' => $agenda->id]),

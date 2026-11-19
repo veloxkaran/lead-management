@@ -148,6 +148,10 @@ class User extends Authenticatable
      */
     protected static function booted(): void
     {
+        // @mention handles come from names and depend on who else is active.
+        static::saved(fn () => \App\Support\MentionParser::flush());
+        static::deleted(fn () => \App\Support\MentionParser::flush());
+
         static::updated(function (self $user) {
             if (! $user->wasChanged('reporting_manager_id')) {
                 return;

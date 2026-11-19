@@ -35,6 +35,7 @@ import './lead-duplicate-check';
 import './campaign-composer';
 import './contacts';
 import './form-drafts';
+import './mentions';
 import './command-palette';
 import './ux-enhancements';
 

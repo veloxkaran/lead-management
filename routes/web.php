@@ -274,6 +274,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::get('mentions/{type}/{id}', [\App\Http\Controllers\MentionController::class, 'users'])->whereNumber('id')->name('mentions.users');
 
     // Team & Org Hierarchy — visibility derived from reporting_manager_id,
     // available to any authenticated user regardless of role (an IC with no

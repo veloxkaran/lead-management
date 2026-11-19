@@ -1,7 +1,7 @@
 @if (auth()->user()->can('view', $task) && auth()->user()->hasPermission('tasks', 'update'))
     <form method="POST" action="{{ route('tasks.comments.store', $task) }}" class="mb-3">
         @csrf
-        <textarea name="comment" rows="2" class="form-control form-control-sm mb-2" placeholder="Add a comment" required></textarea>
+        <textarea name="comment" rows="2" class="form-control form-control-sm mb-2" placeholder="Add a comment… type @ to mention a teammate" data-mentions="{{ route('mentions.users', ['task', $task->id]) }}" required></textarea>
         @error('comment')<div class="text-danger small mb-1">{{ $message }}</div>@enderror
         <button class="btn btn-sm btn-primary"><i class="bi bi-chat-left-text"></i> Post Comment</button>
     </form>
@@ -13,7 +13,7 @@
             <strong class="small">{{ $comment->author?->name ?? 'Unknown' }}</strong>
             <span class="text-muted small">{{ $comment->created_at->diffForHumans() }}</span>
         </div>
-        <p class="small mb-1">{{ $comment->comment }}</p>
+        <x-comment-text :text="$comment->comment" />
         @can('delete', $comment)
             @permitted('tasks', 'update')
                 <form method="POST" action="{{ route('tasks.comments.destroy', [$task, $comment]) }}">

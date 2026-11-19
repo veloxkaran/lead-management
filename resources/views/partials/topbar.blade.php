@@ -52,16 +52,39 @@
                     </span>
                 @endif
             </button>
-            <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 320px; max-height: 380px; overflow-y: auto;">
-                <h6 class="dropdown-header">Notifications</h6>
-                @forelse ($user?->unreadNotifications()->take(8)->get() ?? [] as $notification)
-                    <a href="{{ route('notifications.read', $notification->id) }}" class="dropdown-item small text-wrap">
-                        {{ $notification->data['message'] ?? 'New notification' }}
-                        <div class="text-muted" style="font-size: 0.72rem;">{{ $notification->created_at->diffForHumans() }}</div>
+            @php
+                $unreadNotifications = $user?->unreadNotifications()->take(8)->get() ?? collect();
+                $mentionCount = $unreadNotifications->where('data.type', 'mention')->count();
+            @endphp
+            <div class="dropdown-menu dropdown-menu-end p-2" style="min-width: 320px; max-height: 380px; overflow-y: auto;" x-data="{ tab: 'all' }">
+                <div class="d-flex align-items-center justify-content-between px-2 pb-2">
+                    <h6 class="dropdown-header p-0 m-0">Notifications</h6>
+                    {{-- "Mentions" = someone @mentioned you in a comment. --}}
+                    <div class="btn-group btn-group-sm notification-tabs" role="group" aria-label="Filter notifications">
+                        <button type="button" class="btn" :class="tab === 'all' ? 'btn-primary' : 'btn-outline-secondary'" @click.stop="tab = 'all'">All</button>
+                        <button type="button" class="btn" :class="tab === 'mentions' ? 'btn-primary' : 'btn-outline-secondary'" @click.stop="tab = 'mentions'">
+                            Mentions @if ($mentionCount)<span class="badge rounded-pill bg-danger ms-1">{{ $mentionCount }}</span>@endif
+                        </button>
+                    </div>
+                </div>
+                @forelse ($unreadNotifications as $notification)
+                    @php $isMention = ($notification->data['type'] ?? null) === 'mention'; @endphp
+                    {{-- No d-flex on the <a> itself: its display:flex !important would beat x-show's display:none. --}}
+                    <a href="{{ route('notifications.read', $notification->id) }}" class="dropdown-item small text-wrap" x-show="tab === 'all' || {{ $isMention ? 'true' : 'false' }}">
+                        <span class="d-flex gap-2">
+                            <i class="bi {{ $isMention ? 'bi-at text-primary' : 'bi-dot' }} flex-shrink-0"></i>
+                            <span>
+                                {{ $notification->data['message'] ?? 'New notification' }}
+                                <span class="d-block text-muted" style="font-size: 0.72rem;">{{ $notification->created_at->diffForHumans() }}</span>
+                            </span>
+                        </span>
                     </a>
                 @empty
                     <div class="dropdown-item small text-muted">No new notifications</div>
                 @endforelse
+                @if ($unreadNotifications->isNotEmpty() && ! $mentionCount)
+                    <div class="dropdown-item small text-muted" x-show="tab === 'mentions'" x-cloak>No unread mentions</div>
+                @endif
             </div>
         </div>
         <div class="dropdown">

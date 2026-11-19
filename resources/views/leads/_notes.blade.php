@@ -1,7 +1,7 @@
 @permitted('leads', 'update')
     <form method="POST" action="{{ route('leads.notes.store', $lead) }}" enctype="multipart/form-data" class="mb-3">
         @csrf
-        <textarea name="comment" rows="2" class="form-control form-control-sm mb-2" placeholder="Add a note..." required></textarea>
+        <textarea name="comment" rows="2" class="form-control form-control-sm mb-2" placeholder="Add a note… type @ to mention a teammate" data-mentions="{{ route('mentions.users', ['lead', $lead->id]) }}" required></textarea>
         <div class="d-flex justify-content-between align-items-center">
             <input type="file" name="attachments[]" multiple class="form-control form-control-sm w-auto">
             <button class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Add Note</button>
@@ -23,7 +23,7 @@
                 @endif
             </div>
         </div>
-        <p class="small mb-1">{{ $note->comment }}</p>
+        <x-comment-text :text="$note->comment" />
         @foreach ($note->attachments as $attachment)
             <a href="{{ route('lead-note-attachments.download', $attachment) }}" class="badge bg-light text-dark border text-decoration-none me-1">
                 <i class="bi bi-paperclip"></i> {{ $attachment->original_name }}

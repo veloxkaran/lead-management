@@ -7,6 +7,7 @@ use App\Models\LeadNote;
 use App\Services\LeadNoteService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Services\MentionNotifier;
 
 class LeadNoteController extends Controller
 {
@@ -14,7 +15,7 @@ class LeadNoteController extends Controller
     {
     }
 
-    public function store(Request $request, Lead $lead): RedirectResponse
+    public function store(Request $request, Lead $lead, MentionNotifier $mentions): RedirectResponse
     {
         $this->authorize('view', $lead);
 
@@ -29,6 +30,8 @@ class LeadNoteController extends Controller
             $request->file('attachments', []),
             $request->user()
         );
+
+        $mentions->notify($validated['comment'], $request->user(), $lead);
 
         return back()->with('success', 'Note added successfully.');
     }

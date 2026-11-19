@@ -130,7 +130,7 @@
                                     <span class="fw-semibold small" x-text="comment.author_name"></span>
                                     <span class="text-muted" style="font-size: 0.72rem;" x-text="comment.formatted_at"></span>
                                 </div>
-                                <div class="small" x-text="comment.comment"></div>
+                                <div class="small comment-text" x-html="comment.comment_html"></div>
                                 <button type="button" class="btn btn-link btn-sm p-0" x-show="pending" @click="toggleReply(comment.id)">Reply</button>
 
                                 <template x-for="reply in repliesFor(comment.id)" :key="reply.id">
@@ -139,13 +139,13 @@
                                             <span class="fw-semibold small" x-text="reply.author_name"></span>
                                             <span class="text-muted" style="font-size: 0.7rem;" x-text="reply.formatted_at"></span>
                                         </div>
-                                        <div class="small" x-text="reply.comment"></div>
+                                        <div class="small comment-text" x-html="reply.comment_html"></div>
                                     </div>
                                 </template>
 
                                 <template x-if="pending && replyOpen[comment.id]">
                                     <form class="ms-4 mt-2 d-flex gap-2" @submit.prevent="postComment(comment.id)">
-                                        <input type="text" class="form-control form-control-sm" x-model="replyBody[comment.id]" placeholder="Write a reply...">
+                                        <input type="text" class="form-control form-control-sm" x-model="replyBody[comment.id]" placeholder="Write a reply… type @ to mention" data-mentions="{{ route('mentions.users', ['agenda', $activeAgenda->id]) }}">
                                         <button class="btn btn-sm btn-outline-primary text-nowrap" type="submit" :disabled="posting">Reply</button>
                                     </form>
                                 </template>
@@ -157,7 +157,7 @@
 
                         <div x-show="pending" class="border-top pt-3 mt-2">
                             <form @submit.prevent="postComment(null)" class="d-flex gap-2">
-                                <input type="text" class="form-control form-control-sm" x-model="newComment" placeholder="Add a comment... (use @name to mention someone)" required>
+                                <input type="text" class="form-control form-control-sm" x-model="newComment" placeholder="Add a comment… type @ to mention a teammate" data-mentions="{{ route('mentions.users', ['agenda', $activeAgenda->id]) }}" required>
                                 <button class="btn btn-sm btn-primary text-nowrap" type="submit" :disabled="posting"><i class="bi bi-send"></i></button>
                             </form>
                         </div>
