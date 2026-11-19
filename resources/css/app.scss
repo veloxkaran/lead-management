@@ -1492,3 +1492,23 @@ body.is-filtering .app-content .card:has(> .table-responsive) {
         font-size: 1rem;
     }
 }
+
+// ---- Performance Snapshot month stepper (components/performance-snapshot).
+.performance-snapshot-step {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.35rem;
+    color: var(--app-text-muted);
+
+    &:hover:not(:disabled) {
+        background: var(--app-hover);
+        color: var(--app-text-strong);
+    }
+
+    &:disabled {
+        opacity: 0.35;
+    }
+}

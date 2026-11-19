@@ -93,6 +93,28 @@ class BsDate
     }
 
     /**
+     * "Asoj 2083" — a BS month with its year, for the Monthly snapshot label
+     * (the year matters once you step back past Baisakh).
+     */
+    public static function monthYearLabel(int $bsYear, int $bsMonth): string
+    {
+        return self::MONTHS[$bsMonth].' '.$bsYear;
+    }
+
+    /**
+     * The BS year/month `$offset` months away from the given BS year/month
+     * (e.g. -1 from Baisakh 2083 is Chaitra 2082).
+     *
+     * @return array{year: int, month: int}
+     */
+    public static function shiftMonth(int $bsYear, int $bsMonth, int $offset): array
+    {
+        $index = $bsYear * 12 + ($bsMonth - 1) + $offset;
+
+        return ['year' => intdiv($index, 12), 'month' => $index % 12 + 1];
+    }
+
+    /**
      * "since 2082, Asoj" — for the Lifetime snapshot label, anchored to
      * whichever date it's tracking since (e.g. the earliest record).
      */

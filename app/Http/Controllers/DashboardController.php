@@ -29,6 +29,9 @@ use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    /** How far back the Performance Snapshot's Monthly ‹ arrow can go. */
+    private const MAX_MONTHS_BACK = 120;
+
     public function __invoke(Request $request): View
     {
         $user = $request->user();
@@ -53,7 +56,7 @@ class DashboardController extends Controller
      */
     public function performanceSnapshotJson(Request $request): JsonResponse
     {
-        return response()->json($this->performanceSnapshot($request->only('snapshot_period')));
+        return response()->json($this->performanceSnapshot($request->only('snapshot_period', 'month_offset')));
     }
 
     /**
@@ -80,7 +83,8 @@ class DashboardController extends Controller
      * "Performance Snapshot" data — identical for every role, which is why
      * it's fetched through its own JSON endpoint (performanceSnapshotJson())
      * instead of being merged into each role dashboard's view data. Three
-     * periods: Daily (today), Monthly (this calendar month), and Lifetime
+     * periods: Daily (today), Monthly (a BS month — the current one, or
+     * `month_offset` months back via the widget's ‹ › arrows), and Lifetime
      * (unbounded — averageResolutionFormatted()/count() with no from/to
      * naturally means "every record ever" without any special-casing).
      */
@@ -90,13 +94,20 @@ class DashboardController extends Controller
             ? $filters['snapshot_period']
             : 'daily';
 
+        // Months back from the current BS month (0 = this month). Never
+        // forward — future months have no data yet — and at most 10 years
+        // back, well inside the BS calendar table's range.
+        $monthOffset = $period === 'monthly'
+            ? max(-self::MAX_MONTHS_BACK, min(0, (int) ($filters['month_offset'] ?? 0)))
+            : 0;
+
         [$from, $to, $dateLabel] = match ($period) {
             // The "Monthly" label is a BS month name, so the query range
             // must be that BS month's actual AD date span — BS/AD month
             // boundaries don't line up, so now()->startOfMonth()/endOfMonth()
             // (an AD calendar month) would silently aggregate the wrong ~2
             // weeks of data for whatever BS month is currently showing.
-            'monthly' => $this->currentBsMonthRange(),
+            'monthly' => $this->bsMonthRange($monthOffset),
             'lifetime' => [null, null, BsDate::sinceLabel($this->earliestActivityDate())],
             default => [now()->startOfDay(), now()->endOfDay(), BsDate::dayLabel(now())],
         };
@@ -132,6 +143,9 @@ class DashboardController extends Controller
         return [
             'period' => $period,
             'dateLabel' => $dateLabel,
+            'monthOffset' => $monthOffset,
+            'canGoBack' => $period === 'monthly' && $monthOffset > -self::MAX_MONTHS_BACK,
+            'canGoForward' => $period === 'monthly' && $monthOffset < 0,
             'tickets' => [
                 'created' => $ticketsCreated,
                 'solved' => $ticketsSolved,
@@ -153,21 +167,23 @@ class DashboardController extends Controller
     }
 
     /**
-     * The current BS month's AD date span plus its label, e.g. today being
-     * 2026-09-21 AD is BS "Asoj" — whose AD range is 2026-09-17 to
-     * 2026-10-17, not the AD calendar month (2026-09-01 to 2026-09-30).
-     * Mirrors LeadRepository's bs_year/bs_month filter, which resolves the
-     * same way via BsDate::monthToAdRange().
+     * A BS month's AD date span plus its label — the current BS month, or
+     * `$offset` months before it. E.g. today being 2026-09-21 AD is BS
+     * "Asoj" — whose AD range is 2026-09-17 to 2026-10-17, not the AD
+     * calendar month (2026-09-01 to 2026-09-30). Mirrors LeadRepository's
+     * bs_year/bs_month filter, which resolves the same way via
+     * BsDate::monthToAdRange().
      *
      * @return array{0: Carbon, 1: Carbon, 2: string}
      */
-    protected function currentBsMonthRange(): array
+    protected function bsMonthRange(int $offset = 0): array
     {
-        $bs = BsDate::toBsParts(now());
+        $today = BsDate::toBsParts(now());
+        $bs = BsDate::shiftMonth($today['year'], $today['month'], $offset);
 
         [$start, $end] = BsDate::monthToAdRange($bs['year'], $bs['month']);
 
-        return [$start, $end, BsDate::MONTHS[$bs['month']]];
+        return [$start, $end, BsDate::monthYearLabel($bs['year'], $bs['month'])];
     }
 
     /**

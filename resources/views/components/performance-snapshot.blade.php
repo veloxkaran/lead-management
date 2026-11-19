@@ -1,14 +1,31 @@
 {{-- "Performance Snapshot" — rendered identically on every role dashboard
      (see resources/views/dashboard/*.blade.php). Entirely self-contained:
-     fetches its own data from GET /dashboard/performance-snapshot on mount
-     and on every Daily/Monthly/Lifetime switch (resources/js/performance-
-     snapshot.js), so switching periods never triggers a page navigation —
+     fetches its own data from GET /dashboard/performance-snapshot on mount,
+     on every Daily/Monthly/Lifetime switch and on each Monthly ‹ › step
+     (resources/js/performance-snapshot.js), so it never triggers a page
+     navigation —
      it can't jump the user's scroll position because nothing ever reloads. --}}
 <div class="card border-0 shadow-sm mb-3 performance-snapshot" id="performance-snapshot" x-data="performanceSnapshot()">
     <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
         <div>
             <span class="fw-semibold"><i class="bi bi-graph-up-arrow me-1"></i> Performance Snapshot</span>
-            <div class="small text-muted" x-cloak x-show="!loading" x-text="data.dateLabel"></div>
+            {{-- Monthly: ‹ › step through BS months (never past the current one). --}}
+            <div class="small text-muted d-flex align-items-center gap-1 performance-snapshot-range" x-cloak x-show="data.dateLabel">
+                <template x-if="period === 'monthly'">
+                    <button type="button" class="btn btn-link btn-sm p-0 performance-snapshot-step" @click="shiftMonth(-1)" :disabled="loading || !data.canGoBack" aria-label="Previous month" title="Previous month">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+                </template>
+                <span x-text="data.dateLabel" :class="period === 'monthly' && 'fw-semibold text-body'"></span>
+                <template x-if="period === 'monthly'">
+                    <button type="button" class="btn btn-link btn-sm p-0 performance-snapshot-step" @click="shiftMonth(1)" :disabled="loading || !data.canGoForward" aria-label="Next month" title="Next month">
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                </template>
+                <template x-if="period === 'monthly' && monthOffset < 0">
+                    <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-decoration-none" @click="shiftMonth(-monthOffset)" :disabled="loading">This month</button>
+                </template>
+            </div>
         </div>
         <div class="btn-group btn-group-sm" role="group" aria-label="Snapshot period">
             <button type="button" class="btn" :class="period === 'daily' ? 'btn-primary' : 'btn-outline-primary'" @click="switchPeriod('daily')">Daily</button>

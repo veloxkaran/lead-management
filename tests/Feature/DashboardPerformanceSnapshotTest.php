@@ -111,8 +111,11 @@ class DashboardPerformanceSnapshotTest extends TestCase
         $response->assertOk();
         $response->assertJson([
             'period' => 'monthly',
-            'dateLabel' => BsDate::monthLabel(now()),
+            'dateLabel' => BsDate::monthYearLabel($bs['year'], $bs['month']),
             'tickets' => ['created' => 1],
+            'monthOffset' => 0,
+            'canGoBack' => true,
+            'canGoForward' => false,
         ]);
     }
 
@@ -224,5 +227,73 @@ class DashboardPerformanceSnapshotTest extends TestCase
             'tickets' => ['created' => 1, 'solved' => 0],
             'requirements' => ['created' => 1, 'closed' => 0],
         ]);
+    }
+
+    public function test_previous_month_scopes_to_the_bs_month_before_the_current_one(): void
+    {
+        $user = User::factory()->create();
+
+        $today = BsDate::toBsParts(now());
+        $previous = BsDate::shiftMonth($today['year'], $today['month'], -1);
+        [$previousStart, $previousEnd] = BsDate::monthToAdRange($previous['year'], $previous['month']);
+        [$currentStart] = BsDate::monthToAdRange($today['year'], $today['month']);
+
+        SupportTicket::factory()->count(2)->create(['created_at' => $previousStart->copy()->addDay()]);
+        SupportTicket::factory()->create(['created_at' => $previousEnd->copy()->subHour()]);
+        SupportTicket::factory()->create(['created_at' => $currentStart->copy()->addHour()]); // current month — excluded
+
+        $response = $this->actingAs($user)->getJson(route('dashboard.performance-snapshot', [
+            'snapshot_period' => 'monthly',
+            'month_offset' => -1,
+        ]));
+
+        $response->assertOk()->assertJson([
+            'period' => 'monthly',
+            'monthOffset' => -1,
+            'dateLabel' => BsDate::monthYearLabel($previous['year'], $previous['month']),
+            'tickets' => ['created' => 3],
+            'canGoBack' => true,
+            'canGoForward' => true,
+        ]);
+    }
+
+    public function test_next_month_never_goes_past_the_current_month(): void
+    {
+        $user = User::factory()->create();
+        $today = BsDate::toBsParts(now());
+
+        $response = $this->actingAs($user)->getJson(route('dashboard.performance-snapshot', [
+            'snapshot_period' => 'monthly',
+            'month_offset' => 3,
+        ]));
+
+        $response->assertOk()->assertJson([
+            'monthOffset' => 0,
+            'dateLabel' => BsDate::monthYearLabel($today['year'], $today['month']),
+            'canGoForward' => false,
+        ]);
+    }
+
+    public function test_month_offset_is_ignored_outside_the_monthly_period(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->getJson(route('dashboard.performance-snapshot', [
+            'snapshot_period' => 'daily',
+            'month_offset' => -4,
+        ]))->assertOk()->assertJson([
+            'period' => 'daily',
+            'dateLabel' => BsDate::dayLabel(now()),
+            'monthOffset' => 0,
+            'canGoBack' => false,
+            'canGoForward' => false,
+        ]);
+    }
+
+    public function test_stepping_back_across_baisakh_lands_in_chaitra_of_the_previous_year(): void
+    {
+        $this->assertSame(['year' => 2082, 'month' => 12], BsDate::shiftMonth(2083, 1, -1));
+        $this->assertSame(['year' => 2083, 'month' => 1], BsDate::shiftMonth(2082, 12, 1));
+        $this->assertSame(['year' => 2082, 'month' => 8], BsDate::shiftMonth(2083, 8, -12));
     }
 }
