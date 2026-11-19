@@ -31,6 +31,8 @@
         <env name="CAMPAIGN_MAIL_HOST" value=""/>
         <env name="CAMPAIGN_MAIL_USERNAME" value=""/>
         <env name="CAMPAIGN_MAIL_PASSWORD" value=""/>
+        <!-- Blank so tests never post to the real Slack write-activity webhook in .env. -->
+        <env name="SLACK_ACTIVITY_WEBHOOK_URL" value=""/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>

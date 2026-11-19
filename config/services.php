@@ -33,6 +33,8 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+        // Every model create/update/delete is posted here (SlackWriteActivity). Blank = off.
+        'activity_webhook_url' => env('SLACK_ACTIVITY_WEBHOOK_URL'),
     ],
 
 ];
