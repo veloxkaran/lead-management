@@ -43,9 +43,11 @@ class EmailLog extends Model
     public function remarks(): string
     {
         return match ($this->status) {
-            EmailLogStatus::Pending => $this->created_at?->lt(now()->subMinutes(self::STUCK_AFTER_MINUTES))
+            EmailLogStatus::Pending => $this->error
+                ? 'Temporary problem on the last try (mail server busy or unreachable) — retrying automatically.'
+                : ($this->created_at?->lt(now()->subMinutes(self::STUCK_AFTER_MINUTES))
                 ? 'Still waiting in the queue after '.$this->created_at->diffForHumans(null, true).' — the queue worker (cron) may not be running.'
-                : 'Waiting in the queue to be sent.',
+                : 'Waiting in the queue to be sent.'),
             EmailLogStatus::Sent => 'Accepted by the mail server. Not opened yet — or opened with images blocked, which can\'t be detected.',
             EmailLogStatus::Delivered => 'Opened by the recipient'.($this->delivered_at ? ' on '.$this->delivered_at->format('M d, Y g:i A') : '').'.',
             EmailLogStatus::Failed => EmailFailureReason::explain($this->error) ?? 'Couldn\'t be sent — see the error below.',

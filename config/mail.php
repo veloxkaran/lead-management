@@ -48,6 +48,11 @@ return [
 
     'announcement_per_minute' => max(1, (int) env('ANNOUNCEMENT_EMAILS_PER_MINUTE', 8)),
 
+    // Before sending a campaign/announcement email, look up the recipient's
+    // domain in DNS and skip addresses whose domain can't receive mail
+    // (App\Support\RecipientEmailCheck). Format and typo checks always run.
+    'verify_recipient_domains' => (bool) env('MAIL_VERIFY_RECIPIENT_DOMAINS', true),
+
     'mailers' => [
 
         'smtp' => [

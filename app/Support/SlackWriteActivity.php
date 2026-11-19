@@ -160,6 +160,13 @@ class SlackWriteActivity
             $ref .= ' "'.$label.'"';
         }
 
+        // Clickable: the record's page (or, for a deleted record / one
+        // without a page, the record it belongs to). The page still asks
+        // for login and checks permissions.
+        if ($url = RecordUrl::forModel($model, exists: $action !== 'deleted')) {
+            $ref = $this->link($url, $ref);
+        }
+
         return match ($action) {
             'created' => "• :heavy_plus_sign: created {$ref}",
             'deleted' => "• :wastebasket: deleted {$ref}",
@@ -234,6 +241,12 @@ class SlackWriteActivity
         return $this->escape(Str::limit($plain, $limit));
     }
 
+    /** Slack link: <url|text>. The text is already escaped; "|" would end it early. */
+    private function link(string $url, string $text): string
+    {
+        return '<'.$url.'|'.str_replace('|', '/', $text).'>';
+    }
+
     /** Slack mrkdwn treats &, < and > as control characters. */
     private function escape(string $value): string
     {
@@ -244,8 +257,13 @@ class SlackWriteActivity
     {
         if (! app()->runningInConsole()) {
             $request = request();
+            $label = $request->method().' /'.ltrim($request->path(), '/');
 
-            return '`'.$request->method().' /'.ltrim($request->path(), '/').'`';
+            // Links to the nearest page for that path (e.g. PUT /leads/12 →
+            // the lead), which asks for login and checks permissions.
+            $url = RecordUrl::pageForPath($request->path());
+
+            return $url ? $this->link($url, $this->escape($label)) : '`'.$label.'`';
         }
 
         $command = implode(' ', array_slice($_SERVER['argv'] ?? [], 1, 2));

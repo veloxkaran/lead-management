@@ -87,6 +87,8 @@ class CampaignSendingTest extends TestCase
 
     public function test_sending_an_email_personalizes_it_and_marks_the_campaign_completed(): void
     {
+        config(['app.url' => 'https://crm.hajirhr.com']); // tracking images are only added for a public APP_URL
+
         Mail::fake();
         $user = User::factory()->superAdmin()->create();
         Lead::factory()->create(['company_name' => 'Acme', 'contact_person' => 'Ram', 'email' => 'ram@acme.test']);

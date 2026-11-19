@@ -14,6 +14,12 @@ Schedule::command('goals:reset-monthly')->dailyAt('00:10');
 Schedule::command('slack:daily-summary')->dailyAt('18:00');
 Schedule::command('db:backup')->hourly();
 
+// "What happened in the CRM today" → Slack, 4:20 PM (app timezone, Asia/Kathmandu).
+// In-process for the same proc_open reason as the queue worker below.
+Schedule::call(fn () => Artisan::call('crm:daily-activity-summary'))
+    ->name('crm-daily-activity-summary')
+    ->dailyAt('16:20');
+
 // In-process for the same proc_open reason as the queue worker below.
 Schedule::call(fn () => Artisan::call('campaigns:dispatch-due'))
     ->name('campaigns-dispatch-due')

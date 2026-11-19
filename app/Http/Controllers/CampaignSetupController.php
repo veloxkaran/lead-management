@@ -12,6 +12,7 @@ use App\Services\SmsGateway;
 use App\Support\CampaignSettings;
 use App\Support\CampaignSignature;
 use App\Support\ContactNormalizer;
+use App\Support\PublicUrl;
 use App\Support\SenderDomainCheck;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -163,6 +164,13 @@ class CampaignSetupController extends Controller
      */
     public function domainCheck(CampaignMailer $mailer, SenderDomainCheck $check): JsonResponse
     {
-        return response()->json($check->check($mailer->from()[0]));
+        $result = $check->check($mailer->from()[0]);
+
+        // Unsubscribe and tracking links are built from APP_URL.
+        $result['checks'][] = PublicUrl::isPublic()
+            ? ['key' => 'links', 'label' => 'Email links', 'status' => 'ok', 'detail' => 'Unsubscribe and tracking links point to '.config('app.url').'.']
+            : ['key' => 'links', 'label' => 'Email links', 'status' => 'missing', 'detail' => 'APP_URL is "'.config('app.url').'" — unsubscribe links in emails won\'t work for recipients and look like spam. Set APP_URL in .env to the address people use to open this app (e.g. https://crm.yourdomain.com).'];
+
+        return response()->json($result);
     }
 }

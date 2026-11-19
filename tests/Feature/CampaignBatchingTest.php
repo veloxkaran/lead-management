@@ -422,7 +422,8 @@ class CampaignBatchingTest extends TestCase
         $result = $this->actingAs($this->admin())->getJson(route('campaign-setup.domain-check'))->assertOk()->json();
 
         $this->assertSame('acme.test', $result['domain']);
-        $this->assertSame(['spf' => 'ok', 'dkim' => 'ok', 'dmarc' => 'missing', 'mx' => 'ok'], collect($result['checks'])->pluck('status', 'key')->all());
+        // "links": APP_URL is http://localhost in tests — not reachable by recipients.
+        $this->assertSame(['spf' => 'ok', 'dkim' => 'ok', 'dmarc' => 'missing', 'mx' => 'ok', 'links' => 'missing'], collect($result['checks'])->pluck('status', 'key')->all());
     }
 
     public function test_a_refused_login_points_out_a_username_that_differs_from_the_from_address(): void

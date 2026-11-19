@@ -10,6 +10,8 @@ use App\Models\CampaignUnsubscribe;
 use App\Services\CampaignMailer;
 use App\Services\CampaignService;
 use App\Services\SmsGateway;
+use App\Support\MailRetry;
+use App\Support\RecipientEmailCheck;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Throwable;
@@ -19,20 +21,29 @@ use Throwable;
  * Carries only the id (not the model) so a recipient cancelled while the
  * job waited is re-read and skipped. If the campaign was paused meanwhile,
  * the recipient goes back in line (queued_at cleared) to be queued again
- * on resume. Every failure is caught and recorded
- * as "failed" with the reason, rather than retried — a retry could send a
- * second copy if the first actually went out before the error.
+ * on resume.
+ *
+ * Email addresses are checked first (RecipientEmailCheck) — one that can't
+ * receive mail is marked failed with the reason and never sent, sparing
+ * the sender a bounce. A failure where the server certainly didn't take
+ * the message (unreachable, temporary 4xx — see MailRetry) is retried
+ * after 1, 5 and 15 minutes; any other failure is recorded as "failed"
+ * rather than retried, since a retry could send a second copy if the first
+ * actually went out before the error.
  */
 class SendCampaignMessage implements ShouldQueue
 {
     use Queueable;
+
+    /** 1 send + MailRetry::DELAYS retries; overrides the worker's --tries. */
+    public int $tries = 4;
 
     public function __construct(public int $recipientId)
     {
         $this->onQueue('campaigns');
     }
 
-    public function handle(CampaignMailer $mailer, SmsGateway $sms): void
+    public function handle(CampaignMailer $mailer, SmsGateway $sms, RecipientEmailCheck $addressCheck): void
     {
         $recipient = CampaignRecipient::with('campaign')->find($this->recipientId);
 
@@ -60,6 +71,17 @@ class SendCampaignMessage implements ShouldQueue
             return;
         }
 
+        if ($campaign->channel === CampaignChannel::Email) {
+            $check = $addressCheck->check($recipient->address);
+
+            if ($check['status'] === RecipientEmailCheck::INVALID) {
+                $recipient->update(['status' => CampaignRecipientStatus::Failed, 'error' => 'Not sent — '.$check['reason']]);
+                $campaign->refreshProgress();
+
+                return;
+            }
+        }
+
         $message = CampaignService::personalize($campaign->message, $recipient);
 
         try {
@@ -84,6 +106,14 @@ class SendCampaignMessage implements ShouldQueue
             $recipient->sent_at = now();
             $recipient->error = null;
         } catch (Throwable $e) {
+            // Nothing was handed over — safe to try again shortly.
+            if (($delay = MailRetry::delay($this->job, $e)) !== null) {
+                $recipient->update(['error' => $e->getMessage()]);
+                $this->release($delay);
+
+                return;
+            }
+
             $recipient->status = CampaignRecipientStatus::Failed;
             $recipient->error = $e->getMessage();
         }

@@ -156,4 +156,38 @@ class SlackWriteActivityTest extends TestCase
 
         Http::assertSent(fn (Request $request) => $request->url() === self::WEBHOOK && $request['text'] === 'hello');
     }
+
+    public function test_records_link_to_their_page_and_children_link_to_their_parent(): void
+    {
+        $author = User::factory()->create();
+        $this->discardPending();
+
+        $lead = \App\Models\Lead::factory()->create(['company_name' => 'Acme Traders', 'created_by' => $author->id]);
+        $note = \App\Models\LeadNote::factory()->create(['lead_id' => $lead->id, 'author_id' => $author->id]);
+
+        $text = implode("\n", $this->postedTexts());
+
+        $leadUrl = route('leads.show', $lead);
+        $this->assertStringContainsString("<{$leadUrl}|Lead #{$lead->id} \"Acme Traders\">", $text);
+        $this->assertStringContainsString("<{$leadUrl}|LeadNote #{$note->id}>", $text, 'a note links to its lead');
+    }
+
+    public function test_a_deleted_record_without_a_parent_is_not_linked(): void
+    {
+        $industry = Industry::factory()->create(['name' => 'Fintech']);
+        $this->discardPending();
+
+        $industry->delete();
+
+        $text = implode("\n", $this->postedTexts());
+        $this->assertStringContainsString("deleted Industry #{$industry->id} \"Fintech\"", $text);
+        $this->assertStringNotContainsString('|Industry', $text);
+    }
+
+    public function test_request_paths_link_to_the_nearest_page(): void
+    {
+        $this->assertSame(url('/leads/5'), \App\Support\RecordUrl::pageForPath('leads/5'), 'PUT /leads/5 → the lead page');
+        $this->assertSame(url('/leads/5'), \App\Support\RecordUrl::pageForPath('leads/5/notes'), 'POST /leads/5/notes → its lead');
+        $this->assertNull(\App\Support\RecordUrl::pageForPath('definitely/not/a/page'));
+    }
 }

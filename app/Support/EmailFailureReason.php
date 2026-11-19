@@ -33,6 +33,11 @@ class EmailFailureReason
             return null;
         }
 
+        // Skipped before sending (RecipientEmailCheck, unsubscribed): already plain.
+        if (str_starts_with($error, 'Not sent — ')) {
+            return ucfirst(mb_substr($error, mb_strlen('Not sent — ')));
+        }
+
         foreach (self::RULES as [$pattern, $reason]) {
             if (preg_match($pattern, $error)) {
                 return $reason;

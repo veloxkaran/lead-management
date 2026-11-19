@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Enums\AnnouncementAudience;
+use App\Enums\CampaignChannel;
 use App\Enums\EmailLogStatus;
 use App\Jobs\SendClientNotificationEmail;
 use App\Models\Announcement;
+use App\Models\CampaignUnsubscribe;
 use App\Models\EmailLog;
 use App\Models\Lead;
 use App\Models\User;
@@ -34,8 +36,8 @@ class AnnouncementService
 
     /**
      * Leads an announcement goes to: active (not archived) leads in the
-     * chosen audience with a valid email address, one per address — two
-     * leads sharing an inbox get it once, not twice.
+     * chosen audience with a valid email address who haven't unsubscribed,
+     * one per address — two leads sharing an inbox get it once, not twice.
      *
      * @param  array<int, int|string>  $leadStatusIds
      * @return Collection<int, Lead>
@@ -53,8 +55,12 @@ class AnnouncementService
             AnnouncementAudience::LeadStatuses => $query->whereIn('lead_status_id', $leadStatusIds),
         };
 
+        // People who unsubscribed (from a campaign or an announcement) are left out.
+        $unsubscribed = CampaignUnsubscribe::where('channel', CampaignChannel::Email)->pluck('address')->flip();
+
         return $query->get(['id', 'company_name', 'contact_person', 'email'])
             ->filter(fn (Lead $lead) => filter_var(trim($lead->email), FILTER_VALIDATE_EMAIL) !== false)
+            ->reject(fn (Lead $lead) => $unsubscribed->has(mb_strtolower(trim($lead->email))))
             ->unique(fn (Lead $lead) => strtolower(trim($lead->email)))
             ->values();
     }

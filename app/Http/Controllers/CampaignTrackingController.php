@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\CampaignChannel;
 use App\Enums\CampaignRecipientStatus;
 use App\Enums\EmailLogStatus;
+use App\Models\Announcement;
 use App\Models\CampaignRecipient;
 use App\Models\CampaignUnsubscribe;
 use App\Models\EmailLog;
@@ -88,7 +89,7 @@ class CampaignTrackingController extends Controller
      */
     public function unsubscribeForm(string $token): Response
     {
-        $recipient = $this->emailRecipient($token);
+        $recipient = $this->subscriber($token);
 
         return response()->view('campaigns.unsubscribe', [
             'recipient' => $recipient,
@@ -105,7 +106,7 @@ class CampaignTrackingController extends Controller
      */
     public function unsubscribe(Request $request, string $token): Response
     {
-        $recipient = $this->emailRecipient($token);
+        $recipient = $this->subscriber($token);
 
         if ($recipient) {
             CampaignUnsubscribe::firstOrCreate(
@@ -116,7 +117,7 @@ class CampaignTrackingController extends Controller
                 ],
             );
 
-            if (! $recipient->unsubscribed_at) {
+            if ($recipient instanceof CampaignRecipient && ! $recipient->unsubscribed_at) {
                 $recipient->update(['unsubscribed_at' => now()]);
             }
         }
@@ -127,6 +128,24 @@ class CampaignTrackingController extends Controller
             'companyName' => Setting::get('company_name') ?: config('app.name'),
             'token' => $token,
         ]);
+    }
+
+    /**
+     * Whoever an unsubscribe token belongs to: a campaign email recipient,
+     * or an announcement email (its Email Log row's token). Both end up in
+     * the same unsubscribe list, which campaigns and announcements honour.
+     */
+    private function subscriber(string $token): CampaignRecipient|\stdClass|null
+    {
+        if ($recipient = $this->emailRecipient($token)) {
+            return $recipient;
+        }
+
+        $log = EmailLog::where('tracking_token', $token)
+            ->where('related_type', (new Announcement)->getMorphClass())
+            ->first();
+
+        return $log ? (object) ['address' => mb_strtolower(trim($log->to_email)), 'campaign_id' => null] : null;
     }
 
     private function emailRecipient(string $token): ?CampaignRecipient

@@ -32,6 +32,7 @@ class EmailDeliveryStatusTest extends TestCase
     public function test_notification_emails_are_marked_delivered_when_opened(): void
     {
         Mail::fake();
+        config(['app.url' => 'https://crm.hajirhr.com']); // tracking images are only added for a public APP_URL
         $log = $this->log();
         $this->assertNotNull($log->tracking_token, 'every log gets a tracking token');
 

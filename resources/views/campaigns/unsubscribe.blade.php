@@ -1,4 +1,4 @@
-{{-- Public page (no session, no app layout) — opened from the unsubscribe link in a campaign email. --}}
+{{-- Public page (no session, no app layout) — opened from the unsubscribe link in a campaign or announcement email. --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,10 +30,10 @@
             <p>This unsubscribe link isn't valid — it may be from a test email. If you keep getting emails you don't want, reply to one of them and ask to be removed.</p>
         @elseif ($done)
             <h1>You're unsubscribed</h1>
-            <p><strong>{{ $recipient->address }}</strong> won't receive any more campaign emails from {{ $companyName }}.</p>
+            <p><strong>{{ $recipient->address }}</strong> won't receive any more campaign or announcement emails from {{ $companyName }}.</p>
         @else
             <h1>Unsubscribe?</h1>
-            <p>Stop campaign emails from {{ $companyName }} to <strong>{{ $recipient->address }}</strong>.</p>
+            <p>Stop campaign and announcement emails from {{ $companyName }} to <strong>{{ $recipient->address }}</strong>.</p>
             <form method="POST" action="{{ route('campaigns.unsubscribe', $token) }}">
                 <button type="submit">Unsubscribe</button>
             </form>
