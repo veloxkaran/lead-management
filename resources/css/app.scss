@@ -1274,3 +1274,221 @@ a.lead-chip:hover {
 .form-select {
     overflow: hidden;
 }
+
+// ---- Quick search (Ctrl/⌘+K) — partials/command-palette.blade.php,
+// resources/js/command-palette.js. Theme tokens only, so every theme
+// (including dark) gets it for free.
+.topbar-search {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--app-text-muted);
+
+    @media (min-width: 768px) {
+        min-width: 15rem;
+        justify-content: flex-start;
+    }
+}
+
+.topbar-search-label {
+    flex: 1;
+    text-align: left;
+}
+
+.topbar-search-kbd,
+.command-palette-search kbd,
+.command-palette-footer kbd {
+    padding: 0.05rem 0.35rem;
+    border: 1px solid var(--app-border);
+    border-radius: 0.3rem;
+    background: var(--app-surface-muted);
+    color: var(--app-text-muted);
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.command-palette-dialog {
+    max-width: 640px;
+    margin-top: 12vh;
+}
+
+.command-palette-dialog .modal-content {
+    overflow: hidden;
+    border: 1px solid var(--app-border);
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.22);
+}
+
+.command-palette-search {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid var(--app-border);
+
+    > .bi {
+        color: var(--app-text-muted);
+        font-size: 1.05rem;
+    }
+
+    .form-control {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+        font-size: 1rem;
+    }
+}
+
+.command-palette-results {
+    max-height: min(60vh, 440px);
+    overflow-y: auto;
+    padding: 0.4rem;
+}
+
+.command-palette-group {
+    padding: 0.6rem 0.7rem 0.3rem;
+    color: var(--app-text-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.command-palette-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 0.5rem;
+    color: var(--app-text);
+    text-decoration: none;
+
+    > .bi:first-child {
+        width: 1.75rem;
+        height: 1.75rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 0.4rem;
+        background: var(--app-surface-muted);
+        color: var(--app-text-muted);
+    }
+
+    &.active {
+        background: var(--app-accent-soft);
+        color: var(--app-text-strong);
+
+        > .bi:first-child {
+            background: var(--app-accent);
+            color: #fff;
+        }
+    }
+}
+
+.command-palette-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.command-palette-enter {
+    visibility: hidden;
+    color: var(--app-text-muted);
+
+    .active > & {
+        visibility: visible;
+    }
+}
+
+.command-palette-empty {
+    padding: 2rem 1rem;
+    color: var(--app-text-muted);
+    text-align: center;
+}
+
+.command-palette-footer {
+    gap: 1.25rem;
+    padding: 0.55rem 1.1rem;
+    border-top: 1px solid var(--app-border);
+    background: var(--app-surface-muted);
+    color: var(--app-text-muted);
+    font-size: 0.75rem;
+
+    kbd {
+        margin-right: 0.2rem;
+    }
+}
+
+// ---- Busy submit buttons (resources/js/ux-enhancements.js): the label goes
+// transparent (keeping the button's width) and a spinner sits on top.
+.btn.is-busy {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+    opacity: 1;
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        width: 1rem;
+        height: 1rem;
+        margin: auto;
+        border: 2px solid var(--bs-btn-color, currentColor);
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: btn-busy-spin 0.65s linear infinite;
+    }
+}
+
+@keyframes btn-busy-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+// Instant filters: dim the results while the filtered page loads.
+body.is-filtering .app-content .table-responsive,
+body.is-filtering .app-content .card:has(> .table-responsive) {
+    opacity: 0.55;
+    transition: opacity 0.15s ease 0.1s;
+}
+
+// ---- Tables: row action buttons stay on one line instead of stacking.
+.table > tbody > tr > td.text-end:last-child {
+    white-space: nowrap;
+}
+
+// ---- Lead tabs: fade the edge that has more tabs hidden behind it.
+.lead-tabs.has-more-end {
+    mask-image: linear-gradient(to right, #000 calc(100% - 3rem), transparent);
+}
+
+.lead-tabs.has-more-start {
+    mask-image: linear-gradient(to right, transparent, #000 3rem);
+}
+
+.lead-tabs.has-more-start.has-more-end {
+    mask-image: linear-gradient(to right, transparent, #000 3rem, #000 calc(100% - 3rem), transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn.is-busy::after {
+        animation-duration: 2s;
+    }
+}
+
+// ---- Restored-draft notice (resources/js/form-drafts.js), shown at the top
+// of a form whose unsaved input was put back after a refresh/disconnect.
+.draft-notice {
+    margin-bottom: 1rem;
+
+    .bi {
+        font-size: 1rem;
+    }
+}

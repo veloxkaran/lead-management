@@ -7,6 +7,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- Scopes form drafts (resources/js/form-drafts.js) to the signed-in member. --}}
+    <meta name="user-id" content="{{ auth()->id() }}">
     <script>
         if (localStorage.getItem('sidebar-collapsed') === '1') {
             document.documentElement.classList.add('sidebar-collapsed');
@@ -32,6 +34,8 @@
             </main>
         </div>
     </div>
+
+    @include('partials.command-palette')
 
     @stack('scripts')
 </body>

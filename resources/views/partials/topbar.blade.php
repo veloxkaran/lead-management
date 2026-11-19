@@ -13,6 +13,11 @@
         <h2 class="h6 mb-0 text-muted fw-normal">@yield('title')</h2>
     </div>
     <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-light topbar-search" data-bs-toggle="modal" data-bs-target="#commandPalette" aria-label="Quick search (Ctrl+K)" title="Quick search (Ctrl+K)">
+            <i class="bi bi-search"></i>
+            <span class="topbar-search-label d-none d-md-inline">Search or jump to…</span>
+            <kbd class="topbar-search-kbd d-none d-md-inline" data-shortcut-label>Ctrl K</kbd>
+        </button>
         @php
             $currentTheme = $user?->uiTheme() ?? App\Enums\UiTheme::DEFAULT;
         @endphp

@@ -131,10 +131,12 @@
                             </td>
                             <td class="small text-muted">{{ $lead->currentStatusAge() }}</td>
                             <td>{{ $lead->assignedUser?->name ?? '—' }}</td>
-                            <td class="small text-muted">
-                                {{ $lead->activities_count }} activities · {{ $lead->notes_count }} notes · {{ $lead->requirements_count }} reqs
+                            <td class="small text-muted text-nowrap">
+                                <span class="me-2" title="{{ $lead->activities_count }} activities"><i class="bi bi-clock-history"></i> {{ $lead->activities_count }}</span>
+                                <span class="me-2" title="{{ $lead->notes_count }} notes"><i class="bi bi-sticky"></i> {{ $lead->notes_count }}</span>
+                                <span title="{{ $lead->requirements_count }} requirements"><i class="bi bi-list-check"></i> {{ $lead->requirements_count }}</span>
                             </td>
-                            <td class="small text-muted">{{ $lead->created_at->format('M d, Y') }}</td>
+                            <td class="small text-muted text-nowrap">{{ $lead->created_at->format('M d, Y') }}</td>
                             <td class="text-end">
                                 <a href="{{ route('leads.show', $lead) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
                                 @can('archive', $lead)

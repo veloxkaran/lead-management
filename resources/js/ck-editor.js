@@ -29,6 +29,13 @@ function initOne(textarea) {
             if (form) {
                 form.addEventListener('submit', () => editor.updateSourceElement());
             }
+
+            // Keep the textarea current while typing (not just on submit) so
+            // form drafts (form-drafts.js) capture what's in the editor.
+            editor.model.document.on('change:data', () => {
+                editor.updateSourceElement();
+                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            });
         });
 }
 

@@ -34,6 +34,9 @@ import './attachment-preview';
 import './lead-duplicate-check';
 import './campaign-composer';
 import './contacts';
+import './form-drafts';
+import './command-palette';
+import './ux-enhancements';
 
 import { initRichTextEditors } from './rich-text-editor';
 import { initCkEditors } from './ck-editor';
