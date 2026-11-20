@@ -190,4 +190,25 @@ class SlackWriteActivityTest extends TestCase
         $this->assertSame(url('/leads/5'), \App\Support\RecordUrl::pageForPath('leads/5/notes'), 'POST /leads/5/notes → its lead');
         $this->assertNull(\App\Support\RecordUrl::pageForPath('definitely/not/a/page'));
     }
+
+    public function test_user_and_status_ids_are_shown_as_names(): void
+    {
+        $asha = User::factory()->create(['name' => 'Asha Rai']);
+        $bikash = User::factory()->create(['name' => 'Bikash KC']);
+        $gone = User::factory()->create(['name' => 'Former Staff']);
+        $ticket = \App\Models\SupportTicket::factory()->create(['assigned_to' => $gone->id, 'assigned_by' => $asha->id]);
+        $new = \App\Models\LeadStatus::factory()->create(['name' => 'New']);
+        $phoned = \App\Models\LeadStatus::factory()->create(['name' => 'Phoned']);
+        $lead = \App\Models\Lead::factory()->create(['lead_status_id' => $new->id]);
+        $gone->delete(); // a deleted user is still shown by name
+        $this->discardPending();
+
+        $ticket->update(['assigned_to' => $bikash->id, 'assigned_by' => $bikash->id]);
+        $lead->update(['lead_status_id' => $phoned->id]);
+
+        $text = implode("\n", $this->postedTexts());
+
+        $this->assertStringContainsString('assigned_to: Former Staff → Bikash KC; assigned_by: Asha Rai → Bikash KC', $text);
+        $this->assertStringContainsString('lead_status_id: New → Phoned', $text);
+    }
 }

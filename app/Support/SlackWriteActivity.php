@@ -6,12 +6,14 @@ use App\Jobs\PostSlackWriteActivity;
 use App\Models\ActivityLogEntry;
 use App\Models\CampaignRecipient;
 use App\Models\EmailLog;
+use App\Models\LeadStatus;
 use App\Models\LeadStatusHistory;
 use App\Models\RawDataAssignmentLog;
 use App\Models\RawDataImportRejection;
 use App\Models\Setting;
 use App\Models\SupportTicketAssignmentLog;
 use App\Models\SupportTicketStatusLog;
+use App\Models\User;
 use App\Models\WhatsappMessage;
 use BackedEnum;
 use Illuminate\Database\Eloquent\Model;
@@ -54,6 +56,18 @@ class SlackWriteActivity
 
     private const LABEL_ATTRIBUTES = ['name', 'title', 'company_name', 'subject', 'key', 'email'];
 
+    /** Columns holding a user id — shown as the person's name ("assigned_by: Asha Rai → Bikash KC"). */
+    private const USER_COLUMNS = [
+        'created_by', 'user_id', 'author_id', 'assigned_to', 'assigned_by', 'assigned_user_id', 'performed_by',
+        'changed_by', 'uploaded_by', 'updated_by', 'last_updated_by', 'support_pin_generated_by', 'sent_by',
+        'reporting_manager_id', 'raised_by', 'finalized_by', 'conducted_by', 'completed_by', 'closed_by',
+    ];
+
+    /** Other id columns worth naming: column => [model, attribute to show]. */
+    private const NAMED_COLUMNS = [
+        'lead_status_id' => [LeadStatus::class, 'name'],
+    ];
+
     private const MAX_LINES = 25;
 
     private const MAX_FIELDS = 8;
@@ -66,6 +80,9 @@ class SlackWriteActivity
     private ?string $actor = null;
 
     private ?string $context = null;
+
+    /** @var array<string, string> "Model:id" => display name, per message */
+    private array $names = [];
 
     public function enabled(): bool
     {
@@ -137,6 +154,7 @@ class SlackWriteActivity
         $this->overflow = 0;
         $this->actor = null;
         $this->context = null;
+        $this->names = [];
     }
 
     private function shouldReport(Model $model): bool
@@ -188,7 +206,7 @@ class SlackWriteActivity
         foreach (array_slice($changes, 0, self::MAX_FIELDS, true) as $key => $new) {
             $fields[] = $this->isSensitive($model, $key)
                 ? "{$key}: [redacted]"
-                : "{$key}: ".$this->value($model->getRawOriginal($key)).' → '.$this->value($new);
+                : "{$key}: ".$this->display($key, $model->getRawOriginal($key)).' → '.$this->display($key, $new);
         }
 
         if (($more = count($changes) - self::MAX_FIELDS) > 0) {
@@ -221,6 +239,26 @@ class SlackWriteActivity
 
         // A Setting's secret lives in "value"; its name is in "key".
         return $model instanceof Setting && $attribute === 'value' && preg_match(self::SENSITIVE, (string) $model->key);
+    }
+
+    /**
+     * A changed value as people read it: user and status ids become names
+     * (a deleted user still shows their name; an unknown id stays "#11").
+     */
+    private function display(string $key, mixed $value): string
+    {
+        $lookup = in_array($key, self::USER_COLUMNS, true) ? [User::class, 'name'] : (self::NAMED_COLUMNS[$key] ?? null);
+
+        if (! $lookup || ! is_numeric($value)) {
+            return $this->value($value);
+        }
+
+        [$modelClass, $attribute] = $lookup;
+
+        return $this->names["{$modelClass}:{$value}"] ??= $this->clip(
+            (string) ($modelClass::query()->withoutGlobalScopes()->whereKey($value)->value($attribute) ?? "#{$value}"),
+            60,
+        );
     }
 
     private function value(mixed $value): string
