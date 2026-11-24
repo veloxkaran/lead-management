@@ -12,6 +12,7 @@ use App\Models\Lead;
 use App\Models\Requirement;
 use App\Models\SystemModule;
 use App\Models\User;
+use App\Services\MentionNotifier;
 use App\Services\RequirementService;
 use App\Support\RequirementSummary;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -134,12 +135,28 @@ class RequirementController extends Controller
     {
         $this->authorize('view', $requirement);
 
-        $requirement->load('lead', 'systemModule', 'creator', 'assignee', 'comments.author', 'attachments');
+        $requirement->load('lead.status', 'systemModule', 'creator', 'assignee', 'comments.author', 'attachments');
 
         return view('requirements.show', [
             'requirement' => $requirement,
             'changeLog' => $this->changeLogFor($requirement),
         ]);
+    }
+
+    public function cancel(Request $request, Requirement $requirement, MentionNotifier $mentions): RedirectResponse
+    {
+        $this->authorize('cancel', $requirement);
+
+        $validated = $request->validate(['cancellation_reason' => ['required', 'string', 'max:2000']], [
+            'cancellation_reason.required' => 'Say why the requirement is being cancelled.',
+        ]);
+
+        $this->requirementService->cancel($requirement, $validated['cancellation_reason'], $request->user(), $request->ip(), $request->userAgent());
+
+        // The reason is posted as a comment, so @mentions in it notify people too.
+        $mentions->notify($validated['cancellation_reason'], $request->user(), $requirement);
+
+        return redirect()->route('requirements.show', $requirement)->with('success', 'Requirement cancelled.');
     }
 
     public function assignToMe(Request $request, Requirement $requirement): RedirectResponse

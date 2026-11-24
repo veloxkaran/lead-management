@@ -4,6 +4,7 @@
 
 @section('content')
     <x-page-header :title="$lead->company_name" icon="bi-list-check" :subtitle="'Requirements for this company'.($lead->assignedUser ? ' · Lead owner: '.$lead->assignedUser->name : '').'.'">
+        <x-slot:meta><x-lead-status :lead="$lead" /></x-slot:meta>
         <x-slot:actions>
             <x-status-badge :status="App\Enums\CompanyRequirementStatus::fromRequirements($requirements)" />
             <a href="{{ route('requirements.index') }}" class="btn btn-outline-secondary btn-sm">
@@ -20,6 +21,7 @@
     @php
         $listItems = $requirements->mapWithKeys(fn ($requirement) => [$requirement->id => [
             'completed' => $requirement->status === App\Enums\RequirementStatus::Completed,
+            'cancelled' => $requirement->status === App\Enums\RequirementStatus::Cancelled,
             'overdue' => $requirement->isOverdue(),
             'text' => Str::lower(implode(' ', [$requirement->summary(500), $requirement->assignee?->name])),
         ]]);
@@ -29,7 +31,7 @@
         @if ($requirements->isNotEmpty())
             <div class="card-header bg-white d-flex flex-wrap align-items-center gap-2">
                 <div class="d-flex flex-wrap gap-1" role="group" aria-label="Filter requirements">
-                    @foreach (['all' => ['All', $summary->total], 'open' => ['Open', $summary->open], 'overdue' => ['Overdue', $summary->overdue], 'completed' => ['Completed', $summary->completed]] as $key => [$label, $count])
+                    @foreach (['all' => ['All', $summary->total], 'open' => ['Open', $summary->open], 'overdue' => ['Overdue', $summary->overdue], 'completed' => ['Completed', $summary->completed], 'cancelled' => ['Cancelled', $summary->cancelled]] as $key => [$label, $count])
                         <button type="button" class="btn btn-sm" :class="view === '{{ $key }}' ? 'btn-primary' : 'btn-outline-secondary'" @click="view = '{{ $key }}'">
                             {{ $label }} <span class="badge rounded-pill ms-1" :class="view === '{{ $key }}' ? 'bg-white text-primary' : 'bg-secondary-subtle text-secondary-emphasis'">{{ $count }}</span>
                         </button>
@@ -88,7 +90,7 @@
                                 </div>
                             </td>
                             <td><x-status-badge :status="$requirement->priority" /></td>
-                            <td><x-status-badge :status="$requirement->status" /></td>
+                            <td><x-status-badge :status="$requirement->status" /><x-cancellation-reason :record="$requirement" /></td>
                             <td class="small text-nowrap">
                                 {{ $requirement->due_date?->format('M d, Y') ?? '—' }}
                                 @if ($requirement->isOverdue())
@@ -159,9 +161,10 @@
                     visible(id) {
                         const item = this.items[id];
                         const inView = this.view === 'all'
-                            || (this.view === 'open' && ! item.completed)
+                            || (this.view === 'open' && ! item.completed && ! item.cancelled)
                             || (this.view === 'overdue' && item.overdue)
-                            || (this.view === 'completed' && item.completed);
+                            || (this.view === 'completed' && item.completed)
+                            || (this.view === 'cancelled' && item.cancelled);
 
                         return inView && item.text.includes(this.q.trim().toLowerCase());
                     },

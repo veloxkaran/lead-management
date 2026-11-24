@@ -5,7 +5,7 @@
 @section('content')
     @php
         $initials = collect(preg_split('/\s+/', trim($lead->company_name)))->filter()->take(2)->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))->implode('');
-        $openRequirements = $lead->requirements->filter(fn ($r) => $r->status !== App\Enums\RequirementStatus::Completed)->count();
+        $openRequirements = $lead->requirements->reject(fn ($r) => $r->isClosed())->count();
         $openTickets = $lead->supportTickets->whereNull('resolved_at')->count();
         $nextFollowUp = $lead->followUps
             ->filter(fn ($f) => $f->status === App\Enums\FollowUpStatus::Pending && $f->follow_up_date->gte(today()))

@@ -24,7 +24,7 @@ class RoleHandoffTest extends TestCase
         $manager = User::factory()->create(['role' => UserRole::Manager]);
         $cs = User::factory()->create(['role' => UserRole::CustomerSuccess]);
 
-        $this->actingAs($manager)->post(route('support-tickets.store'), [
+        $this->actingAs($manager)->post(route('support-tickets.store'), ['type' => 'support', 
             'subject' => 'Client cannot log in',
             'priority' => 'high',
         ])->assertRedirect(route('support-tickets.index'));

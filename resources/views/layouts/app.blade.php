@@ -16,6 +16,10 @@
     </script>
     <title>@yield('title', 'Dashboard') - {{ config('app.name') }}</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    {{-- Page-to-page cross-fade opt-in (styles in resources/css/_motion.scss). Inline and
+         before the bundle on purpose: if a script makes the browser compute styles before
+         app.css has loaded, Chrome decides the page didn't opt in and skips the transition. --}}
+    <style>@view-transition { navigation: auto; }</style>
     @vite(['resources/css/app.scss', 'resources/js/app.js'])
     @stack('styles')
 </head>

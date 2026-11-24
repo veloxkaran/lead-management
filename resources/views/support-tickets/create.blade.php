@@ -20,15 +20,18 @@
                         </select>
                         @error('lead_id')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-8">
                         <label class="form-label small fw-semibold">Subject</label>
                         <input type="text" name="subject" class="form-control" value="{{ old('subject') }}" required>
                         @error('subject')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Type</label>
+                        @include('support-tickets._type_select', ['selected' => old('type')])
+                        @error('type')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
                     <div class="col-md-12">
-                        <label class="form-label small fw-semibold">Details</label>
-                        <textarea name="details" rows="4" class="form-control">{{ old('details') }}</textarea>
-                        @error('details')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        <x-rich-text-editor name="details" label="Details" :value="old('details')" placeholder="Describe the issue..." />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small fw-semibold">Priority</label>

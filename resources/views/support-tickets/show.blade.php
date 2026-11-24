@@ -4,7 +4,18 @@
 
 @section('content')
     <x-page-header title="{{ $supportTicket->subject }}" icon="bi-life-preserver" :subtitle="$supportTicket->lead?->company_name">
+        <x-slot:meta><x-lead-status :lead="$supportTicket->lead" /></x-slot:meta>
         <x-slot:actions>
+            @can('reopen', $supportTicket)
+                <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#reopenTicketModal">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reopen
+                </button>
+            @endcan
+            @can('cancel', $supportTicket)
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelTicketModal">
+                    <i class="bi bi-x-octagon"></i> Cancel Ticket
+                </button>
+            @endcan
             @can('update', $supportTicket)
                 <a href="{{ route('support-tickets.edit', $supportTicket) }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-pencil"></i> Edit
@@ -15,6 +26,8 @@
             </a>
         </x-slot:actions>
     </x-page-header>
+
+    <x-cancellation-notice :record="$supportTicket" noun="support ticket" />
 
     <x-completion-lock-notice :record="$supportTicket" noun="support ticket" />
 
@@ -35,6 +48,12 @@
                 <div class="col-md-3">
                     <div class="small text-muted">Priority</div>
                     <x-status-badge :status="$supportTicket->priority" />
+                    <div class="small text-muted mt-2">Type</div>
+                    @if ($supportTicket->type)
+                        <x-status-badge :status="$supportTicket->type" />
+                    @else
+                        <span class="small text-muted">Not set</span>
+                    @endif
                 </div>
                 <div class="col-md-3">
                     <div class="small text-muted">Raised By</div>
@@ -52,7 +71,12 @@
                 </div>
                 <div class="col-12">
                     <div class="small text-muted">Details</div>
-                    <p class="mb-0">{{ $supportTicket->details ?: 'No details provided.' }}</p>
+                    @if (filled($supportTicket->details))
+                        {{-- Same rich-text rendering as a requirement's description. --}}
+                        <div class="rich-content">{!! $supportTicket->detailsHtml() !!}</div>
+                    @else
+                        <p class="mb-0 text-muted small">No details provided.</p>
+                    @endif
                 </div>
                 <div class="col-12" x-data="attachmentPreview()">
                     <div class="small text-muted">Documents</div>
@@ -112,4 +136,47 @@
     @include('support-tickets._assignment_log')
 
     @include('support-tickets._comments')
+
+    @can('cancel', $supportTicket)
+        <x-cancel-modal id="cancelTicketModal" noun="ticket"
+                        :action="route('support-tickets.cancel', $supportTicket)"
+                        :mentions="route('mentions.users', ['support_ticket', $supportTicket->id])" />
+    @endcan
+
+    @can('reopen', $supportTicket)
+        {{-- Reopen with a reason (kept as a comment). Opens on its own when coming from the list's reopen icon (?reopen=1) or after a missing reason. --}}
+        <div class="modal fade" id="reopenTicketModal" tabindex="-1" aria-labelledby="reopenTicketTitle">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ route('support-tickets.reopen', $supportTicket) }}" class="modal-content">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reopenTicketTitle"><i class="bi bi-arrow-counterclockwise"></i> Reopen ticket</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="small text-muted">
+                            It goes back to <strong>{{ $supportTicket->assigned_to ? 'In Progress' : 'Pending' }}</strong>{{ $supportTicket->assignee ? ' with '.$supportTicket->assignee->name : '' }},
+                            and the client gets the usual status update email.
+                        </p>
+                        <label class="form-label small fw-semibold" for="reopenReason">Why is it being reopened?</label>
+                        <textarea name="reason" id="reopenReason" rows="3" class="form-control @error('reason') is-invalid @enderror" placeholder="e.g. The client says the issue is back… type @ to mention a teammate" data-mentions="{{ route('mentions.users', ['support_ticket', $supportTicket->id]) }}" required>{{ old('reason') }}</textarea>
+                        @error('reason')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning"><i class="bi bi-arrow-counterclockwise"></i> Reopen</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @if (request()->boolean('reopen') || $errors->has('reason'))
+            @push('scripts')
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => new bootstrap.Modal(document.getElementById('reopenTicketModal')).show());
+                </script>
+            @endpush
+        @endif
+    @endcan
+
 @endsection

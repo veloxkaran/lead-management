@@ -12,10 +12,10 @@ use App\Models\RequirementComment;
 use App\Models\User;
 use App\Repositories\RequirementRepository;
 use App\Support\RequirementSummary;
+use App\Support\RichText;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Mews\Purifier\Facades\Purifier;
 
 class RequirementService
 {
@@ -65,7 +65,7 @@ class RequirementService
         $attributes['created_by'] = $creator->id;
 
         if (array_key_exists('requirement', $attributes)) {
-            $attributes['requirement'] = Purifier::clean($attributes['requirement']);
+            $attributes['requirement'] = RichText::sanitize($attributes['requirement']);
         }
 
         /** @var Requirement $requirement */
@@ -108,8 +108,11 @@ class RequirementService
         // completed_at is kept in step with status by Requirement::booted().
 
         if (array_key_exists('requirement', $attributes)) {
-            $attributes['requirement'] = Purifier::clean($attributes['requirement']);
+            $attributes['requirement'] = RichText::sanitize($attributes['requirement']);
         }
+
+        $attributes = $this->withCancellation($requirement, $attributes, $actor);
+        $wasCancelled = $requirement->isCancelled();
 
         $originalRaw = collect(array_keys($attributes))
             ->mapWithKeys(fn ($key) => [$key => $requirement->getRawOriginal($key)])
@@ -135,9 +138,53 @@ class RequirementService
             ], $requirement);
         }
 
+        // The reason also goes in the comment thread, so it sits in the
+        // requirement's timeline next to the discussion.
+        if (! $wasCancelled && $requirement->isCancelled()) {
+            $this->addComment($requirement, ['comment' => 'Cancelled: '.$requirement->cancellation_reason], $actor);
+        }
+
         event(new RequirementSaved($requirement, false));
 
         return $requirement;
+    }
+
+    /**
+     * Cancels an open requirement with a reason. Goes through update(), so
+     * the activity log, client status email and comment all happen as usual.
+     */
+    public function cancel(Requirement $requirement, string $reason, User $actor, ?string $ip, ?string $userAgent): Requirement
+    {
+        return $this->update($requirement, [
+            'status' => RequirementStatus::Cancelled->value,
+            'cancellation_reason' => $reason,
+        ], $actor, $ip, $userAgent);
+    }
+
+    /**
+     * Moving to Cancelled records who did it along with the (trimmed)
+     * reason; leaving Cancelled is handled by Cancellable, which clears
+     * all three. A reason sent while the status isn't Cancelled is dropped.
+     */
+    private function withCancellation(Requirement $requirement, array $attributes, User $actor): array
+    {
+        $status = $attributes['status'] ?? $requirement->status?->value;
+
+        if ($status !== RequirementStatus::Cancelled->value) {
+            unset($attributes['cancellation_reason']);
+
+            return $attributes;
+        }
+
+        if (isset($attributes['cancellation_reason'])) {
+            $attributes['cancellation_reason'] = trim($attributes['cancellation_reason']);
+        }
+
+        if (! $requirement->isCancelled()) {
+            $attributes['cancelled_by'] = $actor->id;
+        }
+
+        return $attributes;
     }
 
     /**
@@ -166,6 +213,12 @@ class RequirementService
      */
     public function updateStatus(Requirement $requirement, string $status, string $note, User $actor, ?string $ip, ?string $userAgent): Requirement
     {
+        // Choosing Cancelled here makes the note the cancellation reason;
+        // update() then posts it as the "Cancelled: …" comment itself.
+        if ($status === RequirementStatus::Cancelled->value && ! $requirement->isCancelled()) {
+            return $this->cancel($requirement, $note, $actor, $ip, $userAgent);
+        }
+
         $requirement = $this->update($requirement, ['status' => $status], $actor, $ip, $userAgent);
 
         $this->addComment($requirement, [
@@ -225,7 +278,7 @@ class RequirementService
     {
         $claimed = Requirement::whereKey($requirement->getKey())
             ->whereNull('assigned_to')
-            ->where('status', '!=', RequirementStatus::Completed->value)
+            ->whereNotIn('status', RequirementStatus::closedValues())
             ->update(['assigned_to' => $actor->id, 'updated_at' => now()]);
 
         if (! $claimed) {

@@ -181,8 +181,11 @@
                     <td>{{ $ticket->raiserDisplayName() }}</td>
                     <td>{{ $ticket->assignee?->name ?? '—' }}</td>
                 </tr>
-                @if ($ticket->details)
-                    <tr><td colspan="5"><strong>Details:</strong> {{ $ticket->details }}</td></tr>
+                @if (filled($ticket->details))
+                    <tr><td colspan="5"><strong>Details:</strong> {!! $ticket->detailsHtml() !!}</td></tr>
+                @endif
+                @if ($ticket->isCancelled())
+                    <tr><td colspan="5"><strong>Cancellation reason:</strong> {{ $ticket->cancellation_reason }}</td></tr>
                 @endif
                 <tr>
                     <td colspan="5">

@@ -19,6 +19,7 @@ class RequirementSummary
         public readonly int $overdue,
         public readonly int $completed,
         public readonly ?string $avgSolvingTime,
+        public readonly int $cancelled = 0,
     ) {}
 
     /**
@@ -27,18 +28,26 @@ class RequirementSummary
     public static function of(Collection $requirements): self
     {
         $completed = $requirements->filter(fn (Requirement $r) => $r->status === RequirementStatus::Completed)->count();
+        $cancelled = $requirements->filter(fn (Requirement $r) => $r->status === RequirementStatus::Cancelled)->count();
 
         return new self(
             total: $requirements->count(),
-            open: $requirements->count() - $completed,
+            open: $requirements->count() - $completed - $cancelled,
             overdue: $requirements->filter(fn (Requirement $r) => $r->isOverdue())->count(),
             completed: $completed,
             avgSolvingTime: Requirement::averageResolutionFormattedAmong($requirements),
+            cancelled: $cancelled,
         );
     }
 
+    /**
+     * Share of the work that got done — cancelled items aren't work, so
+     * they're left out rather than dragging the percentage down.
+     */
     public function completionPercent(): int
     {
-        return $this->total === 0 ? 0 : (int) round($this->completed / $this->total * 100);
+        $countable = $this->total - $this->cancelled;
+
+        return $countable <= 0 ? 0 : (int) round($this->completed / $countable * 100);
     }
 }

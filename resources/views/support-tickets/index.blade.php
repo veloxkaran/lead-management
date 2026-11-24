@@ -21,9 +21,10 @@
             ->implode(', ');
         $views = [
             null => ['All', $summary->total, 'primary', null],
-            'open' => ['Open', $summary->open, 'info', 'Not completed yet'],
+            'open' => ['Open', $summary->open, 'info', 'Not completed or cancelled yet'],
             'overdue' => ['Overdue', $summary->overdue, 'danger', "Open longer than its priority allows — {$overdueRule}"],
             'completed' => ['Completed', $summary->completed, 'success', null],
+            'cancelled' => ['Cancelled', $summary->cancelled, 'danger', null],
         ];
     @endphp
 
@@ -33,11 +34,21 @@
                 @if ($currentView)
                     <input type="hidden" name="view" value="{{ $currentView }}">
                 @endif
-                <div class="col-md-3">
-                    <label class="form-label small">Company</label>
-                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search by company" value="{{ $filters['search'] ?? '' }}">
+                <div class="col-12 col-md-3">
+                    <label class="form-label small">Search</label>
+                    <input type="search" name="search" class="form-control form-control-sm" placeholder="Subject or company" value="{{ $filters['search'] ?? '' }}">
                 </div>
-                <div class="col-md-3">
+                <div class="col-6 col-md-3">
+                    <label class="form-label small">Type</label>
+                    <select name="type" class="form-select form-select-sm">
+                        <option value="">All types</option>
+                        @foreach (App\Enums\SupportTicketType::cases() as $type)
+                            <option value="{{ $type->value }}" @selected(($filters['type'] ?? null) === $type->value)>{{ $type->label() }}</option>
+                        @endforeach
+                        <option value="none" @selected(($filters['type'] ?? null) === 'none')>Not set</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
                     <label class="form-label small">Status</label>
                     <select name="status" class="form-select form-select-sm" data-select2-field>
                         <option value="">All statuses</option>
@@ -46,7 +57,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-6 col-md-3">
                     <label class="form-label small">Priority</label>
                     <select name="priority" class="form-select form-select-sm" data-select2-field>
                         <option value="">All priorities</option>
@@ -55,7 +66,27 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-6 col-md-3">
+                    <label class="form-label small">Raised By</label>
+                    <select name="raised_by" class="form-select form-select-sm" data-select2-field>
+                        <option value="">Anyone</option>
+                        <option value="client" @selected(($filters['raised_by'] ?? null) === 'client')>Client (support portal)</option>
+                        @foreach ($users as $u)
+                            <option value="{{ $u->id }}" @selected(($filters['raised_by'] ?? null) == $u->id)>{{ $u->id === auth()->id() ? 'Me' : $u->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small">Assigned To</label>
+                    <select name="assigned_to" class="form-select form-select-sm" data-select2-field>
+                        <option value="">Anyone</option>
+                        <option value="unassigned" @selected(($filters['assigned_to'] ?? null) === 'unassigned')>Unassigned</option>
+                        @foreach ($users as $u)
+                            <option value="{{ $u->id }}" @selected(($filters['assigned_to'] ?? null) == $u->id)>{{ $u->id === auth()->id() ? 'Me' : $u->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
                     <label class="form-label small">Generated</label>
                     <select name="period" class="form-select form-select-sm" x-model="period">
                         <option value="">Any time</option>
@@ -120,10 +151,20 @@
                 <tbody>
                     @forelse ($tickets as $ticket)
                         <tr>
-                            <td class="small fw-semibold"><a href="{{ route('support-tickets.show', $ticket) }}">{{ $ticket->subject }}</a></td>
+                            <td class="small">
+                                <a href="{{ route('support-tickets.show', $ticket) }}" class="fw-semibold">{{ $ticket->subject }}</a>
+                                <div class="mt-1">
+                                    @if ($ticket->type)
+                                        <x-status-badge :status="$ticket->type" />
+                                    @else
+                                        <span class="text-muted" style="font-size: .72rem;">Type not set</span>
+                                    @endif
+                                </div>
+                            </td>
                             <td class="small">
                                 @if ($ticket->lead)
                                     <a href="{{ route('leads.show', $ticket->lead) }}" class="text-decoration-none">{{ $ticket->lead->company_name }}</a>
+                                    <div class="mt-1"><x-lead-status :lead="$ticket->lead" /></div>
                                 @else
                                     &mdash;
                                 @endif
@@ -133,6 +174,7 @@
                             <td><x-status-badge :status="$ticket->priority" /></td>
                             <td>
                                 <x-status-badge :status="$ticket->status" />
+                                <x-cancellation-reason :record="$ticket" />
                                 @if ($ticket->isOverdue())
                                     <span class="badge bg-danger-subtle text-danger-emphasis" title="Open longer than {{ App\Models\SupportTicket::overdueAfterHours($ticket->priority) }}h for {{ strtolower($ticket->priority?->label() ?? 'this') }} priority">Overdue</span>
                                 @endif
@@ -140,12 +182,17 @@
                             <td class="small">
                                 @if ($ticket->resolved_at)
                                     <span class="text-success">Solved in {{ $ticket->elapsedFormatted() }}</span>
+                                @elseif ($ticket->isCancelled())
+                                    <span class="text-muted">Cancelled{{ $ticket->cancelled_at ? ' '.$ticket->cancelled_at->diffForHumans() : '' }}</span>
                                 @else
                                     <span x-data="ticketElapsed('{{ $ticket->created_at->toIso8601String() }}')" x-text="text">{{ $ticket->elapsedFormatted() }}</span>
                                 @endif
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('support-tickets.show', $ticket) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                                <a href="{{ route('support-tickets.show', $ticket) }}" class="btn btn-sm btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
+                                @can('reopen', $ticket)
+                                    <a href="{{ route('support-tickets.show', [$ticket, 'reopen' => 1]) }}" class="btn btn-sm btn-outline-warning" title="Reopen"><i class="bi bi-arrow-counterclockwise"></i></a>
+                                @endcan
                                 @can('delete', $ticket)
                                     <form method="POST" action="{{ route('support-tickets.destroy', $ticket) }}" class="d-inline" data-confirm-delete data-confirm-title="Delete this ticket?">
                                         @csrf @method('DELETE')
@@ -192,15 +239,18 @@
                                 </select>
                                 @error('lead_id')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-8">
                                 <label class="form-label small fw-semibold">Subject</label>
                                 <input type="text" name="subject" class="form-control" value="{{ old('subject') }}" required>
                                 @error('subject')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                             </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">Type</label>
+                                @include('support-tickets._type_select', ['selected' => old('type')])
+                                @error('type')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                            </div>
                             <div class="col-md-12">
-                                <label class="form-label small fw-semibold">Details</label>
-                                <textarea name="details" rows="4" class="form-control">{{ old('details') }}</textarea>
-                                @error('details')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                <x-rich-text-editor name="details" label="Details" :value="old('details')" placeholder="Describe the issue..." />
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold">Priority</label>

@@ -5,6 +5,7 @@ namespace App\Http\Requests\Requirement;
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
 class UpdateRequirementRequest extends FormRequest
@@ -12,6 +13,11 @@ class UpdateRequirementRequest extends FormRequest
     public function authorize(): bool
     {
         return $this->user()->can('update', $this->route('requirement'));
+    }
+
+    public function messages(): array
+    {
+        return ['cancellation_reason.required' => 'Say why the requirement is being cancelled.'];
     }
 
     public function rules(): array
@@ -22,6 +28,10 @@ class UpdateRequirementRequest extends FormRequest
             'requirement' => ['required', 'string'],
             'priority' => ['required', new Enum(RequirementPriority::class)],
             'status' => ['required', new Enum(RequirementStatus::class)],
+            'cancellation_reason' => [
+                Rule::requiredIf(fn () => $this->input('status') === RequirementStatus::Cancelled->value),
+                'nullable', 'string', 'max:2000',
+            ],
             'due_date' => ['nullable', 'date'],
             'client_acknowledged_at' => ['nullable', 'date'],
             'assigned_to' => ['nullable', 'exists:users,id'],

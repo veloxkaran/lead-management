@@ -70,7 +70,7 @@ class OverdueScheduleService
     private function requirements(User $user): int
     {
         return Requirement::where('assigned_to', $user->id)
-            ->where('status', '!=', RequirementStatus::Completed->value)
+            ->whereNotIn('status', RequirementStatus::closedValues())
             ->whereNotNull('due_date')
             ->whereDate('due_date', '<=', today())
             ->count();

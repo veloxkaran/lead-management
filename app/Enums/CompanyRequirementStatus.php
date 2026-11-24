@@ -25,8 +25,18 @@ enum CompanyRequirementStatus: string
         $pending = 0;
         $done = 0;
         $other = 0;
+        $cancelled = 0;
 
         foreach ($requirements as $requirement) {
+            // Cancelled requirements aren't work to be done — they don't
+            // count either way, except that a company whose requirements
+            // were all cancelled has nothing left outstanding (Done).
+            if ($requirement->status === RequirementStatus::Cancelled) {
+                $cancelled++;
+
+                continue;
+            }
+
             $total++;
 
             match ($requirement->status) {
@@ -34,6 +44,10 @@ enum CompanyRequirementStatus: string
                 RequirementStatus::Completed => $done++,
                 default => $other++, // in_progress, on_hold
             };
+        }
+
+        if ($total === 0 && $cancelled > 0) {
+            return self::Done;
         }
 
         if ($total === 0 || $pending === $total) {

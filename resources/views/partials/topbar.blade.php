@@ -44,7 +44,7 @@
             </div>
         </div>
         <div class="dropdown">
-            <button class="btn btn-sm btn-light position-relative" type="button" data-bs-toggle="dropdown" aria-label="Notifications">
+            <button @class(['btn btn-sm btn-light position-relative notification-bell', 'has-unread' => $unreadCount > 0]) type="button" data-bs-toggle="dropdown" aria-label="Notifications">
                 <i class="bi bi-bell"></i>
                 @if ($unreadCount > 0)
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">

@@ -7,7 +7,15 @@
         @endif
         <div class="min-w-0">
             <h1 class="h5 fw-semibold mb-0 text-truncate">{{ $title }}</h1>
-            @if ($subtitle)
+            @if (isset($meta))
+                {{-- Subtitle with extra inline bits after it (e.g. the lead's status). --}}
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    @if ($subtitle)
+                        <p class="text-muted small mb-0">{{ $subtitle }}</p>
+                    @endif
+                    {{ $meta }}
+                </div>
+            @elseif ($subtitle)
                 <p class="text-muted small mb-0">{{ $subtitle }}</p>
             @endif
         </div>

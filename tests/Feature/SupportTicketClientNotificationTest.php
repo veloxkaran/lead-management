@@ -23,7 +23,7 @@ class SupportTicketClientNotificationTest extends TestCase
         $user = User::factory()->create();
         $lead = Lead::factory()->create(['company_name' => 'Acme Corp', 'contact_person' => 'Jordan Smith', 'email' => 'jordan@acme.test']);
 
-        $this->actingAs($user)->post(route('leads.support-tickets.store', $lead), [
+        $this->actingAs($user)->post(route('leads.support-tickets.store', $lead), ['type' => 'support', 
             'subject' => 'Cannot log in',
             'priority' => 'high',
         ])->assertRedirect();
@@ -47,7 +47,7 @@ class SupportTicketClientNotificationTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->actingAs($user)->post(route('support-tickets.store'), [
+        $this->actingAs($user)->post(route('support-tickets.store'), ['type' => 'support', 
             'subject' => 'Unlinked ticket',
             'priority' => 'medium',
         ])->assertRedirect();

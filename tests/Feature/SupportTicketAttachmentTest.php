@@ -20,7 +20,7 @@ class SupportTicketAttachmentTest extends TestCase
 
         $user = User::factory()->create();
 
-        $this->actingAs($user)->post(route('support-tickets.store'), [
+        $this->actingAs($user)->post(route('support-tickets.store'), ['type' => 'support', 
             'subject' => 'Client cannot log in',
             'priority' => 'high',
             'attachments' => [
@@ -118,7 +118,7 @@ class SupportTicketAttachmentTest extends TestCase
         $user = User::factory()->create();
         $lead = Lead::factory()->create();
 
-        $this->actingAs($user)->post(route('leads.support-tickets.store', $lead), [
+        $this->actingAs($user)->post(route('leads.support-tickets.store', $lead), ['type' => 'support', 
             'subject' => 'Onboarding issue',
             'priority' => 'medium',
             'attachments' => [UploadedFile::fake()->create('doc.pdf', 60)],

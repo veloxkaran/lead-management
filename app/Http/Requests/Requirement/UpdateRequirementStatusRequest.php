@@ -17,7 +17,8 @@ class UpdateRequirementStatusRequest extends FormRequest
     {
         return [
             'status' => ['required', new Enum(RequirementStatus::class)],
-            'note' => ['required', 'string'],
+            // Doubles as the cancellation reason when the status is Cancelled.
+            'note' => ['required', 'string', 'max:2000'],
         ];
     }
 }

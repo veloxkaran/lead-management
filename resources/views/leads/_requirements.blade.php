@@ -45,7 +45,7 @@
                         @endif
                     </td>
                     <td><x-status-badge :status="$requirement->priority" /></td>
-                    <td><x-status-badge :status="$requirement->status" /></td>
+                    <td><x-status-badge :status="$requirement->status" /><x-cancellation-reason :record="$requirement" /></td>
                     <td class="small">
                         {{ $requirement->due_date?->format('M d, Y') ?? '—' }}
                         @if ($requirement->isOverdue())

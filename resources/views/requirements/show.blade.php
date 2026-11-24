@@ -4,7 +4,13 @@
 
 @section('content')
     <x-page-header title="Requirement" icon="bi-list-check" :subtitle="$requirement->lead?->company_name">
+        <x-slot:meta><x-lead-status :lead="$requirement->lead" /></x-slot:meta>
         <x-slot:actions>
+            @can('cancel', $requirement)
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#cancelRequirementModal">
+                    <i class="bi bi-x-octagon"></i> Cancel Requirement
+                </button>
+            @endcan
             @can('update', $requirement)
                 <a href="{{ route('requirements.edit', $requirement) }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-pencil"></i> Edit
@@ -15,6 +21,8 @@
             </a>
         </x-slot:actions>
     </x-page-header>
+
+    <x-cancellation-notice :record="$requirement" noun="requirement" />
 
     <x-completion-lock-notice :record="$requirement" noun="requirement" />
 
@@ -29,7 +37,7 @@
                 @endif
                 <div class="col-12">
                     <div class="small text-muted">Requirement</div>
-                    <div class="requirement-rich-content">{!! $requirement->requirementHtml() !!}</div>
+                    <div class="rich-content">{!! $requirement->requirementHtml() !!}</div>
                 </div>
                 <div class="col-md-3">
                     <div class="small text-muted">Module</div>

@@ -30,7 +30,7 @@ class SupportTicketRaiseModalTest extends TestCase
         $user = User::factory()->create();
         $lead = Lead::factory()->create();
 
-        $response = $this->actingAs($user)->post(route('support-tickets.store'), [
+        $response = $this->actingAs($user)->post(route('support-tickets.store'), ['type' => 'support', 
             'lead_id' => $lead->id,
             'subject' => 'Raised from the modal',
             'priority' => 'medium',
@@ -47,7 +47,7 @@ class SupportTicketRaiseModalTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->from(route('support-tickets.index'))->post(route('support-tickets.store'), [
+        $response = $this->actingAs($user)->from(route('support-tickets.index'))->post(route('support-tickets.store'), ['type' => 'support', 
             'priority' => 'medium',
             // subject is required and missing.
         ]);

@@ -1,0 +1,301 @@
+// ============================================================================
+// Motion — app-wide animation layer (behaviour bits in resources/js/motion.js).
+//
+// Rules this file follows:
+//  • Everything that moves is inside `prefers-reduced-motion: no-preference`;
+//    people who asked their OS for less motion get none of it.
+//  • Short and small: 150–350ms, a few pixels of travel, one easing curve.
+//  • Enter animations use fill-mode `backwards` and the individual
+//    `translate`/`scale` properties — so nothing is left transformed after
+//    the animation ends (a lingering transform would break the position of
+//    modals that live inside page content), and Popper's own `transform`
+//    on dropdowns is never overridden.
+// ============================================================================
+
+:root {
+    --motion-ease: cubic-bezier(0.16, 1, 0.3, 1); // quick out, soft landing
+    --motion-fast: 150ms;
+    --motion-base: 280ms;
+}
+
+@keyframes motion-rise {
+    from {
+        opacity: 0;
+        translate: 0 8px;
+    }
+}
+
+@keyframes motion-fade {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes motion-pop {
+    from {
+        opacity: 0;
+        translate: 0 -4px;
+        scale: 0.98;
+    }
+}
+
+@keyframes motion-slide-down {
+    from {
+        opacity: 0;
+        translate: 0 -10px;
+    }
+}
+
+@keyframes motion-float {
+    50% {
+        translate: 0 -4px;
+    }
+}
+
+@keyframes motion-wiggle {
+    0%, 100% { rotate: 0deg; }
+    20% { rotate: -14deg; }
+    40% { rotate: 12deg; }
+    60% { rotate: -8deg; }
+    80% { rotate: 4deg; }
+}
+
+@keyframes motion-badge-pop {
+    0% { scale: 0; }
+    70% { scale: 1.2; }
+    100% { scale: 1; }
+}
+
+@keyframes motion-shrink {
+    to {
+        transform: scaleX(0);
+    }
+}
+
+@keyframes vt-fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes vt-fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
+// The page-to-page View Transitions opt-in (@view-transition) is an inline
+// <style> in the layouts' <head>, not here — see the note there.
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    // ---- Page-to-page (opt-in is at the top of this file): the content
+    // cross-fades while the sidebar and top bar stay put.
+    .app-sidebar {
+        view-transition-name: app-sidebar;
+    }
+
+    .app-topbar {
+        view-transition-name: app-topbar;
+    }
+
+    ::view-transition-old(app-sidebar),
+    ::view-transition-old(app-topbar) {
+        display: none;
+    }
+
+    ::view-transition-new(app-sidebar),
+    ::view-transition-new(app-topbar) {
+        animation: none;
+    }
+
+    ::view-transition-old(root) {
+        animation: 90ms ease-out both vt-fade-out;
+    }
+
+    ::view-transition-new(root) {
+        animation: 160ms ease-in both vt-fade-in;
+    }
+
+    // ---- Content arriving: the page header and cards rise in, staggered.
+    // Grid rows are skipped here — their tiles animate individually below.
+    .app-content > :where(:not(.modal, .alert, .row, script, style, template)) {
+        animation: motion-rise var(--motion-base) var(--motion-ease) backwards;
+    }
+
+    @for $i from 1 through 8 {
+        .app-content > :nth-child(#{$i} of :not(.modal, .alert, .row, script, style, template)) {
+            animation-delay: #{($i - 1) * 40}ms;
+        }
+    }
+
+    // Dashboard tiles/cards laid out in a grid row: stagger across the row.
+    .app-content .row > [class*='col']:has(> .card, > .stat-card) {
+        animation: motion-rise var(--motion-base) var(--motion-ease) backwards;
+    }
+
+    @for $i from 1 through 6 {
+        .app-content .row > [class*='col']:has(> .card, > .stat-card):nth-child(#{$i}) {
+            animation-delay: #{80 + ($i - 1) * 45}ms;
+        }
+    }
+
+    // Table rows fade in one after another (also after an instant filter).
+    .card .table > tbody > tr {
+        animation: motion-fade 240ms ease-out backwards;
+    }
+
+    @for $i from 1 through 12 {
+        .card .table > tbody > tr:nth-child(#{$i}) {
+            animation-delay: #{120 + ($i - 1) * 22}ms;
+        }
+    }
+
+    // ---- Hover & press feedback.
+    .stat-card,
+    .lead-kpi,
+    a.lead-chip {
+        transition: translate var(--motion-fast) var(--motion-ease), box-shadow var(--motion-fast) ease, border-color var(--motion-fast) ease;
+    }
+
+    .stat-card:hover {
+        translate: 0 -2px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .stat-card .stat-icon {
+        transition: scale var(--motion-base) var(--motion-ease);
+    }
+
+    .stat-card:hover .stat-icon {
+        scale: 1.08;
+    }
+
+    .btn {
+        transition: color var(--motion-fast) ease, background-color var(--motion-fast) ease, border-color var(--motion-fast) ease,
+            box-shadow var(--motion-fast) ease, scale 100ms ease;
+    }
+
+    .btn:active:not(:disabled):not(.disabled) {
+        scale: 0.96;
+    }
+
+    .table-hover > tbody > tr > * {
+        transition: background-color var(--motion-fast) ease;
+    }
+
+    // Sidebar: icon tiles respond to hover.
+    .app-sidebar .nav-link i {
+        transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out, scale var(--motion-base) var(--motion-ease);
+    }
+
+    .app-sidebar .nav-link:hover i {
+        scale: 1.1;
+    }
+
+    // ---- Things that open.
+    .dropdown-menu.show {
+        animation: motion-pop 180ms var(--motion-ease) both;
+        transform-origin: top;
+    }
+
+    .modal.fade .modal-dialog {
+        transform: none;
+        translate: 0 14px;
+        scale: 0.98;
+        transition: translate 320ms var(--motion-ease), scale 320ms var(--motion-ease);
+    }
+
+    .modal.show .modal-dialog {
+        translate: 0 0;
+        scale: 1;
+    }
+
+    .mention-menu:not([hidden]) {
+        animation: motion-pop 160ms var(--motion-ease) both;
+    }
+
+    // Bootstrap tab panes fade; add a little lift.
+    .tab-pane.fade {
+        transition: opacity 0.2s linear, translate var(--motion-base) var(--motion-ease);
+    }
+
+    .tab-pane.fade:not(.show) {
+        translate: 0 6px;
+    }
+
+    // ---- Messages & small touches.
+    .app-content > .alert,
+    .draft-notice {
+        animation: motion-slide-down 360ms var(--motion-ease) backwards;
+    }
+
+    .empty-state-icon {
+        animation: motion-float 4s ease-in-out infinite;
+    }
+
+    // Bell wiggles once on page load when there's something unread.
+    .notification-bell.has-unread .bi-bell {
+        display: inline-block;
+        animation: motion-wiggle 700ms ease-in-out 600ms 1;
+        transform-origin: 50% 0;
+    }
+
+    .notification-bell.has-unread .badge {
+        animation: motion-badge-pop 360ms var(--motion-ease) 450ms backwards;
+    }
+
+    .lead-status-pill,
+    .mention {
+        transition: background-color var(--motion-fast) ease, border-color var(--motion-fast) ease;
+    }
+}
+
+// ---- Success messages close themselves (resources/js/motion.js); the line
+// along the bottom shows the time left and pauses while hovered. Kept
+// outside the reduced-motion block: the countdown is information, and
+// with reduced motion the bar simply isn't drawn (see below).
+.alert.alert-autodismiss {
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3px;
+        background: currentColor;
+        opacity: 0.25;
+        transform-origin: left;
+        animation: motion-shrink var(--autodismiss-ms, 6000ms) linear forwards;
+    }
+
+    &:hover::after,
+    &.is-paused::after {
+        animation-play-state: paused;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .alert.alert-autodismiss::after {
+        display: none;
+    }
+}
+
+@media print {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}

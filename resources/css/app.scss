@@ -1600,3 +1600,31 @@ body.is-filtering .app-content .card:has(> .table-responsive) {
     --bs-btn-padding-x: 0.5rem;
     font-size: 0.72rem;
 }
+
+// ---- Lead status pill (components/lead-status): the related lead's pipeline
+// status beside a company name on requirements and support tickets.
+.lead-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.05rem 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--lead-status-color) 35%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--lead-status-color) 10%, transparent);
+    color: var(--app-text-secondary, var(--app-text));
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.lead-status-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--lead-status-color);
+}
+
+// Animations & motion (respects prefers-reduced-motion).
+@import 'motion';

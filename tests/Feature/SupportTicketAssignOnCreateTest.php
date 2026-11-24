@@ -17,7 +17,7 @@ class SupportTicketAssignOnCreateTest extends TestCase
         $user = User::factory()->create();
         $assignee = User::factory()->create();
 
-        $this->actingAs($user)->post(route('support-tickets.store'), [
+        $this->actingAs($user)->post(route('support-tickets.store'), ['type' => 'support', 
             'subject' => 'Client cannot log in',
             'priority' => 'high',
             'assigned_to' => $assignee->id,
@@ -33,7 +33,7 @@ class SupportTicketAssignOnCreateTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->post(route('support-tickets.store'), [
+        $this->actingAs($user)->post(route('support-tickets.store'), ['type' => 'support', 
             'subject' => 'Unassigned issue',
             'priority' => 'medium',
         ])->assertRedirect();
@@ -61,7 +61,7 @@ class SupportTicketAssignOnCreateTest extends TestCase
         $assignee = User::factory()->create();
         $lead = Lead::factory()->create();
 
-        $this->actingAs($user)->post(route('leads.support-tickets.store', $lead), [
+        $this->actingAs($user)->post(route('leads.support-tickets.store', $lead), ['type' => 'support', 
             'subject' => 'Onboarding blocker',
             'priority' => 'medium',
             'assigned_to' => $assignee->id,

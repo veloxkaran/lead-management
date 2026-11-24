@@ -164,9 +164,11 @@ class DailyActivitySummary
             ->map(fn (SupportTicketStatusLog $log) => [
                 'company' => null,
                 'lead_id' => $log->supportTicket->lead_id,
-                'what' => $log->to_status === RequirementStatus::Completed
-                    ? 'resolved a support ticket: '.$log->supportTicket->subject
-                    : 'moved support ticket "'.$log->supportTicket->subject.'" to '.($log->to_status?->label() ?? 'a new status'),
+                'what' => match ($log->to_status) {
+                    RequirementStatus::Completed => 'resolved a support ticket: '.$log->supportTicket->subject,
+                    RequirementStatus::Cancelled => 'cancelled a support ticket: '.$log->supportTicket->subject,
+                    default => 'moved support ticket "'.$log->supportTicket->subject.'" to '.($log->to_status?->label() ?? 'a new status'),
+                },
                 'who' => $log->changedBy?->name ?? 'System',
                 'at' => $log->created_at,
             ]);

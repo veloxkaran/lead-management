@@ -16,7 +16,7 @@ class SupportTicketStatusLogTest extends TestCase
     {
         $raiser = User::factory()->create();
 
-        $this->actingAs($raiser)->post(route('support-tickets.store'), [
+        $this->actingAs($raiser)->post(route('support-tickets.store'), ['type' => 'support', 
             'subject' => 'New issue',
             'priority' => 'medium',
         ])->assertRedirect();

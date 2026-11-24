@@ -21,6 +21,7 @@
             'open' => ['Open', $summary->open, 'info'],
             'overdue' => ['Overdue', $summary->overdue, 'danger'],
             'completed' => ['Completed', $summary->completed, 'success'],
+            'cancelled' => ['Cancelled', $summary->cancelled, 'danger'],
         ];
     @endphp
 
@@ -132,6 +133,7 @@
                                         <a href="{{ route('requirements.company', $requirement->lead) }}" class="text-decoration-none text-muted" title="All requirements for {{ $requirement->lead->company_name }}">
                                             <i class="bi bi-building"></i> {{ $requirement->lead->company_name }}
                                         </a>
+                                        <x-lead-status :lead="$requirement->lead" />
                                     @endif
                                     @if ($requirement->comments_count)
                                         <span><i class="bi bi-chat-left-text"></i> {{ $requirement->comments_count }}</span>
@@ -142,7 +144,7 @@
                                 </div>
                             </td>
                             <td><x-status-badge :status="$requirement->priority" /></td>
-                            <td><x-status-badge :status="$requirement->status" /></td>
+                            <td><x-status-badge :status="$requirement->status" /><x-cancellation-reason :record="$requirement" /></td>
                             <td class="small text-nowrap">
                                 {{ $requirement->due_date?->format('M d, Y') ?? '—' }}
                                 @if ($requirement->isOverdue())

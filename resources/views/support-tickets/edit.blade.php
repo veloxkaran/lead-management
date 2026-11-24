@@ -10,16 +10,32 @@
             <form method="POST" action="{{ route('support-tickets.update', $supportTicket) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
-                <div class="row g-3">
-                    <div class="col-md-12">
+                <div class="row g-3" x-data="{ status: @js(old('status', $supportTicket->status->value)) }">
+                    <div class="col-md-8">
                         <label class="form-label small fw-semibold">Subject</label>
                         <input type="text" name="subject" class="form-control" value="{{ old('subject', $supportTicket->subject) }}" required @readonly(! $supportTicket->detailsEditable())>
                         @error('subject')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Type</label>
+                        @include('support-tickets._type_select', ['selected' => old('type', $supportTicket->type?->value)])
+                        @error('type')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
                     <div class="col-md-12">
-                        <label class="form-label small fw-semibold">Details</label>
-                        <textarea name="details" rows="4" class="form-control" @readonly(! $supportTicket->detailsEditable())>{{ old('details', $supportTicket->details) }}</textarea>
-                        @error('details')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        @if ($supportTicket->detailsEditable())
+                            <x-rich-text-editor name="details" label="Details" :value="old('details', App\Support\RichText::toHtml($supportTicket->details))" placeholder="Describe the issue..." />
+                        @else
+                            {{-- Locked: shown read-only and not submitted, so it can't trip the lock check. --}}
+                            <label class="form-label small fw-semibold">Details</label>
+                            <div class="rich-content border rounded p-2 bg-body-tertiary">
+                                @if (filled($supportTicket->details))
+                                    {!! $supportTicket->detailsHtml() !!}
+                                @else
+                                    <span class="text-muted small">No details provided.</span>
+                                @endif
+                            </div>
+                            @error('details')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        @endif
                     </div>
                     @unless ($supportTicket->detailsEditable())
                         <div class="col-12">
@@ -37,7 +53,7 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label small fw-semibold">Status</label>
-                        <select name="status" class="form-select">
+                        <select name="status" class="form-select" x-model="status">
                             @foreach ($statuses as $status)
                                 <option value="{{ $status->value }}" @selected(old('status', $supportTicket->status->value) === $status->value)>{{ $status->label() }}</option>
                             @endforeach
@@ -53,6 +69,11 @@
                             @endforeach
                         </select>
                         @error('assigned_to')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-12" x-show="status === 'cancelled'" x-cloak>
+                        <label class="form-label small fw-semibold" for="cancellationReason">Why is it being cancelled? *</label>
+                        <textarea name="cancellation_reason" id="cancellationReason" rows="2" maxlength="2000" class="form-control" :required="status === 'cancelled'" placeholder="Shown on the ticket as the cancellation reason">{{ old('cancellation_reason', $supportTicket->cancellation_reason) }}</textarea>
+                        @error('cancellation_reason')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-12">
                         <label class="form-label small fw-semibold">Add Documents</label>

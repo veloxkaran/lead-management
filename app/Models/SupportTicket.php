@@ -4,9 +4,13 @@ namespace App\Models;
 
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
+use App\Enums\SupportTicketType;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\Cancellable;
 use App\Models\Concerns\LocksAfterCompletion;
 use App\Models\Concerns\TracksResolutionTime;
+use App\Support\HtmlToText;
+use App\Support\RichText;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,16 +18,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SupportTicket extends Model
 {
-    use BelongsToCompany, HasFactory, LocksAfterCompletion, TracksResolutionTime;
+    use BelongsToCompany, Cancellable, HasFactory, LocksAfterCompletion, TracksResolutionTime;
 
     protected $fillable = [
-        'company_id', 'lead_id', 'subject', 'details', 'priority', 'status', 'raised_by',
+        'company_id', 'lead_id', 'subject', 'type', 'details', 'priority', 'status', 'raised_by',
         'assigned_to', 'assigned_by', 'assigned_at', 'resolved_at', 'is_client_submitted',
     ];
 
     protected function casts(): array
     {
         return [
+            'type' => SupportTicketType::class,
             'priority' => RequirementPriority::class,
             'status' => RequirementStatus::class,
             'assigned_at' => 'datetime',
@@ -33,14 +38,33 @@ class SupportTicket extends Model
     }
 
     /**
-     * Not Completed and open longer than its priority allows
-     * (config/support_tickets.php) — tickets have no due date.
+     * Still open (not Completed/Cancelled) and open longer than its
+     * priority allows (config/support_tickets.php) — tickets have no due date.
      */
     public function isOverdue(): bool
     {
-        return $this->status !== RequirementStatus::Completed
+        return ! $this->isClosed()
             && $this->created_at !== null
             && $this->created_at->lte(now()->subHours(self::overdueAfterHours($this->priority)));
+    }
+
+    /**
+     * `details` as safe HTML — the same rich-text pipeline as a
+     * requirement's description (see RichText), so formatting typed in the
+     * editor shows the same way when viewed. Older plain-text tickets keep
+     * their line breaks.
+     */
+    public function detailsHtml(): string
+    {
+        return RichText::render($this->details);
+    }
+
+    /**
+     * `details` as readable plain text — for emails, Slack, exports.
+     */
+    public function detailsText(): string
+    {
+        return HtmlToText::convert($this->details);
     }
 
     public static function overdueAfterHours(?RequirementPriority $priority): int

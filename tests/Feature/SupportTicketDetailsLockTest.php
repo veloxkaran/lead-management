@@ -25,7 +25,8 @@ class SupportTicketDetailsLockTest extends TestCase
 
         $ticket->refresh();
         $this->assertSame('Updated subject', $ticket->subject);
-        $this->assertSame('Updated details', $ticket->details);
+        // Stored as sanitized rich text, like a requirement's description.
+        $this->assertSame('<p>Updated details</p>', $ticket->details);
     }
 
     public function test_subject_and_details_cannot_be_edited_after_twelve_hours(): void

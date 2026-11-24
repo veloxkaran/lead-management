@@ -13,6 +13,7 @@ use App\Services\SupportTicketService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Services\MentionNotifier;
 
 class SupportTicketController extends Controller
 {
@@ -24,7 +25,7 @@ class SupportTicketController extends Controller
     {
         $this->authorize('viewAny', SupportTicket::class);
 
-        $filters = $request->only(['search', 'status', 'priority', 'period', 'date_from', 'date_to', 'view']);
+        $filters = $request->only(['search', 'type', 'status', 'priority', 'raised_by', 'assigned_to', 'period', 'date_from', 'date_to', 'view']);
 
         return view('support-tickets.index', [
             'tickets' => $this->supportTickets->list($filters, 20),
@@ -75,11 +76,43 @@ class SupportTicketController extends Controller
     {
         $this->authorize('view', $supportTicket);
 
-        $supportTicket->load('lead', 'raiser', 'assignee', 'comments.author', 'attachments', 'assignmentLogs.user', 'assignmentLogs.performedBy', 'statusLogs.changedBy');
+        $supportTicket->load('lead.status', 'raiser', 'assignee', 'comments.author', 'attachments', 'assignmentLogs.user', 'assignmentLogs.performedBy', 'statusLogs.changedBy');
 
         return view('support-tickets.show', [
             'supportTicket' => $supportTicket,
         ]);
+    }
+
+    public function reopen(Request $request, SupportTicket $supportTicket, MentionNotifier $mentions): RedirectResponse
+    {
+        $this->authorize('reopen', $supportTicket);
+
+        $validated = $request->validate(['reason' => ['required', 'string', 'max:2000']], [
+            'reason.required' => 'Say why the ticket is being reopened.',
+        ]);
+
+        $this->supportTickets->reopen($supportTicket, $validated['reason'], $request->user());
+
+        // The reason is posted as a comment, so @mentions in it notify people too.
+        $mentions->notify($validated['reason'], $request->user(), $supportTicket);
+
+        return redirect()->route('support-tickets.show', $supportTicket)->with('success', 'Ticket reopened.');
+    }
+
+    public function cancel(Request $request, SupportTicket $supportTicket, MentionNotifier $mentions): RedirectResponse
+    {
+        $this->authorize('cancel', $supportTicket);
+
+        $validated = $request->validate(['cancellation_reason' => ['required', 'string', 'max:2000']], [
+            'cancellation_reason.required' => 'Say why the ticket is being cancelled.',
+        ]);
+
+        $this->supportTickets->cancel($supportTicket, $validated['cancellation_reason'], $request->user());
+
+        // The reason is posted as a comment, so @mentions in it notify people too.
+        $mentions->notify($validated['cancellation_reason'], $request->user(), $supportTicket);
+
+        return redirect()->route('support-tickets.show', $supportTicket)->with('success', 'Ticket cancelled.');
     }
 
     public function assignToMe(Request $request, SupportTicket $supportTicket): RedirectResponse

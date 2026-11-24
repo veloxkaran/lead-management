@@ -1,12 +1,13 @@
 @props(['record', 'noun'])
 
-{{-- Shows the 4-hour post-completion edit window (see LocksAfterCompletion). --}}
+{{-- Shows the 4-hour post-completion/cancellation edit window (see LocksAfterCompletion). --}}
 @if ($locksAt = $record->locksAt())
+    @php($closedWord = $record->status === App\Enums\RequirementStatus::Cancelled ? 'cancelled' : 'completed')
     @if ($record->isLocked())
         <div class="alert alert-secondary d-flex align-items-center gap-2 py-2 small">
             <i class="bi bi-lock-fill"></i>
             <div>
-                This {{ $noun }} was completed on {{ $record->locksAt()->copy()->subHours($record::EDIT_WINDOW_HOURS)->format('M d, Y g:i A') }} and is now locked.
+                This {{ $noun }} was {{ $closedWord }} on {{ $record->locksAt()->copy()->subHours($record::EDIT_WINDOW_HOURS)->format('M d, Y g:i A') }} and is now locked.
                 @if (auth()->user()->isSuperAdmin())
                     As Super Admin you can still edit or reopen it.
                 @else
@@ -18,7 +19,7 @@
         <div class="alert alert-info d-flex align-items-center gap-2 py-2 small">
             <i class="bi bi-hourglass-split"></i>
             <div>
-                Completed — it can still be edited until <strong>{{ $locksAt->format('M d, Y g:i A') }}</strong> ({{ $locksAt->diffForHumans() }}), then it locks.
+                {{ ucfirst($closedWord) }} — it can still be edited until <strong>{{ $locksAt->format('M d, Y g:i A') }}</strong> ({{ $locksAt->diffForHumans() }}), then it locks.
             </div>
         </div>
     @endif

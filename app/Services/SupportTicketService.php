@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
+use App\Enums\SupportTicketType;
 use App\Enums\SupportTicketAssignmentAction;
 use App\Models\Lead;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketComment;
 use App\Models\User;
 use App\Repositories\SupportTicketRepository;
+use App\Support\RichText;
 use App\Support\SupportTicketSummary;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -45,6 +47,10 @@ class SupportTicketService
             $assignedTo = $attributes['assigned_to'] ?? null;
             unset($attributes['assigned_to']);
             $attributes['raised_by'] = $raiser->id;
+
+            if (array_key_exists('details', $attributes)) {
+                $attributes['details'] = RichText::sanitize($attributes['details']);
+            }
 
             /** @var SupportTicket $ticket */
             $ticket = $this->tickets->create($attributes);
@@ -103,6 +109,8 @@ class SupportTicketService
             ...$attributes,
             'company_id' => $lead->company_id,
             'priority' => RequirementPriority::Medium->value,
+            // The portal doesn't ask; staff can recategorize it.
+            'type' => $attributes['type'] ?? SupportTicketType::Support->value,
             'is_client_submitted' => true,
         ], $raiser);
     }
@@ -112,6 +120,13 @@ class SupportTicketService
      */
     public function update(SupportTicket $ticket, array $attributes, User $actor, array $files = []): SupportTicket
     {
+        if (array_key_exists('details', $attributes)) {
+            $attributes['details'] = RichText::sanitize($attributes['details']);
+        }
+
+        $attributes = $this->withCancellation($ticket, $attributes, $actor);
+        $wasCancelled = $ticket->isCancelled();
+
         if (array_key_exists('status', $attributes)) {
             if ($attributes['status'] === RequirementStatus::Completed->value && ! $ticket->resolved_at) {
                 $attributes['resolved_at'] = now();
@@ -136,9 +151,54 @@ class SupportTicketService
 
         $this->logStatusChange($ticket, $previousStatus, $actor);
 
+        // The reason also goes in the comment thread, so it sits in the
+        // ticket's timeline next to the discussion (like a reopen reason).
+        if (! $wasCancelled && $ticket->isCancelled()) {
+            $this->addComment($ticket, ['comment' => 'Cancelled: '.$ticket->cancellation_reason], $actor);
+        }
+
         $this->storeAttachments($ticket, $files);
 
         return $ticket;
+    }
+
+    /**
+     * Cancels an open ticket with a reason. Goes through update(), so the
+     * status change is logged, the client gets the usual status email and
+     * the reason is posted as a comment.
+     */
+    public function cancel(SupportTicket $ticket, string $reason, User $actor): SupportTicket
+    {
+        return $this->update($ticket, [
+            'status' => RequirementStatus::Cancelled->value,
+            'cancellation_reason' => $reason,
+        ], $actor);
+    }
+
+    /**
+     * Moving to Cancelled records who did it along with the (trimmed)
+     * reason; leaving Cancelled is handled by Cancellable, which clears
+     * all three. A reason sent while the status isn't Cancelled is dropped.
+     */
+    private function withCancellation(SupportTicket $ticket, array $attributes, User $actor): array
+    {
+        $status = $attributes['status'] ?? $ticket->status?->value;
+
+        if ($status !== RequirementStatus::Cancelled->value) {
+            unset($attributes['cancellation_reason']);
+
+            return $attributes;
+        }
+
+        if (isset($attributes['cancellation_reason'])) {
+            $attributes['cancellation_reason'] = trim($attributes['cancellation_reason']);
+        }
+
+        if (! $ticket->isCancelled()) {
+            $attributes['cancelled_by'] = $actor->id;
+        }
+
+        return $attributes;
     }
 
     /**
@@ -240,7 +300,7 @@ class SupportTicketService
     {
         $claimed = SupportTicket::whereKey($ticket->getKey())
             ->whereNull('assigned_to')
-            ->where('status', '!=', RequirementStatus::Completed->value)
+            ->whereNotIn('status', RequirementStatus::closedValues())
             ->update(['assigned_to' => $actor->id, 'assigned_by' => $actor->id, 'assigned_at' => now(), 'updated_at' => now()]);
 
         if (! $claimed) {
@@ -256,6 +316,23 @@ class SupportTicketService
         $ticket->refresh();
 
         return true;
+    }
+
+    /**
+     * Reopens a completed or cancelled ticket: back to In Progress (or
+     * Pending when no one is assigned). Goes through update(), so resolved_at is cleared
+     * (lifting the completion lock), the status change is logged and the
+     * client gets the usual status email. The reason is kept as a comment.
+     */
+    public function reopen(SupportTicket $ticket, string $reason, User $actor): SupportTicket
+    {
+        $status = $ticket->assigned_to ? RequirementStatus::InProgress : RequirementStatus::Pending;
+
+        $ticket = $this->update($ticket, ['status' => $status->value], $actor);
+
+        $this->addComment($ticket, ['comment' => 'Reopened: '.trim($reason)], $actor);
+
+        return $ticket;
     }
 
     public function addComment(SupportTicket $ticket, array $attributes, User $author): SupportTicketComment

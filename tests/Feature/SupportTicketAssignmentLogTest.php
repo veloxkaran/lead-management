@@ -17,7 +17,7 @@ class SupportTicketAssignmentLogTest extends TestCase
         $raiser = User::factory()->create();
         $assignee = User::factory()->create();
 
-        $this->actingAs($raiser)->post(route('support-tickets.store'), [
+        $this->actingAs($raiser)->post(route('support-tickets.store'), ['type' => 'support', 
             'subject' => 'Client cannot log in',
             'priority' => 'high',
             'assigned_to' => $assignee->id,
@@ -40,7 +40,7 @@ class SupportTicketAssignmentLogTest extends TestCase
     {
         $raiser = User::factory()->create();
 
-        $this->actingAs($raiser)->post(route('support-tickets.store'), [
+        $this->actingAs($raiser)->post(route('support-tickets.store'), ['type' => 'support', 
             'subject' => 'Unassigned issue',
             'priority' => 'medium',
         ])->assertRedirect();

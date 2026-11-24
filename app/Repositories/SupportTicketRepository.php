@@ -19,17 +19,18 @@ class SupportTicketRepository extends BaseRepository
 
     public function filter(array $filters, int $perPage = 20): LengthAwarePaginator
     {
-        $query = $this->applyFilters($this->query()->with(['lead', 'raiser', 'assignee']), $filters);
+        $query = $this->applyFilters($this->query()->with(['lead.status', 'raiser', 'assignee']), $filters);
 
         return $query
             ->orderByRaw(
-                'CASE status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 WHEN ? THEN 5 ELSE 6 END',
+                'CASE status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 WHEN ? THEN 5 WHEN ? THEN 6 ELSE 7 END',
                 [
                     RequirementStatus::Pending->value,
                     RequirementStatus::InProgress->value,
                     RequirementStatus::InReview->value,
                     RequirementStatus::OnHold->value,
                     RequirementStatus::Completed->value,
+                    RequirementStatus::Cancelled->value,
                 ]
             )
             ->orderByRaw(
@@ -63,9 +64,28 @@ class SupportTicketRepository extends BaseRepository
      */
     private function applyFilters(Builder $query, array $filters): Builder
     {
+        // One box: matches the ticket's subject or its client's company name.
         if (! empty($filters['search'])) {
             $term = '%'.$filters['search'].'%';
-            $query->whereHas('lead', fn ($q) => $q->where('company_name', 'like', $term));
+            $query->where(fn (Builder $q) => $q->where('subject', 'like', $term)
+                ->orWhereHas('lead', fn ($lead) => $lead->where('company_name', 'like', $term)));
+        }
+
+        if (! empty($filters['type'])) {
+            $filters['type'] === 'none' ? $query->whereNull('type') : $query->where('type', $filters['type']);
+        }
+
+        // "client" = raised by the client through the support portal.
+        if (! empty($filters['raised_by'])) {
+            $filters['raised_by'] === 'client'
+                ? $query->where('is_client_submitted', true)
+                : $query->where('raised_by', (int) $filters['raised_by'])->where('is_client_submitted', false);
+        }
+
+        if (! empty($filters['assigned_to'])) {
+            $filters['assigned_to'] === 'unassigned'
+                ? $query->whereNull('assigned_to')
+                : $query->where('assigned_to', (int) $filters['assigned_to']);
         }
 
         if (! empty($filters['status'])) {
@@ -88,9 +108,10 @@ class SupportTicketRepository extends BaseRepository
 
         // Quick views from the counts strip; "overdue" mirrors SupportTicket::isOverdue().
         match ($filters['view'] ?? null) {
-            'open' => $query->where('status', '!=', RequirementStatus::Completed->value),
+            'open' => $query->whereNotIn('status', RequirementStatus::closedValues()),
             'completed' => $query->where('status', RequirementStatus::Completed->value),
-            'overdue' => $query->where('status', '!=', RequirementStatus::Completed->value)
+            'cancelled' => $query->where('status', RequirementStatus::Cancelled->value),
+            'overdue' => $query->whereNotIn('status', RequirementStatus::closedValues())
                 ->where(function (Builder $q) {
                     foreach (RequirementPriority::cases() as $priority) {
                         $q->orWhere(fn (Builder $q) => $q->where('priority', $priority->value)

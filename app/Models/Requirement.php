@@ -5,19 +5,20 @@ namespace App\Models;
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
 use App\Models\Concerns\BelongsToCompany;
+use App\Models\Concerns\Cancellable;
 use App\Models\Concerns\LocksAfterCompletion;
 use App\Models\Concerns\TracksResolutionTime;
 use App\Support\HtmlToText;
+use App\Support\RichText;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
-use Mews\Purifier\Facades\Purifier;
 
 class Requirement extends Model
 {
-    use BelongsToCompany, HasFactory, LocksAfterCompletion, TracksResolutionTime;
+    use BelongsToCompany, Cancellable, HasFactory, LocksAfterCompletion, TracksResolutionTime;
 
     protected $fillable = [
         'company_id', 'lead_id', 'system_module_id', 'title', 'requirement', 'priority', 'status', 'due_date',
@@ -56,13 +57,13 @@ class Requirement extends Model
     }
 
     /**
-     * Past its due date and not yet completed.
+     * Past its due date and still open (not Completed/Cancelled).
      */
     public function isOverdue(): bool
     {
         return $this->due_date !== null
             && $this->due_date->isPast()
-            && $this->status !== RequirementStatus::Completed;
+            && ! $this->isClosed();
     }
 
     public function isCompleted(): bool
@@ -88,11 +89,12 @@ class Requirement extends Model
      * `requirement` is saved already-sanitized by RequirementService, but
      * this re-cleans on read too so older rows written before the rich-text
      * editor existed (plain text, possibly with stray "<"/">") still render
-     * safely as HTML instead of being interpreted as broken markup.
+     * safely — with their line breaks — instead of as broken markup. Same
+     * pipeline as SupportTicket::detailsHtml() (see RichText).
      */
     public function requirementHtml(): string
     {
-        return Purifier::clean((string) $this->requirement);
+        return RichText::render($this->requirement);
     }
 
     /**

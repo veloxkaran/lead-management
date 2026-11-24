@@ -19,6 +19,7 @@ class SupportTicketSummary
         public readonly int $overdue,
         public readonly int $completed,
         public readonly ?string $avgResolutionTime,
+        public readonly int $cancelled = 0,
     ) {}
 
     /**
@@ -27,18 +28,26 @@ class SupportTicketSummary
     public static function of(Collection $tickets): self
     {
         $completed = $tickets->filter(fn (SupportTicket $t) => $t->status === RequirementStatus::Completed)->count();
+        $cancelled = $tickets->filter(fn (SupportTicket $t) => $t->status === RequirementStatus::Cancelled)->count();
 
         return new self(
             total: $tickets->count(),
-            open: $tickets->count() - $completed,
+            open: $tickets->count() - $completed - $cancelled,
             overdue: $tickets->filter(fn (SupportTicket $t) => $t->isOverdue())->count(),
             completed: $completed,
             avgResolutionTime: SupportTicket::averageResolutionFormattedAmong($tickets),
+            cancelled: $cancelled,
         );
     }
 
+    /**
+     * Share of the work that got done — cancelled items aren't work, so
+     * they're left out rather than dragging the percentage down.
+     */
     public function completionPercent(): int
     {
-        return $this->total === 0 ? 0 : (int) round($this->completed / $this->total * 100);
+        $countable = $this->total - $this->cancelled;
+
+        return $countable <= 0 ? 0 : (int) round($this->completed / $countable * 100);
     }
 }

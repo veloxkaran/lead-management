@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Sign in') - {{ config('app.name') }}</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    {{-- Page-to-page cross-fade opt-in (styles in resources/css/_motion.scss). Inline and
+         before the bundle on purpose: if a script makes the browser compute styles before
+         app.css has loaded, Chrome decides the page didn't opt in and skips the transition. --}}
+    <style>@view-transition { navigation: auto; }</style>
     @vite(['resources/css/app.scss', 'resources/js/app.js'])
 </head>
 <body class="bg-light">

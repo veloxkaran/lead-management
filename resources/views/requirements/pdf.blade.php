@@ -22,6 +22,7 @@
         .status-in_review { background: #cff4fc; color: #055160; }
         .status-completed { background: #d1e7dd; color: #0f5132; }
         .status-on_hold { background: #fff3cd; color: #664d03; }
+        .status-cancelled { background: #f8d7da; color: #842029; }
     </style>
 </head>
 <body>
@@ -69,7 +70,7 @@
                     <td>{{ $requirement->title ?? '—' }}</td>
                     <td>{!! $requirement->requirementHtml() !!}</td>
                     <td>{{ $requirement->priority->label() }}</td>
-                    <td><span class="status status-{{ $requirement->status->value }}">{{ $requirement->status->label() }}</span></td>
+                    <td><span class="status status-{{ $requirement->status->value }}">{{ $requirement->status->label() }}</span>@if ($requirement->isCancelled() && filled($requirement->cancellation_reason))<div style="font-size: 9px; margin-top: 2px;">{{ $requirement->cancellation_reason }}</div>@endif</td>
                     <td>{{ $requirement->due_date?->format('M d, Y') ?? '—' }}</td>
                     <td>{{ $requirement->client_acknowledged_at?->format('M d, Y g:i A') ?? 'Not yet' }}</td>
                     <td>{{ $requirement->assignee?->name ?? '—' }}</td>

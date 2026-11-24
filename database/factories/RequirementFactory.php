@@ -26,7 +26,7 @@ class RequirementFactory extends Factory
             'priority' => fake()->randomElement(RequirementPriority::cases())->value,
             // Open statuses only — a completed requirement records completed_at
             // on save, so tests that need one ask for it explicitly.
-            'status' => fake()->randomElement(array_filter(RequirementStatus::cases(), fn ($s) => $s !== RequirementStatus::Completed))->value,
+            'status' => fake()->randomElement(array_filter(RequirementStatus::cases(), fn ($s) => ! $s->isClosed()))->value,
             'assigned_to' => null,
             'created_by' => User::factory(),
         ];

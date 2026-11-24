@@ -123,7 +123,7 @@ class RequirementStatusChangeTest extends TestCase
         $this->assertDatabaseCount('requirement_comments', 0);
     }
 
-    public function test_any_user_can_change_status_even_without_update_permission_on_the_requirement(): void
+    public function test_any_user_can_change_status_on_someone_elses_requirement(): void
     {
         $user = User::factory()->create();
         $owner = User::factory()->create();
@@ -134,8 +134,6 @@ class RequirementStatusChangeTest extends TestCase
             'assigned_to' => null,
             'status' => RequirementStatus::Pending,
         ]);
-
-        $this->assertFalse($user->can('update', $requirement));
 
         $response = $this->actingAs($user)->patch(route('requirements.status.update', $requirement), [
             'status' => RequirementStatus::InProgress->value,
@@ -151,9 +149,8 @@ class RequirementStatusChangeTest extends TestCase
         ]);
     }
 
-    public function test_edit_link_still_requires_update_permission_while_status_change_does_not(): void
+    public function test_edit_link_follows_the_update_permission_not_ownership(): void
     {
-        $user = User::factory()->create();
         $owner = User::factory()->create();
         $lead = Lead::factory()->create();
         $requirement = Requirement::factory()->create([
@@ -162,10 +159,30 @@ class RequirementStatusChangeTest extends TestCase
             'assigned_to' => null,
         ]);
 
-        $response = $this->actingAs($user)->get(route('requirements.company', $lead));
+        // Can view requirements but not update them: no Edit (and no status change either).
+        $viewOnly = User::factory()->create();
+        $viewOnly->forceFill(['permissions' => ['requirements' => ['view']]])->save();
 
-        $response->assertOk();
-        $response->assertSee('statusModal-'.$requirement->id);
-        $response->assertDontSee(route('requirements.edit', $requirement));
+        $this->actingAs($viewOnly)->get(route('requirements.company', $lead))
+            ->assertOk()
+            ->assertDontSee(route('requirements.edit', $requirement));
+        $this->get(route('requirements.edit', $requirement))->assertForbidden();
+
+        // Has the update permission: can edit even though they neither created nor were assigned it.
+        $editor = User::factory()->create();
+        $editor->forceFill(['permissions' => ['requirements' => ['view', 'update']]])->save();
+
+        $this->actingAs($editor)->get(route('requirements.company', $lead))->assertSee(route('requirements.edit', $requirement));
+        $this->get(route('requirements.edit', $requirement))->assertOk();
+    }
+
+    public function test_deleting_still_needs_to_be_the_creator_assignee_or_super_admin(): void
+    {
+        $owner = User::factory()->create();
+        $requirement = Requirement::factory()->create(['created_by' => $owner->id, 'assigned_to' => null]);
+
+        $this->actingAs(User::factory()->create())->delete(route('requirements.destroy', $requirement))->assertForbidden();
+        $this->actingAs($owner)->delete(route('requirements.destroy', $requirement))->assertRedirect();
+        $this->assertModelMissing($requirement);
     }
 }

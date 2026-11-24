@@ -247,7 +247,7 @@ class DashboardController extends Controller
             ],
             'statusDistribution' => $statusDistribution,
             'monthlyConversion' => $monthlyConversion,
-            'openSupportTickets' => SupportTicket::whereNotIn('status', [RequirementStatus::Completed])->count(),
+            'openSupportTickets' => SupportTicket::whereNotIn('status', RequirementStatus::closedValues())->count(),
             'recentSupportTickets' => SupportTicket::with(['lead', 'raiser'])->latest()->take(5)->get(),
             'meetings' => Meeting::where('meeting_date', '>=', now()->toDateString())->orderBy('meeting_date')->orderBy('meeting_time')->take(6)->get(),
         ]);
@@ -257,7 +257,7 @@ class DashboardController extends Controller
     {
         return view('dashboard.customer-success', $this->greeting($user) + [
             'pendingTickets' => SupportTicket::where('status', RequirementStatus::Pending)->count(),
-            'ticketQueue' => SupportTicket::whereNotIn('status', [RequirementStatus::Completed])
+            'ticketQueue' => SupportTicket::whereNotIn('status', RequirementStatus::closedValues())
                 ->with(['lead', 'raiser', 'assignee'])->oldest()->take(8)->get(),
         ]);
     }
@@ -278,7 +278,7 @@ class DashboardController extends Controller
             'totalLeads' => Lead::active()->count(),
             'totalUsers' => User::count(),
             'openTasks' => Task::whereNotIn('status', [TaskStatus::Completed, TaskStatus::Cancelled])->count(),
-            'openRequirements' => Requirement::whereNotIn('status', [RequirementStatus::Completed])->count(),
+            'openRequirements' => Requirement::whereNotIn('status', RequirementStatus::closedValues())->count(),
             'dealStats' => [
                 'count' => DealClosure::count(),
                 'value' => DealClosure::sum('deal_value'),
@@ -297,7 +297,7 @@ class DashboardController extends Controller
             'meetings' => Meeting::where('meeting_date', '>=', now()->toDateString())->orderBy('meeting_date')->orderBy('meeting_time')->take(6)->get(),
             'statusDistribution' => $statusDistribution,
             'monthlyConversion' => $monthlyConversion,
-            'openSupportTickets' => SupportTicket::whereNotIn('status', [RequirementStatus::Completed])->count(),
+            'openSupportTickets' => SupportTicket::whereNotIn('status', RequirementStatus::closedValues())->count(),
         ]);
     }
 }

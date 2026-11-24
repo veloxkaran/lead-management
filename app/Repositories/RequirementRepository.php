@@ -60,7 +60,7 @@ class RequirementRepository extends BaseRepository
 
     private function filteredQuery(array $filters): Builder
     {
-        $query = $this->query()->with(['lead', 'systemModule', 'assignee', 'creator', 'attachments'])->withCount('comments');
+        $query = $this->query()->with(['lead.status', 'systemModule', 'assignee', 'creator', 'attachments'])->withCount('comments');
 
         return $this->applyDisplayOrder($this->applyFilters($query, $filters));
     }
@@ -73,13 +73,14 @@ class RequirementRepository extends BaseRepository
     {
         return $query
             ->orderByRaw(
-                'CASE status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 WHEN ? THEN 5 ELSE 6 END',
+                'CASE status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 WHEN ? THEN 5 WHEN ? THEN 6 ELSE 7 END',
                 [
                     RequirementStatus::Pending->value,
                     RequirementStatus::InProgress->value,
                     RequirementStatus::InReview->value,
                     RequirementStatus::OnHold->value,
                     RequirementStatus::Completed->value,
+                    RequirementStatus::Cancelled->value,
                 ]
             )
             ->orderByRaw(
@@ -138,9 +139,10 @@ class RequirementRepository extends BaseRepository
 
         // Quick views from the counts strip; "overdue" mirrors Requirement::isOverdue().
         match ($filters['view'] ?? null) {
-            'open' => $query->where('status', '!=', RequirementStatus::Completed->value),
+            'open' => $query->whereNotIn('status', RequirementStatus::closedValues()),
             'completed' => $query->where('status', RequirementStatus::Completed->value),
-            'overdue' => $query->where('status', '!=', RequirementStatus::Completed->value)
+            'cancelled' => $query->where('status', RequirementStatus::Cancelled->value),
+            'overdue' => $query->whereNotIn('status', RequirementStatus::closedValues())
                 ->whereNotNull('due_date')
                 ->whereDate('due_date', '<=', today()),
             default => null,

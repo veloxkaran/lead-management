@@ -24,7 +24,7 @@
             <form method="POST" action="{{ route('requirements.update', $requirement) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
-                <div class="row g-3">
+                <div class="row g-3" x-data="{ status: @js(old('status', $requirement->status->value)) }">
                     <div class="col-md-12">
                         <x-system-module-select :modules="$systemModules" :selected="$requirement->system_module_id" />
                     </div>
@@ -34,7 +34,7 @@
                         @error('title')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-12">
-                        <x-rich-text-editor name="requirement" label="Requirement" :value="old('requirement', $requirement->requirement)" required placeholder="Describe the requirement..." />
+                        <x-rich-text-editor name="requirement" label="Requirement" :value="old('requirement', App\Support\RichText::toHtml($requirement->requirement))" required placeholder="Describe the requirement..." />
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small fw-semibold">Priority</label>
@@ -47,7 +47,7 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small fw-semibold">Status</label>
-                        <select name="status" class="form-select">
+                        <select name="status" class="form-select" x-model="status">
                             @foreach ($statuses as $status)
                                 <option value="{{ $status->value }}" @selected(old('status', $requirement->status->value) === $status->value)>{{ $status->label() }}</option>
                             @endforeach
@@ -73,6 +73,11 @@
                             @endforeach
                         </select>
                         @error('assigned_to')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-12" x-show="status === 'cancelled'" x-cloak>
+                        <label class="form-label small fw-semibold" for="cancellationReason">Why is it being cancelled? *</label>
+                        <textarea name="cancellation_reason" id="cancellationReason" rows="2" maxlength="2000" class="form-control" :required="status === 'cancelled'" placeholder="Shown on the requirement as the cancellation reason">{{ old('cancellation_reason', $requirement->cancellation_reason) }}</textarea>
+                        @error('cancellation_reason')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-12">
                         <label class="form-label small fw-semibold">Add Attachments</label>

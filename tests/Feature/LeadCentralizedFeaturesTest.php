@@ -34,7 +34,7 @@ class LeadCentralizedFeaturesTest extends TestCase
         $user = User::factory()->create();
         $lead = Lead::factory()->create(['assigned_user_id' => $user->id, 'created_by' => $user->id]);
 
-        $this->actingAs($user)->from(route('leads.show', $lead))->post(route('leads.support-tickets.store', $lead), [
+        $this->actingAs($user)->from(route('leads.show', $lead))->post(route('leads.support-tickets.store', $lead), ['type' => 'support', 
             'subject' => 'Client cannot access dashboard',
             'priority' => 'high',
         ])->assertRedirect(route('leads.show', $lead));

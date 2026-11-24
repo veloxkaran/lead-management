@@ -10,7 +10,10 @@ Alpine.start();
 import Chart from 'chart.js/auto';
 window.Chart = Chart;
 
-import Swal from 'sweetalert2';
+// The plain ESM build: its CSS already comes from app.scss. The default
+// ("all") build injects a second copy as a <style> tag at load, which also
+// made Chrome skip the page-to-page view transition ("opt-in disabled").
+import Swal from 'sweetalert2/dist/sweetalert2.esm.js';
 window.Swal = Swal;
 
 import './jquery-global';
@@ -36,6 +39,7 @@ import './campaign-composer';
 import './contacts';
 import './form-drafts';
 import './mentions';
+import './motion';
 import './command-palette';
 import './ux-enhancements';
 
