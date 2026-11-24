@@ -207,6 +207,7 @@ Route::middleware('auth')->group(function () {
         Route::patch('support-tickets/{support_ticket}/comments/{comment}', [SupportTicketCommentController::class, 'update'])->name('support-tickets.comments.update');
         Route::post('support-tickets/{support_ticket}/assign-to-me', [SupportTicketController::class, 'assignToMe'])->name('support-tickets.assign-to-me');
         Route::post('support-tickets/{support_ticket}/reopen', [SupportTicketController::class, 'reopen'])->middleware('permission:support_tickets,update')->name('support-tickets.reopen');
+        Route::patch('support-tickets/{support_ticket}/status', [SupportTicketController::class, 'updateStatus'])->middleware('permission:support_tickets,update')->name('support-tickets.status.update');
         Route::post('support-tickets/{support_ticket}/cancel', [SupportTicketController::class, 'cancel'])->middleware('permission:support_tickets,update')->name('support-tickets.cancel');
         Route::get('support-ticket-attachments/{attachment}/download', [SupportTicketAttachmentController::class, 'download'])->name('support-ticket-attachments.download');
         Route::get('support-ticket-attachments/{attachment}/preview', [SupportTicketAttachmentController::class, 'preview'])->name('support-ticket-attachments.preview');

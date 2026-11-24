@@ -27,11 +27,32 @@ class RichText
      */
     public static function sanitize(?string $value): ?string
     {
-        if ($value === null || trim($value) === '') {
-            return $value === null ? null : '';
+        if ($value === null) {
+            return null;
+        }
+
+        if (self::isBlank($value)) {
+            return '';
         }
 
         return Purifier::clean(self::normalizeQuillLists(self::toHtml($value)));
+    }
+
+    /**
+     * Nothing a reader would see: empty, or only empty editor lines
+     * (<p><br></p>), spaces and &nbsp;. An image or table counts as content.
+     */
+    public static function isBlank(?string $value): bool
+    {
+        $value = (string) $value;
+
+        if (preg_match('/<\s*(img|table|hr)\b/i', $value)) {
+            return false;
+        }
+
+        $text = html_entity_decode(strip_tags($value), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        return preg_replace('/[\s\x{00A0}\x{200B}]+/u', '', $text) === '';
     }
 
     /**

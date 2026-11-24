@@ -6,6 +6,7 @@ use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
 use App\Http\Requests\SupportTicket\StoreSupportTicketRequest;
 use App\Http\Requests\SupportTicket\UpdateSupportTicketRequest;
+use App\Http\Requests\SupportTicket\UpdateSupportTicketStatusRequest;
 use App\Models\Lead;
 use App\Models\SupportTicket;
 use App\Models\User;
@@ -97,6 +98,16 @@ class SupportTicketController extends Controller
         $mentions->notify($validated['reason'], $request->user(), $supportTicket);
 
         return redirect()->route('support-tickets.show', $supportTicket)->with('success', 'Ticket reopened.');
+    }
+
+    public function updateStatus(UpdateSupportTicketStatusRequest $request, SupportTicket $supportTicket, MentionNotifier $mentions): RedirectResponse
+    {
+        $this->supportTickets->updateStatus($supportTicket, $request->validated('status'), $request->validated('note'), $request->user());
+
+        // The note is posted as a comment, so @mentions in it notify people too.
+        $mentions->notify($request->validated('note'), $request->user(), $supportTicket);
+
+        return back()->with('success', 'Status updated.');
     }
 
     public function cancel(Request $request, SupportTicket $supportTicket, MentionNotifier $mentions): RedirectResponse

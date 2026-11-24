@@ -20,7 +20,7 @@
     <div class="col-9 col-sm-4">
         <select name="assigned_to" class="form-select form-select-sm">
             <option value="">Unassigned</option>
-            @foreach ($users as $u)
+            @foreach ($users->filter->isActive() as $u)
                 <option value="{{ $u->id }}">{{ $u->name }}</option>
             @endforeach
         </select>

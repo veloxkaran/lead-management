@@ -37,6 +37,15 @@ class SupportTicketPolicy
     }
 
     /**
+     * The list's quick "Change status" popup — same rule as editing: open
+     * until the completion/cancellation lock kicks in.
+     */
+    public function changeStatus(User $user, SupportTicket $ticket): Response|bool
+    {
+        return $this->update($user, $ticket);
+    }
+
+    /**
      * "Assign to me" on the details page — anyone may pick up an open,
      * unassigned ticket for themselves. Completed/cancelled ones aren't claimable.
      */

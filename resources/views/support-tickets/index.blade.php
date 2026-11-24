@@ -190,6 +190,11 @@
                             </td>
                             <td class="text-end">
                                 <a href="{{ route('support-tickets.show', $ticket) }}" class="btn btn-sm btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
+                                @can('changeStatus', $ticket)
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#ticketStatusModal-{{ $ticket->id }}" title="Change status &amp; add note">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                    </button>
+                                @endcan
                                 @can('reopen', $ticket)
                                     <a href="{{ route('support-tickets.show', [$ticket, 'reopen' => 1]) }}" class="btn btn-sm btn-outline-warning" title="Reopen"><i class="bi bi-arrow-counterclockwise"></i></a>
                                 @endcan
@@ -218,6 +223,8 @@
         @endif
     </div>
 
+    @include('support-tickets._status_modals')
+
     @can('create', App\Models\SupportTicket::class)
         <div class="modal fade" id="raiseTicketModal" tabindex="-1">
             <div class="modal-dialog modal-lg">
@@ -228,6 +235,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        <input type="hidden" name="_form" value="raise_ticket">
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <label class="form-label small fw-semibold">Related Lead (optional)</label>
@@ -286,7 +294,8 @@
             </div>
         </div>
 
-        @if ($errors->any())
+        {{-- Only for errors from this form — not e.g. a status popup on the same page. --}}
+        @if ($errors->any() && old('_form') === 'raise_ticket')
             @push('scripts')
                 <script>
                     document.addEventListener('DOMContentLoaded', () => {

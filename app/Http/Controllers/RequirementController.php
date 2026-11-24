@@ -96,7 +96,8 @@ class RequirementController extends Controller
         $this->authorize('create', Requirement::class);
 
         return view('requirements.create', [
-            'leads' => Lead::orderBy('company_name')->get(),
+            // Same choice as the Requirements list's modal — archived leads aren't offered.
+            'leads' => Lead::active()->orderBy('company_name')->get(),
             'priorities' => RequirementPriority::cases(),
             'users' => User::orderBy('name')->get(),
             'systemModules' => SystemModule::ordered()->get(),

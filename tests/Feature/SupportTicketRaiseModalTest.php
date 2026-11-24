@@ -49,6 +49,8 @@ class SupportTicketRaiseModalTest extends TestCase
 
         $response = $this->actingAs($user)->from(route('support-tickets.index'))->post(route('support-tickets.store'), ['type' => 'support', 
             'priority' => 'medium',
+            // Sent by the modal so only its own errors reopen it.
+            '_form' => 'raise_ticket',
             // subject is required and missing.
         ]);
 

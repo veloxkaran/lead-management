@@ -163,6 +163,28 @@ class SupportTicketService
     }
 
     /**
+     * The list page's quick "Change status" popup: changes only the status
+     * (through update(), so the status log, resolved_at and client email
+     * behave as from the edit form) with a required note, kept as a comment.
+     * Choosing Cancelled makes the note the cancellation reason, and
+     * update() posts it as the "Cancelled: …" comment itself.
+     */
+    public function updateStatus(SupportTicket $ticket, string $status, string $note, User $actor): SupportTicket
+    {
+        if ($status === RequirementStatus::Cancelled->value && ! $ticket->isCancelled()) {
+            return $this->cancel($ticket, $note, $actor);
+        }
+
+        $ticket = $this->update($ticket, ['status' => $status], $actor);
+
+        $this->addComment($ticket, [
+            'comment' => "Status changed to {$ticket->status->label()}: ".trim($note),
+        ], $actor);
+
+        return $ticket;
+    }
+
+    /**
      * Cancels an open ticket with a reason. Goes through update(), so the
      * status change is logged, the client gets the usual status email and
      * the reason is posted as a comment.

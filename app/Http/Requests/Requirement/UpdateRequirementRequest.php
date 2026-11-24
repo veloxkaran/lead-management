@@ -4,6 +4,7 @@ namespace App\Http\Requests\Requirement;
 
 use App\Enums\RequirementPriority;
 use App\Enums\RequirementStatus;
+use App\Rules\RichTextNotBlank;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -25,7 +26,7 @@ class UpdateRequirementRequest extends FormRequest
         return [
             'title' => ['nullable', 'string', 'max:255'],
             'system_module_id' => ['required', 'exists:system_modules,id'],
-            'requirement' => ['required', 'string'],
+            'requirement' => ['required', 'string', new RichTextNotBlank],
             'priority' => ['required', new Enum(RequirementPriority::class)],
             'status' => ['required', new Enum(RequirementStatus::class)],
             'cancellation_reason' => [
