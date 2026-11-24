@@ -192,7 +192,7 @@
                                 <a href="{{ route('support-tickets.show', $ticket) }}" class="btn btn-sm btn-outline-secondary" title="View"><i class="bi bi-eye"></i></a>
                                 @can('changeStatus', $ticket)
                                     <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#ticketStatusModal-{{ $ticket->id }}" title="Change status &amp; add note">
-                                        <i class="bi bi-arrow-repeat"></i>
+                                        <i class="bi bi-chat-square-text"></i>
                                     </button>
                                 @endcan
                                 @can('reopen', $ticket)
