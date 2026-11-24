@@ -27,7 +27,9 @@ import 'datatables.net-bs5';
 // `import 'select2'` never calls it, so $.fn.select2 stays undefined and
 // every select2-enhanced dropdown silently falls back to a plain <select>.
 import registerSelect2 from 'select2';
+import { patchSelect2Positioning } from './select2-position';
 registerSelect2(window, window.jQuery);
+patchSelect2Positioning(window.jQuery);
 
 import './performance-snapshot';
 import './raw-data-paste-grid';
