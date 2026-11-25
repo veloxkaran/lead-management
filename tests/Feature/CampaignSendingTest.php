@@ -104,7 +104,7 @@ class CampaignSendingTest extends TestCase
             return $mail->hasTo('ram@acme.test')
                 && $mail->renderedSubject === 'Offer for Acme'
                 && $mail->renderedBody === "Hi Ram,\nHappy Dashain!"
-                && $mail->trackingUrl === route('campaigns.track-open', $recipient->tracking_token);
+                && $mail->trackingUrl === 'https://crm.hajirhr.com/track/email/'.$recipient->tracking_token;
         });
     }
 

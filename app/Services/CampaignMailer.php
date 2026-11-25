@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
+use App\Support\EmailLinks;
 use App\Enums\MailEncryption;
 use App\Mail\CampaignMail;
 use App\Support\CampaignSettings;
-use App\Support\PublicUrl;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Support\Facades\Mail;
 
@@ -55,10 +55,10 @@ class CampaignMailer
         return new CampaignMail(
             $subject,
             $body,
-            // A tracking image pointing at localhost would be broken for
-            // every recipient and look like spam — leave it out.
-            trackingUrl: $token && $trackOpens && PublicUrl::isPublic() ? route('campaigns.track-open', $token) : null,
-            unsubscribeUrl: $token ? route('campaigns.unsubscribe', $token) : null,
+            // Only over HTTPS on a public host (see EmailLinks) — a
+            // tracking image on localhost or plain http hurts delivery.
+            trackingUrl: $token && $trackOpens ? EmailLinks::trackingPixel('campaigns.track-open', $token) : null,
+            unsubscribeUrl: $token ? EmailLinks::route('campaigns.unsubscribe', $token) : null,
             signatureHtml: $includeSignature ? $this->settings->signature() : null,
             footer: $this->settings->get('campaign_footer'),
             images: $files['images'] ?? [],

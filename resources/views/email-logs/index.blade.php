@@ -63,7 +63,11 @@
                     </a>
                 @endforeach
             </nav>
-            <span class="ms-auto small text-muted" title="Plain email has no delivery receipt — an email counts as delivered once the recipient opens it (with images on)."><i class="bi bi-info-circle"></i> Delivered = opened by the recipient</span>
+            @if (config('mail.track_notification_opens') && App\Support\EmailLinks::canTrack())
+                <span class="ms-auto small text-muted" title="Plain email has no delivery receipt — an email counts as delivered once the recipient opens it (with images on)."><i class="bi bi-info-circle"></i> Delivered = opened by the recipient</span>
+            @else
+                <span class="ms-auto small text-muted" title="Notification emails carry no tracking image (better inbox delivery), so they stay &quot;Sent&quot;. Turn it on with MAIL_TRACK_NOTIFICATION_OPENS=true and an HTTPS MAIL_LINKS_URL."><i class="bi bi-info-circle"></i> Open tracking off — sent emails stay "Sent"</span>
+            @endif
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">

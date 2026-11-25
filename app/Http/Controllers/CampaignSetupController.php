@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\EmailLinks;
 use App\Enums\CampaignChannel;
 use App\Http\Requests\Campaign\UpdateCampaignEmailSetupRequest;
 use App\Http\Requests\Campaign\UpdateCampaignSetupRequest;
@@ -109,7 +110,7 @@ class CampaignSetupController extends Controller
         $mail = new CampaignMail(
             'Test email from '.config('app.name'),
             "Hi {$request->user()->name},\n\nThis is a test email from Campaign Setup. It's laid out exactly like a campaign email — your signature and footer are below.\n\nIf it arrived in your inbox (not spam), campaign email is working.",
-            unsubscribeUrl: route('campaigns.unsubscribe', 'test-email'),
+            unsubscribeUrl: EmailLinks::route('campaigns.unsubscribe', 'test-email'),
             signatureHtml: $this->settings->signature(),
             footer: $this->settings->get('campaign_footer'),
         );
@@ -166,11 +167,38 @@ class CampaignSetupController extends Controller
     {
         $result = $check->check($mailer->from()[0]);
 
-        // Unsubscribe and tracking links are built from APP_URL.
-        $result['checks'][] = PublicUrl::isPublic()
-            ? ['key' => 'links', 'label' => 'Email links', 'status' => 'ok', 'detail' => 'Unsubscribe and tracking links point to '.config('app.url').'.']
-            : ['key' => 'links', 'label' => 'Email links', 'status' => 'missing', 'detail' => 'APP_URL is "'.config('app.url').'" — unsubscribe links in emails won\'t work for recipients and look like spam. Set APP_URL in .env to the address people use to open this app (e.g. https://crm.yourdomain.com).'];
+        $result['checks'][] = $this->emailLinksCheck((string) $mailer->from()[0]);
 
         return response()->json($result);
+    }
+
+    /**
+     * Unsubscribe and tracking links are built from MAIL_LINKS_URL (or
+     * APP_URL). Gmail distrusts links that aren't public, aren't HTTPS, or
+     * sit on a different domain from the From address.
+     *
+     * @return array{key: string, label: string, status: string, detail: string}
+     */
+    private function emailLinksCheck(string $fromAddress): array
+    {
+        $base = EmailLinks::base();
+        $check = fn (string $status, string $detail) => ['key' => 'links', 'label' => 'Email links', 'status' => $status, 'detail' => $detail];
+
+        if (! PublicUrl::isPublic($base)) {
+            return $check('missing', "Links in emails point to \"{$base}\" — they won't work for recipients and look like spam. Set MAIL_LINKS_URL (or APP_URL) in .env to a public HTTPS address on your own domain, e.g. https://track.yourdomain.com.");
+        }
+
+        if (parse_url($base, PHP_URL_SCHEME) !== 'https') {
+            return $check('warn', "Links in emails use plain http ({$base}). Tracking images are left out until this is HTTPS. Set MAIL_LINKS_URL to an HTTPS address on your sending domain with a valid SSL certificate.");
+        }
+
+        $linkHost = mb_strtolower((string) parse_url($base, PHP_URL_HOST));
+        $fromDomain = mb_strtolower((string) substr(strrchr($fromAddress, '@') ?: '', 1));
+
+        if ($fromDomain !== '' && $linkHost !== $fromDomain && ! str_ends_with($linkHost, '.'.$fromDomain)) {
+            return $check('warn', "Links in emails point to {$linkHost}, but email is sent from {$fromDomain}. Gmail trusts links on the sender's own domain more — set MAIL_LINKS_URL to e.g. https://track.{$fromDomain}.");
+        }
+
+        return $check('ok', "Unsubscribe and tracking links point to {$base}.");
     }
 }

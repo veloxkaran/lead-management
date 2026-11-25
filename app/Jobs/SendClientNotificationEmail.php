@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Support\EmailLinks;
 use App\Enums\CampaignChannel;
 use App\Enums\EmailLogStatus;
 use App\Mail\ClientNotificationMail;
@@ -11,7 +12,6 @@ use App\Models\EmailLog;
 use App\Models\Setting;
 use App\Services\EmailTemplateService;
 use App\Support\MailRetry;
-use App\Support\PublicUrl;
 use App\Support\RecipientEmailCheck;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
@@ -109,10 +109,13 @@ class SendClientNotificationEmail implements ShouldQueue
 
             Mail::to($log->to_email)->send(new ClientNotificationMail(
                 $log->subject, $log->body, $images, $documents,
-                // A tracking image pointing at localhost would be broken
-                // for every recipient and look like spam — leave it out.
-                trackingUrl: PublicUrl::isPublic() ? route('email-logs.track-open', $log->tracking_token) : null,
-                unsubscribeUrl: $isAnnouncement ? route('campaigns.unsubscribe', $log->tracking_token) : null,
+                // Off unless MAIL_TRACK_NOTIFICATION_OPENS is on, and only
+                // ever over HTTPS — a tracking image is a spam signal, and
+                // one on plain http/another domain got these refused by Gmail.
+                trackingUrl: config('mail.track_notification_opens')
+                    ? EmailLinks::trackingPixel('email-logs.track-open', $log->tracking_token)
+                    : null,
+                unsubscribeUrl: $isAnnouncement ? EmailLinks::route('campaigns.unsubscribe', $log->tracking_token) : null,
                 footer: $isAnnouncement ? Setting::get('campaign_footer') : null,
             ));
 

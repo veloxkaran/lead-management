@@ -37,6 +37,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Links Inside Emails & Open Tracking
+    |--------------------------------------------------------------------------
+    |
+    | links_url: where the unsubscribe link and tracking image point. Leave
+    | empty to use APP_URL. Set it to an HTTPS host on the sender's own
+    | domain (e.g. https://track.hajirhr.com, pointed at this app with a
+    | valid SSL certificate) so links match the From address — Gmail
+    | distrusts links to another domain or over plain http.
+    |
+    | track_notification_opens: adds an invisible 1×1 image to client
+    | notification emails (Email Log) that marks them "Delivered" when
+    | opened. Off by default — tracking images are a spam signal. Even when
+    | on, the image is only added if the links URL above is HTTPS. Campaign
+    | emails have their own "Track opens" switch in Campaign Setup, with the
+    | same HTTPS requirement.
+    |
+    */
+
+    'links_url' => env('MAIL_LINKS_URL'),
+
+    'track_notification_opens' => (bool) env('MAIL_TRACK_NOTIFICATION_OPENS', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Announcement Send Rate
     |--------------------------------------------------------------------------
     |

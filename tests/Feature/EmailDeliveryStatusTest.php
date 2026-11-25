@@ -32,15 +32,17 @@ class EmailDeliveryStatusTest extends TestCase
     public function test_notification_emails_are_marked_delivered_when_opened(): void
     {
         Mail::fake();
-        config(['app.url' => 'https://crm.hajirhr.com']); // tracking images are only added for a public APP_URL
+        // Opt-in, and only over HTTPS on a public host.
+        config(['app.url' => 'https://crm.hajirhr.com', 'mail.track_notification_opens' => true]);
         $log = $this->log();
         $this->assertNotNull($log->tracking_token, 'every log gets a tracking token');
 
         app()->call([new SendClientNotificationEmail($log), 'handle']);
 
+        $pixel = 'https://crm.hajirhr.com/track/notification/'.$log->tracking_token;
         $this->assertSame(EmailLogStatus::Sent, $log->fresh()->status);
-        Mail::assertSent(ClientNotificationMail::class, fn (ClientNotificationMail $mail) => $mail->trackingUrl === route('email-logs.track-open', $log->tracking_token)
-            && str_contains($mail->render(), 'src="'.route('email-logs.track-open', $log->tracking_token).'"'));
+        Mail::assertSent(ClientNotificationMail::class, fn (ClientNotificationMail $mail) => $mail->trackingUrl === $pixel
+            && str_contains($mail->render(), 'src="'.$pixel.'"'));
 
         $response = $this->get(route('email-logs.track-open', $log->tracking_token));
         $response->assertOk()->assertHeader('Content-Type', 'image/gif');

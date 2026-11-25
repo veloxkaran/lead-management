@@ -113,7 +113,7 @@ CAMPAIGN_MAIL_REPLY_TO=           # optional</pre>
                                 <input class="form-check-input" type="checkbox" role="switch" name="campaign_track_opens" value="1" id="trackOpens" @checked($emailFields['campaign_track_opens'] === '1')>
                                 <label class="form-check-label small fw-semibold" for="trackOpens">Track opens</label>
                             </div>
-                            <div class="form-text">Adds an invisible 1×1 image that marks an email "Delivered" (opened) on the campaign page. Turn it off for the cleanest possible email — then emails stay "Sent".</div>
+                            <div class="form-text">Adds an invisible 1×1 image that marks an email "Delivered" (opened) on the campaign page — only when email links are HTTPS (see "Email links" in the domain check). Turn it off for the cleanest possible email — then emails stay "Sent".</div>
                         </div>
                     </div>
                 </div>
