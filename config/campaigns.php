@@ -13,7 +13,9 @@ return [
 
     'emails_per_minute' => max(1, (int) env('CAMPAIGN_EMAILS_PER_MINUTE', 20)),
 
-    'batch_pause_minutes' => max(0, (int) env('CAMPAIGN_BATCH_PAUSE_MINUTES', 15)),
+    // An hour between batches keeps each batch's burst well apart, so the
+    // mail host and Gmail see a steady trickle rather than bulk sending.
+    'batch_pause_minutes' => max(0, (int) env('CAMPAIGN_BATCH_PAUSE_MINUTES', 60)),
 
     'sms_per_minute' => max(1, (int) env('CAMPAIGN_SMS_PER_MINUTE', 60)),
 
